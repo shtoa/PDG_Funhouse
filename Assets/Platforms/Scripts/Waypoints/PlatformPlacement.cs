@@ -43,6 +43,12 @@ public class PlatformPlacement : MonoBehaviour
         }
 
 
+        for (int i = platformHolder.transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(platformHolder.transform.GetChild(i).gameObject);
+        }
+
+
         foreach (Transform child in transform){
             Waypoints.Add(child.transform.position);
         }
@@ -112,7 +118,7 @@ public class PlatformPlacement : MonoBehaviour
 
                     //  && (i == Waypoints.Count-1)
                     if ((plat == nPlatforms - 1)) {
-                        GameObject goal = GameObject.Instantiate(_goal, newLoc, Quaternion.Euler(0f, angle+90f, 0f));
+                        GameObject goal = GameObject.Instantiate(_goal, newLoc, Quaternion.Euler(-90f, angle+90f, 0f)); // -90f
                         goal.transform.position = g.transform.position;
                         goal.transform.parent = g.transform;
 
@@ -136,8 +142,9 @@ public class PlatformPlacement : MonoBehaviour
 
         //foreach (Vector3 pos in Waypoints)
         //{
-        //    if (_platform) { 
-        //        GameObject g = GameObject.Instantiate(_platform, pos, Quaternion.Euler(270f, 0,0));
+        //    if (_platform)
+        //    {
+        //        GameObject g = GameObject.Instantiate(_platform, pos, Quaternion.Euler(270f, 0, 0));
         //    }
         //}
     }
@@ -154,22 +161,22 @@ public class PlatformPlacement : MonoBehaviour
             
         }
 
-        //if (startPlatform.gameObject.GetComponent<PlatformMovement>().hasStarted)
-        //{
-        //    timeElapsed += Time.deltaTime;
-        //    _canvas.GetComponent<Text>().text = "The Time " + Math.Round(timeElapsed,2).ToString() + " (-_-)// ";
-  
-        //}
-        //if (endPlatform.gameObject.GetComponent<PlatformMovement>().hasEnded)
-        //{
-        //    print(timeElapsed);
-        //    _canvas.GetComponent<Text>().text = "The END Time " + Math.Round(timeElapsed, 2).ToString() + "!!! ";
-        //    timeElapsed = 0;
+        if (startPlatform.gameObject.GetComponent<PlatformMovement>().hasStarted)
+        {
+            timeElapsed += Time.deltaTime;
+            _canvas.GetComponent<Text>().text = "The Time " + Math.Round(timeElapsed, 2).ToString() + " (-_-)// ";
 
-        //    startPlatform.GetComponent<PlatformMovement>().hasStarted = false;
-        //    endPlatform.GetComponent<PlatformMovement>().hasEnded = false;
+        }
+        if (endPlatform.gameObject.GetComponent<PlatformMovement>().hasEnded)
+        {
+            print(timeElapsed);
+            _canvas.GetComponent<Text>().text = "The END Time " + Math.Round(timeElapsed, 2).ToString() + "!!! ";
+            timeElapsed = 0;
 
-        //}
+            startPlatform.GetComponent<PlatformMovement>().hasStarted = false;
+            endPlatform.GetComponent<PlatformMovement>().hasEnded = false;
+
+        }
     }
 
 }

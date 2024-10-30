@@ -360,6 +360,7 @@ public class DungeonGeneration2D : MonoBehaviour
 
 
 
+
         //roomCenters.Remove(curRoom);
 
         #region while coridor generator
@@ -507,9 +508,87 @@ public class DungeonGeneration2D : MonoBehaviour
 
 //GetComponent<MeshCollider>().sharedMesh = mesh;
         #endregion
-;
 
 
+        RemoveWallsWithCoridoors(coridoorHolder, WallHolder);
+    }
+
+    private void RemoveWallsWithCoridoors(GameObject coridoorHolder, GameObject wallHolder)
+    {
+
+
+   
+        for(var i = (wallHolder.transform.childCount-1); i >= 0; i--) 
+        {
+       
+            for (var j = (coridoorHolder.transform.childCount-1); j >= 0; j--)
+            {
+
+                //print(coridoorHolder.transform.GetChild(j).GetComponent<Renderer>().bounds);
+
+                if (coridoorHolder.transform.GetChild(j).GetComponent<Renderer>().bounds.Intersects(wallHolder.transform.GetChild(i).GetComponent<Renderer>().bounds))
+                {
+
+                    #region add walls that do not intersect around path
+                    //Bounds wallBounds = wallHolder.transform.GetChild(i).GetComponent<Renderer>().bounds;
+                    //Bounds coridoorBounds = coridoorHolder.transform.GetChild(j).GetComponent<Renderer>().bounds;
+
+                    //if ((coridoorHolder.transform.GetChild(j).rotation.y == 0))
+
+                    //    if ((coridoorBounds.min.z - wallBounds.min.z) > 0) { 
+                    //        {
+                    //            var wallLength = (coridoorBounds.min.z - wallBounds.min.z);
+
+                    //            var wallHeight = 1.5f;
+                    //            var wallThickness = 0.1f;
+
+
+
+
+                    //            GameObject leftWall = GameObject.CreatePrimitive(PrimitiveType.Cube); // add room floor
+
+                    //            leftWall.transform.position = new Vector3(wallBounds.center.x, wallHeight / 2f, wallBounds.center.z + coridoorBounds.size.z/2f + wallLength/2f);
+                    //            leftWall.transform.localScale = new Vector3(wallThickness, wallHeight, wallLength);
+                    //            leftWall.transform.parent = WallHolder.transform;
+                    //        }
+
+                    //    } 
+                    //    if ((wallBounds.max.z - coridoorBounds.max.z) > 0)
+                    //    {
+
+                    //        {
+                    //            var wallLength = (wallBounds.max.z - coridoorBounds.max.z);
+
+                    //            var wallHeight = 1.5f;
+                    //            var wallThickness = 0.1f;
+
+
+
+
+                    //            GameObject rightWall = GameObject.CreatePrimitive(PrimitiveType.Cube); // add room floor
+
+                    //            rightWall.transform.position = new Vector3(wallBounds.center.x, wallHeight / 2f, wallBounds.center.z - coridoorBounds.size.z / 2f - wallLength / 2f);
+                    //            rightWall.transform.localScale = new Vector3(wallThickness, wallHeight, wallLength);
+                    //            rightWall.transform.parent = WallHolder.transform;
+                    //        }
+
+
+
+
+                    //        // top and bottom 
+
+
+
+                    //    }
+                    #endregion
+
+
+                    GameObject.Destroy(wallHolder.transform.GetChild(i).gameObject); // destroy the wall at current position if intersects with coridoor
+                }
+
+
+            }
+        }
     }
 
     private void AddWallsAroundRooms(List<BoundsInt> roomList)
@@ -559,6 +638,10 @@ public class DungeonGeneration2D : MonoBehaviour
             right.transform.parent = WallHolder.transform;
         }
     }
+
+
+
+
 
     private Vector3 FindClosestPoint(Vector3 curRoom, List<Vector3> roomCenters)
     {
