@@ -275,6 +275,8 @@ public class DungeonGeneration2D : MonoBehaviour
 
     [SerializeField] public GameObject Waypoint;
     [SerializeField] public GameObject WaypointHolder;
+    [SerializeField] public GameObject WallHolder;
+    [SerializeField] public GameObject coridoorHolder;
 
     List<Vector3> orderedRoomLocs = new List<Vector3>();
 
@@ -294,6 +296,7 @@ public class DungeonGeneration2D : MonoBehaviour
             DestroyImmediate(transform.GetChild(i).gameObject);
         }
 
+        // destroy platforms 
         //for (int i = Waypoint.transform.childCount - 1; i >= 0; i--)
         //{
         //    DestroyImmediate(Waypoint.transform.GetChild(i).gameObject);
@@ -353,7 +356,11 @@ public class DungeonGeneration2D : MonoBehaviour
         allRoomCenters.AddRange(roomCenters);
 
 
-        roomCenters.Remove(curRoom);
+        AddWallsAroundRooms(roomList);
+
+
+
+        //roomCenters.Remove(curRoom);
 
         #region while coridor generator
         //while (roomCenters.Count > 0)
@@ -370,7 +377,7 @@ public class DungeonGeneration2D : MonoBehaviour
         //}
         #endregion
 
-
+        #region Coridor Generation using Tree Work in Progress
         //findChildPairs(tree.Root);
 
         //print($"Count of childpairs {childPairs.Count}");
@@ -386,11 +393,12 @@ public class DungeonGeneration2D : MonoBehaviour
         //}
         //var player = GameObject.FindGameObjectWithTag("Player");
         //player.transform.position = orderedRoomLocs[0] + new Vector3(0, player.GetComponent<CharacterController>().height, 0);
+        #endregion
 
 
 
 
-
+        #region Platform Generation
         //foreach (var roomCenter in orderedRoomLocs)
         //{
 
@@ -414,16 +422,16 @@ public class DungeonGeneration2D : MonoBehaviour
         //    g.transform.localScale = new Vector3(Mathf.Sqrt(dir.sqrMagnitude), 0.25f, 1f);
         //    g.transform.rotation = Quaternion.Euler(0,-Vector3.SignedAngle(dir, new Vector3(1,0,0), Vector3.up),0);
         //}
+        #endregion
 
 
+        #region Coridor generation
         // corridors using nodes
 
         foreach (var child in childPairs)
         {
 
-
             Vector3 start = child.Item1.center;
-            //Vector3 start = child.Item1.max;
             start = new Vector3(start.x, 0.25f, start.y) + _dungeonLocation;
            
             Vector3 end = child.Item2.center;
@@ -469,55 +477,87 @@ public class DungeonGeneration2D : MonoBehaviour
            
 
             g.transform.rotation = Quaternion.Euler(0, -Vector3.SignedAngle(dir, new Vector3(1, 0, 0), Vector3.up), 0);
-            g.transform.parent = transform;
+            g.transform.parent = coridoorHolder.transform;
         }
 
-
-        //MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>();
-        //CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-
-        // int x = 0;
-        //foreach (Transform child in transform)
-        //for(int x = 0; x < transform.childCount; x++)
-        //{
-        //    Transform child = gameObject.transform.GetChild(x);
+        #endregion
 
 
-        //    if(child.GetComponent<MeshFilter>().sharedMesh != null) { 
-        //        combine[x].mesh = child.GetComponent<MeshFilter>().sharedMesh;
-        //        combine[x].transform = child.transform.localToWorldMatrix;
-        //        //child.gameObject.SetActive(false);
-        //        x++;
+        #region Join Floor and Cooridor Mesh
 
-        //    }
+//MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>();
+//CombineInstance[] combine = new CombineInstance[meshFilters.Length-1];
+
+//int x = 1;
+//while (x < meshFilters.Length)
+//{
+//    combine[x-1].mesh = meshFilters[x].sharedMesh;
+//    combine[x-1].transform = meshFilters[x].transform.localToWorldMatrix;
+//    //meshFilters[x].gameObject.SetActive(false);
+
+//    x++;
+//}
+
+//print($"length of combine {combine.Length}");
+
+//Mesh mesh = new Mesh();
+////mesh.CombineMeshes(combine);
+////transform.GetComponent<MeshFilter>().sharedMesh = mesh;
+////transform.position = Vector3.zero;
+
+//GetComponent<MeshCollider>().sharedMesh = mesh;
+        #endregion
+;
 
 
-        //}
-        MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>();
-        CombineInstance[] combine = new CombineInstance[meshFilters.Length-1];
+    }
 
-        int x = 1;
-        while (x < meshFilters.Length)
+    private void AddWallsAroundRooms(List<BoundsInt> roomList)
+    {
+        foreach (var room in roomList)
         {
-            combine[x-1].mesh = meshFilters[x].sharedMesh;
-            combine[x-1].transform = meshFilters[x].transform.localToWorldMatrix;
-            //meshFilters[x].gameObject.SetActive(false);
+            // bottom wall and top wall
 
-            x++;
+            //g.transform.localScale = new Vector3(room.size.x - offset, 0.25f, room.size.y - offset);
+            var wallLength = room.size.y - offset;
+
+            var wallHeight = 1.5f;
+            var wallThickness = 0.1f;
+
+            GameObject bottom = GameObject.CreatePrimitive(PrimitiveType.Cube); // add room floor
+
+
+            bottom.transform.position = new Vector3(room.center.x-(room.size.x-offset)/2f-wallThickness/2f, 0.25f+wallHeight/2f, room.center.y) + _dungeonLocation;
+            bottom.transform.localScale = new Vector3(wallThickness, wallHeight, wallLength);
+            bottom.transform.parent = WallHolder.transform;
+
+            GameObject top = GameObject.CreatePrimitive(PrimitiveType.Cube); // add room floor
+
+
+            top.transform.position = new Vector3(room.center.x + (room.size.x - offset) / 2f + wallThickness / 2f, 0.25f + wallHeight / 2f, room.center.y) + _dungeonLocation;
+            top.transform.localScale = new Vector3(wallThickness, wallHeight, wallLength);
+            top.transform.parent = WallHolder.transform;
+
+
+            // left and right wall
+            wallLength = room.size.x - offset;
+
+            GameObject left = GameObject.CreatePrimitive(PrimitiveType.Cube); // add room floor
+
+
+            left.transform.position = new Vector3(room.center.x, 
+                                      0.25f + wallHeight / 2f,
+                                      room.center.y - (room.size.y - offset) / 2f - wallThickness / 2f) + _dungeonLocation;
+            left.transform.localScale = new Vector3(wallLength, wallHeight, wallThickness);
+            left.transform.parent = WallHolder.transform;
+
+
+            GameObject right = GameObject.CreatePrimitive(PrimitiveType.Cube); // add room floor
+
+            right.transform.position = new Vector3(room.center.x, 0.25f + wallHeight / 2f, room.center.y + (room.size.y - offset) / 2f + wallThickness / 2f) + _dungeonLocation;
+            right.transform.localScale = new Vector3(wallLength, wallHeight, wallThickness);
+            right.transform.parent = WallHolder.transform;
         }
-
-        print($"length of combine {combine.Length}");
-
-        Mesh mesh = new Mesh();
-        //mesh.CombineMeshes(combine);
-        //transform.GetComponent<MeshFilter>().sharedMesh = mesh;
-        //transform.position = Vector3.zero;
-
-        GetComponent<MeshCollider>().sharedMesh = mesh;
-
-        //GameObject.Instantiate(mesh);
-
-
     }
 
     private Vector3 FindClosestPoint(Vector3 curRoom, List<Vector3> roomCenters)
