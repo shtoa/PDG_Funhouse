@@ -9,6 +9,9 @@ using UnityEngine.Playables;
 using UnityEngine.UIElements;
 using UnityEngine.XR;
 using Random = UnityEngine.Random;
+using andywiecko.BurstTriangulator;
+using Unity.Collections;
+using Unity.Mathematics;
 
 [DefaultExecutionOrder(-2)]
 
@@ -279,6 +282,7 @@ public class DungeonGeneration2D : MonoBehaviour
     [SerializeField] public GameObject coridoorHolder;
 
     List<Vector3> orderedRoomLocs = new List<Vector3>();
+    List<Vector2> roomCenters2D = new List<Vector2>();
 
     private void Awake()
     {
@@ -287,6 +291,14 @@ public class DungeonGeneration2D : MonoBehaviour
                        new Vector3Int(dungeonWidth, dungeonHeight, 0)), minRoomWidth, minRoomHeight); // (Vector3Int)startPosition
 
         Debug.Log($"Room Count {roomList.Count}");
+        
+
+        #region Test Delauney Triangulation
+
+        #endregion
+
+
+
 
         // HashSet<Vector2Int> floor = new HashSet<Vector2Int>();
         // floor = CreateSimpleRooms(roomList);
@@ -356,7 +368,7 @@ public class DungeonGeneration2D : MonoBehaviour
         allRoomCenters.AddRange(roomCenters);
 
 
-        AddWallsAroundRooms(roomList);
+        //AddWallsAroundRooms(roomList);
 
 
 
@@ -396,9 +408,6 @@ public class DungeonGeneration2D : MonoBehaviour
         //player.transform.position = orderedRoomLocs[0] + new Vector3(0, player.GetComponent<CharacterController>().height, 0);
         #endregion
 
-
-
-
         #region Platform Generation
         //foreach (var roomCenter in orderedRoomLocs)
         //{
@@ -426,62 +435,7 @@ public class DungeonGeneration2D : MonoBehaviour
         #endregion
 
 
-        #region Coridor generation
-        // corridors using nodes
-
-        foreach (var child in childPairs)
-        {
-
-            Vector3 start = child.Item1.center;
-            start = new Vector3(start.x, 0.25f, start.y) + _dungeonLocation;
-           
-            Vector3 end = child.Item2.center;
-            end = new Vector3(end.x, 0.25f, end.y) + _dungeonLocation;
-            
-
-            Vector3 dir = end - start;
-            //print($"the current dir is {dir}");
-
-
-            // cheat method so change later
-
-            var corridorScale = 0f;
-            var corridorPosition = (end + start)/2f;
-           // print($"dir y {dir}");
-            
-            //if(dir.z > 0f)
-            //{
-            //    print($"Current max {child.Item2.min}" +
-            //        $"Current min {child.Item1.max}" +
-            //        $"" +
-            //        $"");
-            //    corridorScale = (child.Item2.min.z - child.Item1.max.z)+offset;
-            //    corridorPosition = corridorPosition + new Vector3(0, 0, corridorScale);
-            //    //corridorPosition = new Vector3(child.Item1.center.x, 0,
-            //    //   offset
-
-            //    //    ) ;
-
-            //} else if (dir.x > 0f)
-            //{
-            //    corridorScale = (child.Item2.min.x - child.Item1.max.x)+offset;
-            //    corridorPosition = corridorPosition + new Vector3(corridorScale, 0, 0);
-            //} 
-            
-
-
-            GameObject g = GameObject.CreatePrimitive(PrimitiveType.Cube); // add room floor
-                                                                           //g.transform.localScale = new Vector3(Mathf.Sqrt(dir.sqrMagnitude)-1f, 0.25f, 1f); // subtract the width
-            g.transform.localScale = new Vector3(Mathf.Sqrt(dir.sqrMagnitude) - 1f, 0.25f, 1f); // subtract the width
-            g.transform.position = corridorPosition;
-            //g.transform.localScale = new Vector3(corridorScale, 0.25f, 1f); // subtract the width
-           
-
-            g.transform.rotation = Quaternion.Euler(0, -Vector3.SignedAngle(dir, new Vector3(1, 0, 0), Vector3.up), 0);
-            g.transform.parent = coridoorHolder.transform;
-        }
-
-        #endregion
+        GenerateCoridoors();
 
 
         #region Join Floor and Cooridor Mesh
@@ -510,7 +464,63 @@ public class DungeonGeneration2D : MonoBehaviour
         #endregion
 
 
-        RemoveWallsWithCoridoors(coridoorHolder, WallHolder);
+        //RemoveWallsWithCoridoors(coridoorHolder, WallHolder);
+    }
+
+    private void GenerateCoridoors()
+    {
+
+        foreach (var child in childPairs)
+        {
+
+            Vector3 start = child.Item1.center;
+            start = new Vector3(start.x, 0.25f, start.y) + _dungeonLocation;
+
+            Vector3 end = child.Item2.center;
+            end = new Vector3(end.x, 0.25f, end.y) + _dungeonLocation;
+
+
+            Vector3 dir = end - start;
+            //print($"the current dir is {dir}");
+
+
+            // cheat method so change later
+
+            var corridorScale = 0f;
+            var corridorPosition = (end + start) / 2f;
+            // print($"dir y {dir}");
+
+            //if(dir.z > 0f)
+            //{
+            //    print($"Current max {child.Item2.min}" +
+            //        $"Current min {child.Item1.max}" +
+            //        $"" +
+            //        $"");
+            //    corridorScale = (child.Item2.min.z - child.Item1.max.z)+offset;
+            //    corridorPosition = corridorPosition + new Vector3(0, 0, corridorScale);
+            //    //corridorPosition = new Vector3(child.Item1.center.x, 0,
+            //    //   offset
+
+            //    //    ) ;
+
+            //} else if (dir.x > 0f)
+            //{
+            //    corridorScale = (child.Item2.min.x - child.Item1.max.x)+offset;
+            //    corridorPosition = corridorPosition + new Vector3(corridorScale, 0, 0);
+            //} 
+
+
+
+            GameObject g = GameObject.CreatePrimitive(PrimitiveType.Cube); // add room floor
+                                                                           //g.transform.localScale = new Vector3(Mathf.Sqrt(dir.sqrMagnitude)-1f, 0.25f, 1f); // subtract the width
+            g.transform.localScale = new Vector3(Mathf.Sqrt(dir.sqrMagnitude) - 1f, 0.25f, 1f); // subtract the width
+            g.transform.position = corridorPosition;
+            //g.transform.localScale = new Vector3(corridorScale, 0.25f, 1f); // subtract the width
+
+            g.transform.rotation = Quaternion.Euler(0, -Vector3.SignedAngle(dir, new Vector3(1, 0, 0), Vector3.up), 0);
+            g.transform.parent = coridoorHolder.transform;
+        }
+     
     }
 
     private void RemoveWallsWithCoridoors(GameObject coridoorHolder, GameObject wallHolder)
@@ -590,7 +600,6 @@ public class DungeonGeneration2D : MonoBehaviour
             }
         }
     }
-
     private void AddWallsAroundRooms(List<BoundsInt> roomList)
     {
         foreach (var room in roomList)
@@ -638,11 +647,6 @@ public class DungeonGeneration2D : MonoBehaviour
             right.transform.parent = WallHolder.transform;
         }
     }
-
-
-
-
-
     private Vector3 FindClosestPoint(Vector3 curRoom, List<Vector3> roomCenters)
     {
         Vector3 closest = Vector3.zero;
