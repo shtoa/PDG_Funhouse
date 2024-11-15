@@ -22,7 +22,7 @@ namespace dungeonGenerator {
         /// Calculate the dungeon floor bounds that can be used to generate the dungeon meshes
         /// </summary>
 
-        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, float splitCenterDeviationPercent)
+        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent)
         {
             // 1. Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
             BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength);

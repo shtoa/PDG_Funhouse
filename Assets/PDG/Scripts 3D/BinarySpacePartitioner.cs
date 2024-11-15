@@ -28,7 +28,7 @@ namespace dungeonGenerator
                 null, 0);
         }
 
-        public List<SpaceNode> PartitionSpace(int maxIterations, int roomWidthMin, int roomLengthMin, float splitCenterDeviationPercent)
+        public List<SpaceNode> PartitionSpace(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent)
         {
       
             Queue<SpaceNode> spacesToSplit = new Queue<SpaceNode>(); // initialize queue of spaces to split
@@ -57,7 +57,7 @@ namespace dungeonGenerator
         /// Split the rooms based on their current width and height
         /// </summary>
 
-        private void SplitSpaces(SpaceNode currentSpace, List<SpaceNode> splitSpaces, int roomWidthMin, int roomLengthMin, Queue<SpaceNode> spacesToSplit, float splitCenterDeviationPercent)
+        private void SplitSpaces(SpaceNode currentSpace, List<SpaceNode> splitSpaces, int roomWidthMin, int roomLengthMin, Queue<SpaceNode> spacesToSplit, Vector2 splitCenterDeviationPercent)
         {
             int spaceWidth = currentSpace.Bounds.size.x;
             int spaceHeight = currentSpace.Bounds.size.z;
@@ -67,20 +67,20 @@ namespace dungeonGenerator
                 // if both width and height are enough to split split randomly
                 if(currentSpace.SplitPosition.Equals(SplitPosition.Left) || currentSpace.SplitPosition.Equals(SplitPosition.Right)) // Random.Range(0,1) == 0
                 {
-                    splitHorizontally(currentSpace, splitSpaces, roomLengthMin, spacesToSplit, splitCenterDeviationPercent);
+                    splitHorizontally(currentSpace, splitSpaces, roomLengthMin, spacesToSplit, splitCenterDeviationPercent.x);
                 } else
                 {
-                    splitVertically(currentSpace, splitSpaces, roomWidthMin, spacesToSplit, splitCenterDeviationPercent);
+                    splitVertically(currentSpace, splitSpaces, roomWidthMin, spacesToSplit, splitCenterDeviationPercent.y);
                 }
 
             } else if (spaceWidth > 2 * roomWidthMin)
             {
                 // if only width is large enough to split, split vertically
-                splitVertically(currentSpace, splitSpaces, roomWidthMin, spacesToSplit, splitCenterDeviationPercent);
+                splitVertically(currentSpace, splitSpaces, roomWidthMin, spacesToSplit, splitCenterDeviationPercent.y);
             } else if (spaceHeight > 2 * roomLengthMin)
             {
                 // if only height is large enough to split, split horizontally
-                splitHorizontally(currentSpace, splitSpaces, roomLengthMin, spacesToSplit, splitCenterDeviationPercent);
+                splitHorizontally(currentSpace, splitSpaces, roomLengthMin, spacesToSplit, splitCenterDeviationPercent.x);
             } 
         }
 

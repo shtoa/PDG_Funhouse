@@ -10,6 +10,7 @@ using UnityEngine.TextCore.LowLevel;
 using UnityEngine.UI;
 using static UnityEditor.PlayerSettings;
 using System;
+using TMPro;
 
 //[ExecuteInEditMode]
 
@@ -23,6 +24,7 @@ public class PlatformPlacement : MonoBehaviour
     [SerializeField] public GameObject platformHolder;
     [SerializeField] GameObject _goal;
     [SerializeField] Canvas _canvas;
+    [SerializeField] TextMeshPro _platformTimer;
     public float _spacing = 0f;
 
 
@@ -164,13 +166,12 @@ public class PlatformPlacement : MonoBehaviour
         if (startPlatform.gameObject.GetComponent<PlatformMovement>().hasStarted)
         {
             timeElapsed += Time.deltaTime;
-            _canvas.GetComponent<Text>().text = "The Time " + Math.Round(timeElapsed, 2).ToString() + " (-_-)// ";
-
+            _platformTimer.text = "The Time " + Math.Round(timeElapsed, 2).ToString();
         }
         if (endPlatform.gameObject.GetComponent<PlatformMovement>().hasEnded)
         {
             print(timeElapsed);
-            _canvas.GetComponent<Text>().text = "The END Time " + Math.Round(timeElapsed, 2).ToString() + "!!! ";
+            _platformTimer.text = "The END Time " + Math.Round(timeElapsed, 2).ToString() + "!!! ";
             timeElapsed = 0;
 
             startPlatform.GetComponent<PlatformMovement>().hasStarted = false;

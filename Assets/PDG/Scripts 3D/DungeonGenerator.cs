@@ -20,24 +20,40 @@ namespace dungeonGenerator {
 
         [Header("Space Properties")]
         [Range(0f, 1)]
-        public float splitCenterDeviationPercent;
+        public float splitCenterDeviationWidthPercent;
+        [Range(0f, 1)]
+        public float splitCenterDeviationLengthPercent;
+        private Vector2 splitCenterDeviation;
 
 
         [Header("Room Properties")]
         public int roomWidthMin;
         public int roomLengthMin;
+        private Vector2 roomSizeMin;
 
 
         [Range(0f, 1)] 
         public float roomOffsetWidthPercent;
         [Range(0f, 1)]
         public float roomOffsetLengthPercent;
+        private Vector2 roomOffset;
 
         [Range(0f, 1)]
         public int roomRandomnessWidth;
         [Range(0f, 1)]
         public int roomRandomnessLength;
+        private Vector2 roomRandomness; 
 
+
+
+        private void Awake()
+        {
+                splitCenterDeviation = new Vector2(splitCenterDeviationWidthPercent, splitCenterDeviationLengthPercent);
+                roomSizeMin = new Vector2(roomWidthMin, roomLengthMin);
+                roomOffset = new Vector2(roomOffsetWidthPercent, roomOffsetLengthPercent);
+                roomRandomness = new Vector2(roomRandomnessWidth, roomRandomnessLength);
+
+        }
 
         void Start()
         {
@@ -54,7 +70,7 @@ namespace dungeonGenerator {
         private void GenerateDungeon()
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonWidth, dungeonLength);
-            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviationPercent);
+            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation);
 
 
             DrawRooms(roomList);
