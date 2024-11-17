@@ -5,6 +5,7 @@ using UnityEngine;
 
 
 using dungeonGenerator;
+using System.Linq;
 
 namespace dungeonGenerator {
     public class DungeonCalculator
@@ -22,11 +23,11 @@ namespace dungeonGenerator {
         /// Calculate the dungeon floor bounds that can be used to generate the dungeon meshes
         /// </summary>
 
-        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent)
+        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent, int corridorWidth)
         {
             // 1. Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
             BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength);
-            var bspGraph = bsp.PartitionSpace(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviationPercent);
+            var allNodeSpaces = bsp.PartitionSpace(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviationPercent);
 
             // 2. Extract the leaves, which represent the possible room positions
             var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
@@ -36,10 +37,11 @@ namespace dungeonGenerator {
             var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
 
             // 4. Generate the corridors to connect the rooms
-            //CorridorGenerator corridorGenerator = new CorridorGenerator();
+            CorridorGenerator corridorGenerator = new CorridorGenerator();
+            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth);
              
             // 5. Return a list of bounds on which the floor will be (Rooms and Corridors) 
-            return new List<Node>(rooms);
+            return new List<Node>(rooms).Concat(corridorList).ToList();
         }
     }
 }

@@ -42,7 +42,11 @@ namespace dungeonGenerator {
         public int roomRandomnessWidth;
         [Range(0f, 1)]
         public int roomRandomnessLength;
-        private Vector2 roomRandomness; 
+        private Vector2 roomRandomness;
+
+        [Header("Corridor Properties")]
+        [Range(1, 10)]
+        public int corridorWidth;
 
 
 
@@ -70,7 +74,7 @@ namespace dungeonGenerator {
         private void GenerateDungeon()
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonWidth, dungeonLength);
-            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation);
+            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidth);
 
 
             DrawRooms(roomList);

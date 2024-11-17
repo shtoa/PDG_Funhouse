@@ -826,15 +826,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dungeonWidth: 100
   dungeonLength: 100
-  maxIterations: 7
-  splitCenterDeviationWidthPercent: 1
-  splitCenterDeviationLengthPercent: 1
+  maxIterations: 12
+  splitCenterDeviationWidthPercent: 0.335
+  splitCenterDeviationLengthPercent: 0.601
   roomWidthMin: 10
   roomLengthMin: 10
   roomOffsetWidthPercent: 0.507
   roomOffsetLengthPercent: 0
   roomRandomnessWidth: 0
   roomRandomnessLength: 0
+  corridorWidth: 5
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0

@@ -27,7 +27,7 @@ namespace dungeonGenerator
         {
             List<SpaceNode> rooms = new List<SpaceNode>();
 
-            int roomOffset = 1;
+            int roomOffset = 3;
 
             SpaceNode room;
 
@@ -38,10 +38,11 @@ namespace dungeonGenerator
 
                 // add offset into the partitioning to account for the room sizes ... 
 
-                room = new SpaceNode(roomSpace.Bounds, roomSpace.Parent, roomSpace.TreeLayerIndex);
-                room.Bounds = new BoundsInt(roomSpace.Bounds.position,
+;
+                BoundsInt bounds = new BoundsInt(roomSpace.Bounds.position,
                     roomSpace.Bounds.size - roomOffset * new Vector3Int(1, 0, 1)
                     );
+                roomSpace.Bounds = bounds;
 
                 //// try to make boxier rooms
 
@@ -61,7 +62,7 @@ namespace dungeonGenerator
                 //room.Bounds = new BoundsInt(newPos, newSize);
                 #endregion
 
-                rooms.Add(room);
+                rooms.Add((SpaceNode)roomSpace);
 
             }
 
