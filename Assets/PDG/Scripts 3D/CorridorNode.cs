@@ -103,7 +103,7 @@ namespace dungeonGenerator
             var midPointX = (rightSpace.Bounds.min.x + leftSpace.Bounds.max.x)/2f;
             var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
 
-            var pos = new Vector3Int((int)midPointX-sizeX/2, 0, corridorZ);
+            var pos = new Vector3Int((int)midPointX-sizeX/2, 0, corridorZ-this.corridorWidth/2);
 
             Bounds = new BoundsInt(
                 pos,
@@ -117,12 +117,12 @@ namespace dungeonGenerator
             // right space is above left space
             if (leftSpace.Bounds.max.z >= rightSpace.Bounds.min.z && rightSpace.Bounds.min.z > leftSpace.Bounds.min.z){
 
-                //if (leftSpace.Bounds.max.z - rightSpace.Bounds.min.z <= this.corridorWidth)
-                //{
+                if (leftSpace.Bounds.max.z - rightSpace.Bounds.min.z <= this.corridorWidth)
+                {
 
-                //    return -1;
+                    return -1;
 
-                //}
+                }
 
 
                 return CalculateMiddlePoint(
@@ -134,10 +134,10 @@ namespace dungeonGenerator
             if(rightSpace.Bounds.max.z >= leftSpace.Bounds.min.z && leftSpace.Bounds.min.z > rightSpace.Bounds.min.z) // before was >=
             {
 
-                //if (rightSpace.Bounds.max.z - leftSpace.Bounds.min.z <= this.corridorWidth)
-                //{
-                //    return -1;
-                //}
+                if (rightSpace.Bounds.max.z - leftSpace.Bounds.min.z <= this.corridorWidth)
+                {
+                    return -1;
+                }
 
 
                 return CalculateMiddlePoint(
@@ -231,7 +231,7 @@ namespace dungeonGenerator
             var midPointZ = (topSpace.Bounds.min.z + bottomSpace.Bounds.max.z) / 2f;
             var sizeZ = topSpace.Bounds.min.z - bottomSpace.Bounds.max.z;
 
-            var pos = new Vector3Int(corridorX, 0, (int)midPointZ-sizeZ/2);
+            var pos = new Vector3Int(corridorX-this.corridorWidth/2, 0, (int)midPointZ-sizeZ/2);
 
             Bounds = new BoundsInt(
                 pos,
@@ -246,12 +246,12 @@ namespace dungeonGenerator
             if (topSpace.Bounds.max.x >= bottomSpace.Bounds.min.x && bottomSpace.Bounds.min.x > topSpace.Bounds.min.x)
             {
 
-                //if (topSpace.Bounds.max.x - bottomSpace.Bounds.min.x <= this.corridorWidth)
-                //{
+                if (topSpace.Bounds.max.x - bottomSpace.Bounds.min.x <= this.corridorWidth)
+                {
 
-                //    return -1;
+                    return -1;
 
-                //}
+                }
 
 
                 return CalculateMiddlePoint(
@@ -260,13 +260,13 @@ namespace dungeonGenerator
                     ).x;
             }
             // right space is bellow left space
-            if (bottomSpace.Bounds.max.x >= topSpace.Bounds.min.x && topSpace.Bounds.min.   x > bottomSpace.Bounds.min.x) // before was >=
+            if (bottomSpace.Bounds.max.x >= topSpace.Bounds.min.x && topSpace.Bounds.min.x > bottomSpace.Bounds.min.x) // before was >=
             {
 
-                //if (bottomSpace.Bounds.max.x - topSpace.Bounds.min.x <= this.corridorWidth)
-                //{
-                //    return -1;
-                //}
+                if (bottomSpace.Bounds.max.x - topSpace.Bounds.min.x <= this.corridorWidth)
+                {
+                    return -1;
+                }
 
 
                 return CalculateMiddlePoint(
