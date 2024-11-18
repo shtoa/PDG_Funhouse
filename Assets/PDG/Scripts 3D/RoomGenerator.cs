@@ -29,8 +29,6 @@ namespace dungeonGenerator
 
             int roomOffset = 3;
 
-            SpaceNode room;
-
             foreach(var roomSpace in roomSpaces)
             {
 

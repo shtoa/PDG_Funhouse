@@ -824,9 +824,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8457e47f06f0ea646b4cc7b7e0e3e4c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dungeonWidth: 100
-  dungeonLength: 100
-  maxIterations: 12
+  dungeonWidth: 50
+  dungeonLength: 50
+  maxIterations: 3
   splitCenterDeviationWidthPercent: 0.335
   splitCenterDeviationLengthPercent: 0.601
   roomWidthMin: 10
@@ -835,7 +835,9 @@ MonoBehaviour:
   roomOffsetLengthPercent: 0
   roomRandomnessWidth: 0
   roomRandomnessLength: 0
-  corridorWidth: 5
+  corridorWidth: 8
+  wallThickness: 1
+  wallHeight: 5
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0
