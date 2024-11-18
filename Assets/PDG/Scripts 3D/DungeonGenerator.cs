@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 
@@ -61,11 +62,14 @@ namespace dungeonGenerator {
         [Header("End Room")]
         public Material EndRoomMat;
 
+        [Header("Door")]
+        public Material DoorMat;
+
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
 
 
-        
+
 
         private void Awake()
         {
@@ -124,6 +128,13 @@ namespace dungeonGenerator {
 
                     floor.GetComponent<MeshRenderer>().material = EndRoomMat;
                 }
+
+
+                GameObject ceiling = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ceiling.transform.SetParent(transform, false);
+
+                ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight + Vector3.up * 0.15f; // should be 0.25f
+                ceiling.transform.localScale = room.Bounds.size + Vector3.up * 0.5f;
             }
 
             foreach (var wallBound in wallBounds)
@@ -136,6 +147,18 @@ namespace dungeonGenerator {
                 wall.transform.localScale = wallBound.size;
             }
 
+            foreach (var doorBound in doorBounds)
+            {
+
+
+                GameObject door = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                door.transform.SetParent(transform, false);
+
+                door.transform.localPosition = doorBound.center;
+                door.transform.localScale = doorBound.size;
+                door.GetComponent<MeshRenderer>().material = DoorMat;
+                door.AddComponent<DoorInteraction>();
+            }
         
 
         }
@@ -173,7 +196,7 @@ namespace dungeonGenerator {
                         List<BoundsInt> splitWalls = splitWall(roomWall, wall); // change to array
 
                         this.wallBounds.AddRange(splitWalls);
-                        //this.doorBounds.Add(roomWall);
+                        this.doorBounds.Add(roomWall);
                         
                         // add break or continue
                         isIntersected = true;

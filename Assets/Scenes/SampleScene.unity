@@ -138,7 +138,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &58382897
 Transform:
   m_ObjectHideFlags: 0
@@ -352,11 +352,11 @@ Transform:
   m_GameObject: {fileID: 87232021}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -5.5, y: 0, z: 5}
   m_LocalScale: {x: 2.1049, y: 2.1049, z: 2.1049}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 457370170}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &109226594
 Mesh:
@@ -779,7 +779,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &398984039
 Transform:
   m_ObjectHideFlags: 0
@@ -829,15 +829,18 @@ MonoBehaviour:
   maxIterations: 10
   splitCenterDeviationWidthPercent: 0.358
   splitCenterDeviationLengthPercent: 0.601
-  roomWidthMin: 8
-  roomLengthMin: 8
+  roomWidthMin: 10
+  roomLengthMin: 10
   roomOffsetWidthPercent: 0.507
   roomOffsetLengthPercent: 0.488
   roomRandomnessWidth: 0
   roomRandomnessLength: 0
-  corridorWidth: 2
+  corridorWidth: 4
   wallThickness: 1
   wallHeight: 2
+  StartRoomMat: {fileID: 2100000, guid: e26c759fcffc57e4bab5d3bed04e4f40, type: 2}
+  EndRoomMat: {fileID: 2100000, guid: a89b910f44110e44a9da3cb49b27006e, type: 2}
+  DoorMat: {fileID: 2100000, guid: 161dccd2efb354345ac617cfa5cd5edb, type: 2}
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0
@@ -846,13 +849,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 404951505}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -20.6, y: 0, z: -10.5}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -9.7, y: 0, z: 10.22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -986,7 +989,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &457370170
 Transform:
   m_ObjectHideFlags: 0
@@ -1001,7 +1004,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1082106213}
-  - {fileID: 87232027}
   - {fileID: 1839930378}
   - {fileID: 2023460769}
   - {fileID: 1093359587}
@@ -3064,7 +3066,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1461293179
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3930,7 +3932,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1930704664
 Transform:
   m_ObjectHideFlags: 0
@@ -4632,3 +4634,4 @@ SceneRoots:
   - {fileID: 1930704664}
   - {fileID: 1924544464}
   - {fileID: 404951507}
+  - {fileID: 87232027}

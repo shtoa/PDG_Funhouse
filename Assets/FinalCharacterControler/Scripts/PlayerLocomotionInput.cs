@@ -33,7 +33,9 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
 
         PlayerControls.PlayerLocomotionMap.Enable();
         PlayerControls.PlayerLocomotionMap.SetCallbacks(this);
-    
+
+        Cursor.lockState = CursorLockMode.Locked;
+
     }
 
     private void OnDisable()
@@ -63,19 +65,19 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
 
     public void OnToggleSprint(InputAction.CallbackContext context)
     {
-        if (context.performed)
-        {
+        //if (context.performed)
+        //{
 
 
-            SprintToggledOn = holdToSprint || !SprintToggledOn;
+        //    SprintToggledOn = holdToSprint || !SprintToggledOn;
 
 
-        }
-        else if (context.canceled) { 
+        //}
+        //else if (context.canceled) { 
         
-            SprintToggledOn = !holdToSprint && SprintToggledOn;
+        //    SprintToggledOn = !holdToSprint && SprintToggledOn;
         
-        }
+        //}
     }
 
     public void OnJump(InputAction.CallbackContext context)
@@ -89,5 +91,24 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
 
         JumpPressed = true;
     }
-    #endregion 
+
+    public void OnInteract(InputAction.CallbackContext context)
+    {
+        if (!context.performed)
+        {
+            return;
+        }
+
+        GameObject cam = GameObject.FindGameObjectWithTag("camFollower");
+        Ray r = new Ray(cam.transform.position, cam.transform.forward);
+        if(Physics.Raycast(r, out RaycastHit hitInfo, 3f)) { 
+            if(hitInfo.collider.gameObject.TryGetComponent(out IInteractable interactableObj))
+            {
+                interactableObj.Interact();
+                Debug.Log("Interacted");
+            }
+        
+        }
+    }
+    #endregion
 }
