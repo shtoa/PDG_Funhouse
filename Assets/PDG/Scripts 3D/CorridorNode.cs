@@ -16,14 +16,16 @@ namespace dungeonGenerator
         private Node node2;
         private int corridorWidth;
         private int modifierDistanceFromWall = 3;
+        private Vector2Int maxDeviation;
 
-        public CorridorNode(Node node1, Node node2, int corridorWidth) : base(null) // null since it doesnt have any parents
+        public CorridorNode(Node node1, Node node2, int corridorWidth, Vector2Int maxDeviation) : base(null) // null since it doesnt have any parents
         {
             this.node1 = node1;
             this.node2 = node2;
             this.corridorWidth = corridorWidth;
 
             GenerateCorridor();
+            this.maxDeviation = maxDeviation;
         }
 
         private void GenerateCorridor()
@@ -62,7 +64,9 @@ namespace dungeonGenerator
             {
                 // add randomness to which rooms are connected 
                 int maxX = sortedLeftSpace[0].Bounds.max.x;
-                sortedLeftSpace = sortedLeftSpace.Where(Child => Math.Abs(maxX-Child.Bounds.max.x) < 10).ToList(); // find rooms that have the least deviation from maxX
+
+                // the deviation has to be less than max room size to not go throug rooms
+                sortedLeftSpace = sortedLeftSpace.Where(Child => Math.Abs(maxX-Child.Bounds.max.x) < 5).ToList(); // find rooms that have the least deviation from maxX
 
                 // select a random room from valid rooms
                 leftSpace = sortedLeftSpace[Random.RandomRange(0, sortedLeftSpace.Count)];
@@ -103,7 +107,7 @@ namespace dungeonGenerator
             var midPointX = (rightSpace.Bounds.min.x + leftSpace.Bounds.max.x)/2f;
             var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
 
-            var pos = new Vector3Int((int)midPointX-sizeX/2, 0, corridorZ-this.corridorWidth/2);
+            var pos = new Vector3Int((int)midPointX-sizeX/2, 0, corridorZ- this.corridorWidth/2); //+this.corridorWidth/2
 
             Bounds = new BoundsInt(
                 pos,
@@ -114,6 +118,24 @@ namespace dungeonGenerator
 
         private int GetCorridorPositionLeftRightZ(Node leftSpace, Node rightSpace)
         {
+
+            // right space is within bounds of left space
+            if (leftSpace.Bounds.max.z >= rightSpace.Bounds.max.z && rightSpace.Bounds.min.z >= leftSpace.Bounds.min.z)
+            {
+                return CalculateMiddlePoint(
+                    rightSpace.Bounds.min,
+                    rightSpace.Bounds.max
+                ).z;
+            }
+            // right space contain bounds of left space
+            if (rightSpace.Bounds.max.z >= leftSpace.Bounds.max.z && leftSpace.Bounds.min.z >= rightSpace.Bounds.min.z)
+            {
+                return CalculateMiddlePoint(
+                    leftSpace.Bounds.min,
+                    leftSpace.Bounds.max
+                ).z;
+            }
+
             // right space is above left space
             if (leftSpace.Bounds.max.z >= rightSpace.Bounds.min.z && rightSpace.Bounds.min.z > leftSpace.Bounds.min.z){
 
@@ -145,22 +167,7 @@ namespace dungeonGenerator
                    rightSpace.Bounds.max
                 ).z;
             }
-            // right space is within bounds of left space
-            if(leftSpace.Bounds.max.z >= rightSpace.Bounds.max.z && rightSpace.Bounds.min.z >= leftSpace.Bounds.min.z)
-            {
-                return CalculateMiddlePoint(
-                    rightSpace.Bounds.min,
-                    rightSpace.Bounds.max
-                ).z;
-            }
-            // right space contain bounds of left space
-            if(rightSpace.Bounds.max.z >= leftSpace.Bounds.max.z && leftSpace.Bounds.min.z >= rightSpace.Bounds.min.z)
-            {
-                return CalculateMiddlePoint(
-                    leftSpace.Bounds.min,
-                    leftSpace.Bounds.max
-                ).z;
-            }
+       
 
             return -1;
         }
@@ -189,7 +196,7 @@ namespace dungeonGenerator
             {
                 // add randomness to which rooms are connected 
                 int minZ = sortedTopSpace[0].Bounds.min.z;
-                sortedTopSpace = sortedTopSpace.Where(Child => Math.Abs(minZ - Child.Bounds.min.z) < 10).ToList(); // find rooms that have the least deviation from maxX
+                sortedTopSpace = sortedTopSpace.Where(Child => Math.Abs(minZ - Child.Bounds.min.z) < 5).ToList(); // find rooms that have the least deviation from maxX
 
                 // select a random room from valid rooms
                 topSpace = sortedTopSpace[Random.RandomRange(0, sortedTopSpace.Count)];
@@ -242,6 +249,23 @@ namespace dungeonGenerator
 
         private int GetCorridorPositionTopBottomX(Node topSpace, Node bottomSpace)
         {
+            // right space is within bounds of left space
+            if (topSpace.Bounds.max.x >= bottomSpace.Bounds.max.x && bottomSpace.Bounds.min.x >= topSpace.Bounds.min.x)
+            {
+                return CalculateMiddlePoint(
+                    bottomSpace.Bounds.min,
+                    bottomSpace.Bounds.max
+                ).x;
+            }
+            // right space contain bounds of left space
+            if (bottomSpace.Bounds.max.x >= topSpace.Bounds.max.x && topSpace.Bounds.min.x >= bottomSpace.Bounds.min.x)
+            {
+                return CalculateMiddlePoint(
+                    topSpace.Bounds.min,
+                    topSpace.Bounds.max
+                ).x;
+            }
+
             // right space is above left space
             if (topSpace.Bounds.max.x >= bottomSpace.Bounds.min.x && bottomSpace.Bounds.min.x > topSpace.Bounds.min.x)
             {
@@ -274,22 +298,7 @@ namespace dungeonGenerator
                    bottomSpace.Bounds.max
                 ).x;
             }
-            // right space is within bounds of left space
-            if (topSpace.Bounds.max.x >= bottomSpace.Bounds.max.x && bottomSpace.Bounds.min.x >= topSpace.Bounds.min.x)
-            {
-                return CalculateMiddlePoint(
-                    bottomSpace.Bounds.min,
-                    bottomSpace.Bounds.max
-                ).x;
-            }
-            // right space contain bounds of left space
-            if (bottomSpace.Bounds.max.x >= topSpace.Bounds.max.x && topSpace.Bounds.min.x >= bottomSpace.Bounds.min.x)
-            {
-                return CalculateMiddlePoint(
-                    topSpace.Bounds.min,
-                    topSpace.Bounds.max
-                ).x;
-            }
+
 
             return -1;
         }

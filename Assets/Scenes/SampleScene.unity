@@ -824,20 +824,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8457e47f06f0ea646b4cc7b7e0e3e4c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dungeonWidth: 50
-  dungeonLength: 50
-  maxIterations: 3
-  splitCenterDeviationWidthPercent: 0.335
+  dungeonWidth: 40
+  dungeonLength: 40
+  maxIterations: 10
+  splitCenterDeviationWidthPercent: 0.358
   splitCenterDeviationLengthPercent: 0.601
-  roomWidthMin: 10
-  roomLengthMin: 10
+  roomWidthMin: 8
+  roomLengthMin: 8
   roomOffsetWidthPercent: 0.507
-  roomOffsetLengthPercent: 0
+  roomOffsetLengthPercent: 0.488
   roomRandomnessWidth: 0
   roomRandomnessLength: 0
-  corridorWidth: 8
+  corridorWidth: 2
   wallThickness: 1
-  wallHeight: 5
+  wallHeight: 2
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0
@@ -846,13 +846,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 404951505}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 54.803345, y: -7.199325, z: 19.236416}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -20.6, y: 0, z: -10.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0

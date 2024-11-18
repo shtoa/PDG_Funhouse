@@ -11,6 +11,13 @@ namespace dungeonGenerator
         Root,Top, Bottom, Left, Right
     }
 
+    public enum RoomType
+    {
+        None,
+        Start,
+        End,
+        Corridor
+    }
     public class Node
     {
         #region structure elements
@@ -27,6 +34,7 @@ namespace dungeonGenerator
         
 
         public SplitPosition SplitPosition;
+        public RoomType RoomType;
      
 
 
@@ -41,6 +49,8 @@ namespace dungeonGenerator
                 parentNode.addChild(this);
             
             }
+
+            RoomType = RoomType.None;
 
         }
 

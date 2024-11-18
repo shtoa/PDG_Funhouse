@@ -23,7 +23,7 @@ namespace dungeonGenerator {
         /// Calculate the dungeon floor bounds that can be used to generate the dungeon meshes
         /// </summary>
 
-        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent, int corridorWidth)
+        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent, int corridorWidth, Vector2Int maxDeviation)
         {
             // 1. Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
             BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength);
@@ -32,15 +32,18 @@ namespace dungeonGenerator {
             // 2. Extract the leaves, which represent the possible room positions
             var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
 
-            // 3. Place rooms within the possible room bounds taking into account room offset
+            // 3. Pick starting and ending rooms
+            var startAndEnd = GraphHelper.ChooseStartAndEnd(roomSpaces);
+
+            // 4. Place rooms within the possible room bounds taking into account room offset
             RoomGenerator roomGenerator = new RoomGenerator(maxIterations, roomWidthMin, roomLengthMin);
             var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
 
-            // 4. Generate the corridors to connect the rooms
+            // 5. Generate the corridors to connect the rooms
             CorridorGenerator corridorGenerator = new CorridorGenerator();
-            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth);
+            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, maxDeviation);
              
-            // 5. Return a list of bounds on which the floor will be (Rooms and Corridors) 
+            // 6. Return a list of bounds on which the floor will be (Rooms and Corridors) 
             return new List<Node>(rooms).Concat(corridorList).ToList();
         }
     }

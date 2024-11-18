@@ -62,7 +62,9 @@ namespace dungeonGenerator
             {
                 // add randomness to which rooms are connected 
                 int maxX = sortedLeftSpace[0].Bounds.max.x;
-                sortedLeftSpace = sortedLeftSpace.Where(Child => Math.Abs(maxX-Child.Bounds.max.x) < 10).ToList(); // find rooms that have the least deviation from maxX
+
+                // deviation value has to be atleast as big as minimum room size
+                sortedLeftSpace = sortedLeftSpace.Where(Child => Math.Abs(maxX-Child.Bounds.max.x) < 5).ToList(); // find rooms that have the least deviation from maxX
 
                 // select a random room from valid rooms
                 leftSpace = sortedLeftSpace[Random.RandomRange(0, sortedLeftSpace.Count)];

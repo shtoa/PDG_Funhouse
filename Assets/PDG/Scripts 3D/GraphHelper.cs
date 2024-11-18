@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.UIElements;
 
 namespace dungeonGenerator
@@ -43,5 +45,22 @@ namespace dungeonGenerator
 
         }
 
+        public static List<Node> ChooseStartAndEnd(List<Node> roomSpaces)
+        {
+            List<Node> startEndRooms = new List<Node>();
+
+            var startRoom = roomSpaces.OrderBy(room => room.Bounds.xMin + room.Bounds.zMin).ToList()[0];
+            startRoom.RoomType = RoomType.Start;
+
+            startEndRooms.Add(startRoom);
+
+            var endRoom = roomSpaces.OrderByDescending(room => room.Bounds.xMax + room.Bounds.zMax).ToList()[0];
+            endRoom.RoomType = RoomType.End;
+            startEndRooms.Add(endRoom);
+
+
+            return startEndRooms;
+
+        }
     }
 }

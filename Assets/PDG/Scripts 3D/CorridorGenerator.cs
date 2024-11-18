@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using dungeonGenerator;
+using UnityEngine;
 
 namespace dungeonGenerator
 {
     public class CorridorGenerator
     {  
-        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth)
+        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth, Vector2Int maxDeviation)
         {
             List<Node> corridorList = new List<Node>();
             
@@ -25,9 +26,9 @@ namespace dungeonGenerator
                     // cant join the children together so continue the loop
                     continue;
                 }
-                else
+                else 
                 {
-                    CorridorNode corridor = new CorridorNode(space.ChildrenNodeList[0], space.ChildrenNodeList[1], corridorWidth);
+                    CorridorNode corridor = new CorridorNode(space.ChildrenNodeList[0], space.ChildrenNodeList[1], corridorWidth, maxDeviation);
                     corridorList.Add(corridor);
                 }
             }

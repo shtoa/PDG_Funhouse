@@ -30,7 +30,7 @@ namespace dungeonGenerator {
         [Header("Room Properties")]
         public int roomWidthMin;
         public int roomLengthMin;
-        private Vector2 roomSizeMin;
+        private Vector2Int roomSizeMin;
 
 
         [Range(0f, 1)] 
@@ -55,14 +55,22 @@ namespace dungeonGenerator {
         [Range(1, 10)]
         public int wallHeight;
 
+        [Header("Start Room")]
+        public Material StartRoomMat;
+
+        [Header("End Room")]
+        public Material EndRoomMat;
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
 
+
+        
+
         private void Awake()
         {
                 splitCenterDeviation = new Vector2(splitCenterDeviationWidthPercent, splitCenterDeviationLengthPercent);
-                roomSizeMin = new Vector2(roomWidthMin, roomLengthMin);
+                roomSizeMin = new Vector2Int(roomWidthMin, roomLengthMin);
                 roomOffset = new Vector2(roomOffsetWidthPercent, roomOffsetLengthPercent);
                 roomRandomness = new Vector2(roomRandomnessWidth, roomRandomnessLength);
 
@@ -83,7 +91,7 @@ namespace dungeonGenerator {
         private void GenerateDungeon()
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonWidth, dungeonLength);
-            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidth);
+            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidth, roomSizeMin);
 
                 
             DrawRooms(roomList);
@@ -102,6 +110,20 @@ namespace dungeonGenerator {
 
                 floor.transform.localPosition = room.Bounds.center;
                 floor.transform.localScale = room.Bounds.size;
+
+
+                if(room.RoomType == RoomType.Start)
+                {
+
+                    floor.GetComponent<MeshRenderer>().material = StartRoomMat;
+                    
+                }
+
+                if (room.RoomType == RoomType.End)
+                {
+
+                    floor.GetComponent<MeshRenderer>().material = EndRoomMat;
+                }
             }
 
             foreach (var wallBound in wallBounds)
@@ -117,49 +139,7 @@ namespace dungeonGenerator {
         
 
         }
-
-        private void DrawWalls(Node room, int wallThickness)
-        {
-
-
-            BoundsInt bounds = room.Bounds;
-
-            Vector3 horizontalWallSize = new Vector3(
-               bounds.size.x - this.wallThickness,
-               this.wallHeight,
-               this.wallThickness
-           );
-
-            Vector3 verticalWallSize = new Vector3(
-               this.wallThickness,
-               this.wallHeight,
-               bounds.size.z - this.wallThickness
-            );
-
-            GameObject topWall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            topWall.transform.SetParent(transform, false);
-            topWall.transform.localScale = horizontalWallSize;
-            topWall.transform.localPosition = new Vector3(bounds.center.x, this.wallHeight/2f, bounds.max.z);
-       
-
-            GameObject bottomWall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            bottomWall.transform.SetParent(transform, false);
-            bottomWall.transform.localScale = horizontalWallSize;
-            bottomWall.transform.localPosition = new Vector3(bounds.center.x, this.wallHeight / 2f, bounds.min.z);
-
-
-            GameObject rightWall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            rightWall.transform.SetParent(transform, false);
-            rightWall.transform.localScale = verticalWallSize;
-            rightWall.transform.localPosition = new Vector3(bounds.max.x, this.wallHeight / 2f, bounds.center.z);
-            
-            GameObject leftWall = GameObject.CreatePrimitive(PrimitiveType.Cube);   
-            leftWall.transform.SetParent(transform, false);
-            leftWall.transform.localScale = verticalWallSize;
-            leftWall.transform.localPosition = new Vector3(bounds.min.x, this.wallHeight / 2f, bounds.center.z);
-        
-        }
-        private void CalculateWalls(List<Node> rooms, int wallThicknes)
+        private void CalculateWalls(List<Node> rooms, int wallThickness)
         {
             // create floors
 
@@ -174,24 +154,42 @@ namespace dungeonGenerator {
         private void addWall(int wallThickness, Node room)
         {
             List<BoundsInt> curRoomWallBounds = CalculateWallBounds(wallThickness, room);
+            bool isIntersected = false;
             
             // optimize as you know how many rooms there are 
             foreach(var roomWall in curRoomWallBounds)
             {
-                for(int i = this.wallBounds.Count-1; i >= 0; i--)
+
+                isIntersected = false;
+
+                for (int i = this.wallBounds.Count-1; i >= 0; i--)
                 {
                     BoundsInt wall = this.wallBounds[i];
+                  
 
-                    if (wall.Contains(Vector3Int.CeilToInt(roomWall.position))){                       
+                    if (wall.Contains(Vector3Int.CeilToInt(roomWall.position)))
+                    {
                         this.wallBounds.Remove(wall);
                         List<BoundsInt> splitWalls = splitWall(roomWall, wall); // change to array
 
                         this.wallBounds.AddRange(splitWalls);
-                        this.doorBounds.Add(roomWall);
+                        //this.doorBounds.Add(roomWall);
+                        
+                        // add break or continue
+                        isIntersected = true;
                     }
+
                 }
 
-                this.wallBounds.Add(roomWall);
+                if (!isIntersected)
+                {
+                    this.wallBounds.Add(roomWall);
+
+                }
+
+
+
+
             }
 
             
@@ -289,11 +287,33 @@ namespace dungeonGenerator {
                     horizontalWallSize)
                 );
 
-            thisRoomsWallBounds.Add(
-                new BoundsInt(
-                    new Vector3Int((int)bounds.min.x + this.wallThickness, 0, (int)bounds.min.z),
-                    horizontalWallSize)
-                );
+
+
+            if(room.RoomType == RoomType.Start)
+            {
+
+                BoundsInt wall1 = new BoundsInt(
+                       new Vector3Int((int)bounds.min.x + this.wallThickness, 0, (int)bounds.min.z),
+                       horizontalWallSize
+                    );
+
+                BoundsInt door1 = new BoundsInt(
+                       new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f)),
+                       new Vector3Int(this.corridorWidth - this.wallThickness, this.wallHeight, this.wallThickness)
+                    );
+
+                var splitWalls = splitWall(door1, wall1);
+                this.doorBounds.Add(door1);
+                this.wallBounds.AddRange(splitWalls);
+
+
+            } else {
+                thisRoomsWallBounds.Add(
+                    new BoundsInt(
+                        new Vector3Int((int)bounds.min.x + this.wallThickness, 0, (int)bounds.min.z),
+                        horizontalWallSize)
+                    );
+            }
 
             // left right wall bounds
 

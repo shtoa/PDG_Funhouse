@@ -44,8 +44,10 @@ namespace dungeonGenerator
             
                 iterations++;
                 SpaceNode currentSpace = spacesToSplit.Dequeue();
-                SplitSpaces(currentSpace, allSpaces, roomWidthMin, roomLengthMin, spacesToSplit, splitCenterDeviationPercent); // start splitting spaces
 
+          
+                SplitSpaces(currentSpace, allSpaces, roomWidthMin, roomLengthMin, spacesToSplit, splitCenterDeviationPercent); // start splitting spaces
+                
             }
 
             return allSpaces;
@@ -134,12 +136,23 @@ namespace dungeonGenerator
                                                    center + centerDeviation*splitCenterDeviationPercent);
 
 
+
+
+
+
+            var randVal = Random.value;
+
             topNode = new SpaceNode(
                 new BoundsInt(currentSpace.Bounds.min,
                 new Vector3Int(currentSpace.Bounds.size.x, currentSpace.Bounds.size.y, hSplitPosition)),
                 currentSpace,
                 currentSpace.TreeLayerIndex + 1
             );
+            topNode.SplitPosition = SplitPosition.Top;
+            spacesToSplit.Enqueue(topNode);
+            splitSpaces.Add(topNode);
+
+
 
             bottomNode = new SpaceNode(
                 new BoundsInt(currentSpace.Bounds.min + new Vector3Int(0, 0, hSplitPosition),
@@ -147,16 +160,12 @@ namespace dungeonGenerator
                 currentSpace,
                 currentSpace.TreeLayerIndex + 1
             );
-
-            topNode.SplitPosition = SplitPosition.Top;
             bottomNode.SplitPosition = SplitPosition.Bottom;
-
-            // can separate further
-            spacesToSplit.Enqueue(topNode);
             spacesToSplit.Enqueue(bottomNode);
-
-            splitSpaces.Add(topNode);
             splitSpaces.Add(bottomNode);
+
+            
+
 
         }
         #endregion
