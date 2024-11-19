@@ -11,7 +11,8 @@ public class DoorInteraction : MonoBehaviour, IInteractable
     private DoorState doorState = DoorState.closed;
     private Vector3 closedPosition = Vector3.zero;
     private Vector3 prevPosition = Vector3.zero;
-    
+
+    bool isHovering = false;
 
     public enum DoorState
     {
@@ -47,6 +48,7 @@ public class DoorInteraction : MonoBehaviour, IInteractable
     // Update is called once per frame
     void Update()
     {
+        isHovering = false;
 
         if (doorState == DoorState.closing)
         {
@@ -75,7 +77,29 @@ public class DoorInteraction : MonoBehaviour, IInteractable
 
          
         }
+        
 
 
+
+    }
+
+    public void OnEnter()
+    {
+        GetComponent<MeshRenderer>().material.SetInt("_isSelected", 1);
+        isHovering = true;
+
+    }
+
+    public void OnHover()
+    {
+        //Debug.Log("Hovering");
+    }
+
+    public void OnExit()
+    {
+        GetComponent<MeshRenderer>().material.SetInt("_isSelected", 0);
+        isHovering = true;
+
+        //Debug.Log("Exited");
     }
 }

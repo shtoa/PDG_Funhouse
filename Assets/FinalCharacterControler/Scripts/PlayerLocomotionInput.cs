@@ -61,7 +61,10 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
     public void OnLook(InputAction.CallbackContext context)
     {
         LookInput = context.ReadValue<Vector2>();
+
+        
     }
+
 
     public void OnToggleSprint(InputAction.CallbackContext context)
     {

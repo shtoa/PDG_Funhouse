@@ -621,7 +621,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 17.100037, y: -6.5}
+  m_AnchoredPosition: {x: 17.100098, y: -6.5}
   m_SizeDelta: {x: 20, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &152659511
@@ -838,9 +838,12 @@ MonoBehaviour:
   corridorWidth: 4
   wallThickness: 1
   wallHeight: 2
+  wallMaterial: {fileID: 2100000, guid: 1efffa6d0fa88d84eae2e37de1ddc1ab, type: 2}
   StartRoomMat: {fileID: 2100000, guid: e26c759fcffc57e4bab5d3bed04e4f40, type: 2}
   EndRoomMat: {fileID: 2100000, guid: a89b910f44110e44a9da3cb49b27006e, type: 2}
-  DoorMat: {fileID: 2100000, guid: 161dccd2efb354345ac617cfa5cd5edb, type: 2}
+  DoorMat: {fileID: -876546973899608171, guid: 94f75d363746557419a5fc5336a86b2d, type: 3}
+  floorMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
+  ceilingMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0
@@ -897,7 +900,7 @@ Light:
     m_CustomResolution: -1
     m_Strength: 1
     m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_NormalBias: 0.01
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1
@@ -964,7 +967,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 3
-  m_UsePipelineSettings: 1
+  m_UsePipelineSettings: 0
   m_AdditionalLightsShadowResolutionTier: 2
   m_LightLayerMask: 1
   m_RenderingLayers: 1
@@ -973,7 +976,7 @@ MonoBehaviour:
   m_ShadowRenderingLayers: 1
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
-  m_SoftShadowQuality: 1
+  m_SoftShadowQuality: 2
 --- !u!1 &457370169
 GameObject:
   m_ObjectHideFlags: 0
@@ -4466,6 +4469,24 @@ Mesh:
     offset: 0
     size: 0
     path: 
+--- !u!1 &2143232501 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2653614715499021735, guid: 78cd805d35111bb428ae8a751dd939e9,
+    type: 3}
+  m_PrefabInstance: {fileID: 4019703021039348871}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2143232502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143232501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2a0a4036d3f45f4093a1277c970cb58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &4019703021039348871
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4617,7 +4638,11 @@ PrefabInstance:
         type: 3}
       insertIndex: 0
       addedObject: {fileID: 925960313}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2653614715499021735, guid: 78cd805d35111bb428ae8a751dd939e9,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2143232502}
   m_SourcePrefab: {fileID: 100100000, guid: 78cd805d35111bb428ae8a751dd939e9, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

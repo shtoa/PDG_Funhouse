@@ -55,6 +55,7 @@ namespace dungeonGenerator {
         public int wallThickness;
         [Range(1, 10)]
         public int wallHeight;
+        public Material wallMaterial;
 
         [Header("Start Room")]
         public Material StartRoomMat;
@@ -64,6 +65,12 @@ namespace dungeonGenerator {
 
         [Header("Door")]
         public Material DoorMat;
+        [Header("Floor Properties")]
+        public Material floorMaterial;
+
+        [Header("Ceiling Properties")]
+        public Material ceilingMaterial;
+
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
@@ -114,9 +121,9 @@ namespace dungeonGenerator {
 
                 floor.transform.localPosition = room.Bounds.center;
                 floor.transform.localScale = room.Bounds.size;
+                floor.GetComponent<MeshRenderer>().material = floorMaterial;
 
-
-                if(room.RoomType == RoomType.Start)
+                if (room.RoomType == RoomType.Start)
                 {
 
                     floor.GetComponent<MeshRenderer>().material = StartRoomMat;
@@ -133,8 +140,9 @@ namespace dungeonGenerator {
                 GameObject ceiling = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 ceiling.transform.SetParent(transform, false);
 
-                ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight + Vector3.up * 0.15f; // should be 0.25f
+                ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight + Vector3.up * 0.25f; // should be 0.25f
                 ceiling.transform.localScale = room.Bounds.size + Vector3.up * 0.5f;
+                ceiling.GetComponent<MeshRenderer>().material = ceilingMaterial;
             }
 
             foreach (var wallBound in wallBounds)
@@ -145,6 +153,7 @@ namespace dungeonGenerator {
 
                 wall.transform.localPosition = wallBound.center;
                 wall.transform.localScale = wallBound.size;
+                wall.GetComponent<MeshRenderer>().material = wallMaterial;
             }
 
             foreach (var doorBound in doorBounds)
@@ -156,6 +165,10 @@ namespace dungeonGenerator {
 
                 door.transform.localPosition = doorBound.center;
                 door.transform.localScale = doorBound.size;
+                MaterialPropertyBlock matBlock = new MaterialPropertyBlock();
+                matBlock.SetFloat(0, 0);
+
+                door.GetComponent<MeshRenderer>().SetPropertyBlock(matBlock);
                 door.GetComponent<MeshRenderer>().material = DoorMat;
                 door.AddComponent<DoorInteraction>();
             }
