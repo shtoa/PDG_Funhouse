@@ -118,7 +118,7 @@ namespace dungeonGenerator {
             foreach (var room in roomList)
             {
                 DrawFloor(room);
-                DrawCeiling(room);
+                //DrawCeiling(room);
             }
 
             foreach (var wallBound in wallBounds)

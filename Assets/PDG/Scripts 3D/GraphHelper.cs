@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
+using UnityEngine;
+using UnityEditor.MemoryProfiler;
 
 namespace dungeonGenerator
 {
@@ -45,6 +47,57 @@ namespace dungeonGenerator
 
         }
 
+        public static void CalculateNodeDepths(Node start)
+        {
+            // optimize this 
+
+            Queue<List<Node>> layersToCheck = new Queue<List<Node>>();
+
+            if(start.ConnectionsList.Count == 0)
+            {
+                return; 
+            }
+            
+            layersToCheck.Enqueue(start.ConnectionsList);
+
+
+            int connectionDepth = 0;
+            start.ConnectionDepthIndex = connectionDepth;
+
+            while (layersToCheck.Count > 0)
+            {
+                connectionDepth++;
+
+                List<Node> curLayer = layersToCheck.Dequeue();
+                List<Node> nextLayer = new List<Node>();
+
+                foreach(Node room in curLayer)
+                {
+                    if (room.ConnectionDepthIndex == -1)
+                    {
+                        room.ConnectionDepthIndex = connectionDepth;
+
+                        foreach (Node connection in room.ConnectionsList) { 
+                            
+                            if(connection.ConnectionDepthIndex == -1)
+                            {
+                                nextLayer.Add(connection);
+                            }
+                        
+                        }
+                        
+                    }
+                }
+
+                if (nextLayer.Count > 0)
+                {
+                    layersToCheck.Enqueue(nextLayer);
+                }
+                
+            }
+
+        }
+
         public static List<Node> ChooseStartAndEnd(List<Node> roomSpaces)
         {
             List<Node> startEndRooms = new List<Node>();
@@ -54,13 +107,22 @@ namespace dungeonGenerator
 
             startEndRooms.Add(startRoom);
 
-            var endRoom = roomSpaces.OrderByDescending(room => room.Bounds.xMax + room.Bounds.zMax).ToList()[0];
+            //var endRoom = calculateEndRoom(startRoom);
+            CalculateNodeDepths(startRoom);
+
+            var endRoom = roomSpaces.OrderByDescending(room => room.ConnectionDepthIndex).ToList()[0];
+            
             endRoom.RoomType = RoomType.End;
             startEndRooms.Add(endRoom);
 
 
             return startEndRooms;
 
+        }
+
+        private static Node calculateEndRoom(Node startRoom)
+        {
+           return startRoom.ConnectionsList[0]; 
         }
     }
 }

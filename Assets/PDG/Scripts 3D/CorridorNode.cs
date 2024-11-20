@@ -114,6 +114,10 @@ namespace dungeonGenerator
                 new Vector3Int(
                 sizeX, 0, (int)(this.corridorWidth))
             );
+
+            leftSpace.ConnectionsList.Add(rightSpace);
+            rightSpace.ConnectionsList.Add(leftSpace);
+            
         }
 
         private int GetCorridorPositionLeftRightZ(Node leftSpace, Node rightSpace)
@@ -245,6 +249,9 @@ namespace dungeonGenerator
                 new Vector3Int(
                 (int)(this.corridorWidth),0, sizeZ)
             );
+
+            topSpace.addConnection(bottomSpace);
+            bottomSpace.addConnection(topSpace);
         }
 
         private int GetCorridorPositionTopBottomX(Node topSpace, Node bottomSpace)

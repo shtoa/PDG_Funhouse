@@ -32,17 +32,19 @@ namespace dungeonGenerator {
             // 2. Extract the leaves, which represent the possible room positions
             var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
 
-            // 3. Pick starting and ending rooms
-            var startAndEnd = GraphHelper.ChooseStartAndEnd(roomSpaces);
 
-            // 4. Place rooms within the possible room bounds taking into account room offset
+            // 3. Place rooms within the possible room bounds taking into account room offset
             RoomGenerator roomGenerator = new RoomGenerator(maxIterations, roomWidthMin, roomLengthMin, wallThickness);
             var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
 
-            // 5. Generate the corridors to connect the rooms
+            // 4. Generate the corridors to connect the rooms
             CorridorGenerator corridorGenerator = new CorridorGenerator();
             var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, maxDeviation);
-             
+
+
+            // 5. Pick starting and ending rooms
+            var startAndEnd = GraphHelper.ChooseStartAndEnd(roomSpaces);
+
             // 6. Return a list of bounds on which the floor will be (Rooms and Corridors) 
             return new List<Node>(rooms).Concat(corridorList).ToList();
         }
