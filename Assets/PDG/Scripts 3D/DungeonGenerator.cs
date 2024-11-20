@@ -3,11 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor;
+using UnityEditor.AI;
 using UnityEditorInternal;
 using UnityEngine;
-
-
-
 namespace dungeonGenerator {
 
 
@@ -45,7 +43,7 @@ namespace dungeonGenerator {
         [Range(0f, 1)]
         public int roomRandomnessLength;
         private Vector2 roomRandomness;
-
+        private int corridorWidthAndWall;
         [Header("Corridor Properties")]
         [Range(1, 10)]
         public int corridorWidth;
@@ -65,6 +63,8 @@ namespace dungeonGenerator {
 
         [Header("Door")]
         public Material DoorMat;
+        [Range(0, 1)]
+        public float doorThickness;
         [Header("Floor Properties")]
         public Material floorMaterial;
 
@@ -84,6 +84,7 @@ namespace dungeonGenerator {
                 roomSizeMin = new Vector2Int(roomWidthMin, roomLengthMin);
                 roomOffset = new Vector2(roomOffsetWidthPercent, roomOffsetLengthPercent);
                 roomRandomness = new Vector2(roomRandomnessWidth, roomRandomnessLength);
+                corridorWidthAndWall = wallThickness + corridorWidth;
 
         }
 
@@ -102,7 +103,7 @@ namespace dungeonGenerator {
         private void GenerateDungeon()
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonWidth, dungeonLength);
-            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidth, roomSizeMin);
+            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidthAndWall, roomSizeMin, wallThickness);
 
                 
             DrawRooms(roomList);
@@ -116,65 +117,90 @@ namespace dungeonGenerator {
             // create floors
             foreach (var room in roomList)
             {
-                GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                floor.transform.SetParent(transform, false);
-
-                floor.transform.localPosition = room.Bounds.center;
-                floor.transform.localScale = room.Bounds.size;
-                floor.GetComponent<MeshRenderer>().material = floorMaterial;
-
-                if (room.RoomType == RoomType.Start)
-                {
-
-                    floor.GetComponent<MeshRenderer>().material = StartRoomMat;
-                    
-                }
-
-                if (room.RoomType == RoomType.End)
-                {
-
-                    floor.GetComponent<MeshRenderer>().material = EndRoomMat;
-                }
-
-
-                GameObject ceiling = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                ceiling.transform.SetParent(transform, false);
-
-                ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight + Vector3.up * 0.25f; // should be 0.25f
-                ceiling.transform.localScale = room.Bounds.size + Vector3.up * 0.5f;
-                ceiling.GetComponent<MeshRenderer>().material = ceilingMaterial;
+                DrawFloor(room);
+                DrawCeiling(room);
             }
 
             foreach (var wallBound in wallBounds)
             {
-
-                GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                wall.transform.SetParent(transform, false);
-
-                wall.transform.localPosition = wallBound.center;
-                wall.transform.localScale = wallBound.size;
-                wall.GetComponent<MeshRenderer>().material = wallMaterial;
+                DrawWalls(wallBound);
             }
 
             foreach (var doorBound in doorBounds)
             {
-
-
-                GameObject door = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                door.transform.SetParent(transform, false);
-
-                door.transform.localPosition = doorBound.center;
-                door.transform.localScale = doorBound.size;
-                MaterialPropertyBlock matBlock = new MaterialPropertyBlock();
-                matBlock.SetFloat(0, 0);
-
-                door.GetComponent<MeshRenderer>().SetPropertyBlock(matBlock);
-                door.GetComponent<MeshRenderer>().material = DoorMat;
-                door.AddComponent<DoorInteraction>();
+                DrawDoors(doorBound);
             }
-        
+
 
         }
+
+        private void DrawDoors(BoundsInt doorBound)
+        {
+            GameObject door = MeshHelper.CreateCuboid(doorBound.size, 1);
+            door.transform.SetParent(transform, false);
+
+            door.transform.localPosition = doorBound.center;
+   
+            
+            MaterialPropertyBlock matBlock = new MaterialPropertyBlock();
+            matBlock.SetFloat(0, 0);
+
+            door.GetComponent<MeshRenderer>().SetPropertyBlock(matBlock);
+            door.GetComponent<MeshRenderer>().material = DoorMat;
+            door.AddComponent<DoorInteraction>();
+        }
+
+        private void DrawWalls(BoundsInt wallBound)
+        {
+            GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
+            wall.transform.SetParent(transform, false);
+
+            wall.transform.localPosition = wallBound.center;
+            wall.GetComponent<MeshRenderer>().material = wallMaterial;
+        }
+
+        private void DrawFloor(Node room)
+        {
+            
+            int uvUnit = 1;
+            GameObject floor = MeshHelper.CreatePlane(room.Bounds.size, uvUnit);
+
+            floor.transform.SetParent(transform, false);
+
+            floor.transform.localPosition = room.Bounds.center;
+            //floor.transform.localScale = room.Bounds.size;
+            floor.GetComponent<MeshRenderer>().material = floorMaterial;
+
+            if (room.RoomType == RoomType.Start)
+            {
+
+                floor.GetComponent<MeshRenderer>().material = StartRoomMat;
+
+            }
+
+            if (room.RoomType == RoomType.End)
+            {
+
+                floor.GetComponent<MeshRenderer>().material = EndRoomMat;
+            }
+        }
+
+        private void DrawCeiling(Node room)
+        {
+            GameObject ceiling = MeshHelper.CreatePlane(room.Bounds.size, 1, true);
+            GameObject ceiling2 = MeshHelper.CreatePlane(room.Bounds.size, 1);
+
+            ceiling.transform.SetParent(transform, false);
+            ceiling2.transform.SetParent(ceiling.transform, false);
+
+            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight; // should be 0.25f
+            ceiling2.transform.localPosition = 0.1f * Vector3.up;
+            ceiling2.transform.localScale = Vector3.one * 1.1f;
+
+            ceiling.GetComponent<MeshRenderer>().material = ceilingMaterial;
+            ceiling2.GetComponent<MeshRenderer>().material = ceilingMaterial;
+        }
+
         private void CalculateWalls(List<Node> rooms, int wallThickness)
         {
             // create floors
@@ -201,7 +227,7 @@ namespace dungeonGenerator {
                 for (int i = this.wallBounds.Count-1; i >= 0; i--)
                 {
                     BoundsInt wall = this.wallBounds[i];
-                  
+
 
                     if (wall.Contains(Vector3Int.CeilToInt(roomWall.position)))
                     {
@@ -210,7 +236,7 @@ namespace dungeonGenerator {
 
                         this.wallBounds.AddRange(splitWalls);
                         this.doorBounds.Add(roomWall);
-                        
+
                         // add break or continue
                         isIntersected = true;
                     }
@@ -300,11 +326,29 @@ namespace dungeonGenerator {
         {
 
             List<BoundsInt> thisRoomsWallBounds = new List<BoundsInt>();
+            BoundsInt bounds;
 
-            BoundsInt bounds = room.Bounds;
+            // for wall intersection checking
+            if (room.RoomType == RoomType.Corridor)
+            {
+                bounds = room.Bounds;
+                bounds = new BoundsInt(
+                    new Vector3Int(bounds.min.x + wallThickness,
+                    bounds.min.y,
+                    bounds.min.z + wallThickness)
+                    , new Vector3Int(bounds.size.x - wallThickness*2,
+                    bounds.size.y,
+                    bounds.size.z - wallThickness*2)
+                );
+            } else
+            {
+                bounds = room.Bounds;
+            }
+
+
 
             Vector3Int horizontalWallSize = new Vector3Int(
-               bounds.size.x - this.wallThickness,
+               bounds.size.x, //- this.wallThickness
                this.wallHeight,
                this.wallThickness
            );
@@ -312,32 +356,32 @@ namespace dungeonGenerator {
             Vector3Int verticalWallSize = new Vector3Int(
                this.wallThickness,
                this.wallHeight,
-               bounds.size.z - this.wallThickness
+               bounds.size.z //  - this.wallThickness
             );
 
             // top and bottom walls
 
             thisRoomsWallBounds.Add(
                 new BoundsInt(
-                    new Vector3Int((int)bounds.min.x + this.wallThickness, 0, (int)bounds.max.z),
+                    new Vector3Int((int)bounds.min.x, 0, (int)bounds.max.z),
                     horizontalWallSize)
                 );
 
 
-
+            // for bottom wall + check if start r
             if(room.RoomType == RoomType.Start)
             {
 
                 BoundsInt wall1 = new BoundsInt(
-                       new Vector3Int((int)bounds.min.x + this.wallThickness, 0, (int)bounds.min.z),
+                       new Vector3Int((int)bounds.min.x, 0, (int)bounds.min.z-wallThickness),
                        horizontalWallSize
                     );
 
                 BoundsInt door1 = new BoundsInt(
-                       new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f)),
-                       new Vector3Int(this.corridorWidth - this.wallThickness, this.wallHeight, this.wallThickness)
+                       new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f) - this.wallThickness, 0, (int)((bounds.min.z + bounds.min.z) / 2f) - wallThickness),
+                       new Vector3Int(this.corridorWidth - this.wallThickness*2, this.wallHeight, this.wallThickness)
                     );
-
+                
                 var splitWalls = splitWall(door1, wall1);
                 this.doorBounds.Add(door1);
                 this.wallBounds.AddRange(splitWalls);
@@ -346,22 +390,24 @@ namespace dungeonGenerator {
             } else {
                 thisRoomsWallBounds.Add(
                     new BoundsInt(
-                        new Vector3Int((int)bounds.min.x + this.wallThickness, 0, (int)bounds.min.z),
+                        new Vector3Int((int)bounds.min.x, 0, (int)bounds.min.z - wallThickness),
                         horizontalWallSize)
                     );
             }
 
             // left right wall bounds
 
+            // right
             thisRoomsWallBounds.Add(
                new BoundsInt(
-                   new Vector3Int((int)bounds.max.x, 0, (int)bounds.min.z + this.wallThickness),
+                   new Vector3Int((int)bounds.max.x, 0, (int)bounds.min.z),
                    verticalWallSize)
                );
 
+            // left
             thisRoomsWallBounds.Add(
                 new BoundsInt(
-                    new Vector3Int((int)bounds.min.x, 0, (int)bounds.min.z + this.wallThickness),
+                    new Vector3Int((int)bounds.min.x-this.wallThickness, 0, (int)bounds.min.z),
                     verticalWallSize)
                 );
 

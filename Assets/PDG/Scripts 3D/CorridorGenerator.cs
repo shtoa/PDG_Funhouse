@@ -29,6 +29,7 @@ namespace dungeonGenerator
                 else 
                 {
                     CorridorNode corridor = new CorridorNode(space.ChildrenNodeList[0], space.ChildrenNodeList[1], corridorWidth, maxDeviation);
+                    corridor.RoomType = RoomType.Corridor;
                     corridorList.Add(corridor);
                 }
             }

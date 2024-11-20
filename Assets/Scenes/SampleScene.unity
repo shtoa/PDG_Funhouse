@@ -835,13 +835,14 @@ MonoBehaviour:
   roomOffsetLengthPercent: 0.488
   roomRandomnessWidth: 0
   roomRandomnessLength: 0
-  corridorWidth: 4
+  corridorWidth: 5
   wallThickness: 1
   wallHeight: 2
   wallMaterial: {fileID: 2100000, guid: 1efffa6d0fa88d84eae2e37de1ddc1ab, type: 2}
   StartRoomMat: {fileID: 2100000, guid: e26c759fcffc57e4bab5d3bed04e4f40, type: 2}
   EndRoomMat: {fileID: 2100000, guid: a89b910f44110e44a9da3cb49b27006e, type: 2}
   DoorMat: {fileID: -876546973899608171, guid: 94f75d363746557419a5fc5336a86b2d, type: 3}
+  doorThickness: 0
   floorMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
   ceilingMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
 --- !u!4 &404951507
@@ -899,8 +900,8 @@ Light:
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.01
+    m_Bias: 0
+    m_NormalBias: 0
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1

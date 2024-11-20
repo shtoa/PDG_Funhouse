@@ -13,13 +13,15 @@ namespace dungeonGenerator
         private int maxIterations;
         private int roomWidthMin;
         private int roomLengthMin;
+        private int wallThickness;
 
        
-        public RoomGenerator(int maxIterations, int roomWidthMin, int roomLengthMin)
+        public RoomGenerator(int maxIterations, int roomWidthMin, int roomLengthMin, int wallThickness)
         {
             this.maxIterations = maxIterations;
             this.roomWidthMin = roomWidthMin;
             this.roomLengthMin = roomLengthMin;
+            this.wallThickness = wallThickness;
         }
 
         public List<SpaceNode> PlaceRoomsInSpaces(List<Node> roomSpaces)
@@ -38,7 +40,7 @@ namespace dungeonGenerator
 
 ;
                 BoundsInt bounds = new BoundsInt(roomSpace.Bounds.position,
-                    roomSpace.Bounds.size - roomOffset * new Vector3Int(1, 0, 1)
+                    roomSpace.Bounds.size - new Vector3Int(1, 0, 1) * (roomOffset+wallThickness)
                     );
                 roomSpace.Bounds = bounds;
 
