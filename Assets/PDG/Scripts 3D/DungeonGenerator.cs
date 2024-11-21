@@ -71,12 +71,15 @@ namespace dungeonGenerator {
         [Header("Ceiling Properties")]
         public Material ceilingMaterial;
 
+        [Header("Collectable Properties")] // move this to different class
+        public Material collectableMaterial;
+
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
 
-
-
+        public List<Node> roomList { get; private set; }
+        public GameObject startRoom { get; private set; }
 
         private void Awake()
         {
@@ -103,7 +106,7 @@ namespace dungeonGenerator {
         private void GenerateDungeon()
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonWidth, dungeonLength);
-            var roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidthAndWall, roomSizeMin, wallThickness);
+            roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidthAndWall, roomSizeMin, wallThickness);
 
                 
             DrawRooms(roomList);
@@ -161,7 +164,8 @@ namespace dungeonGenerator {
 
         private void DrawFloor(Node room)
         {
-            
+            // maybe convert rooms to gameobjects? to allow to give them individual effect!!!
+
             int uvUnit = 1;
             GameObject floor = MeshHelper.CreatePlane(room.Bounds.size, uvUnit);
 
@@ -171,17 +175,61 @@ namespace dungeonGenerator {
             //floor.transform.localScale = room.Bounds.size;
             floor.GetComponent<MeshRenderer>().material = floorMaterial;
 
+            // rewrite using case switch 
             if (room.RoomType == RoomType.Start)
             {
 
                 floor.GetComponent<MeshRenderer>().material = StartRoomMat;
+                startRoom = floor;
+                floor.AddComponent<FloorTriggers>().roomType = room.RoomType;
+
+                // remove this
+                BoxCollider m = floor.AddComponent<BoxCollider>();
+                m.isTrigger = true;
+                m.size = new Vector3(m.size.x, 2f, m.size.z);
+      
+        
+                
+
+            }
+            else if (room.RoomType == RoomType.End)
+            { 
+
+                floor.GetComponent<MeshRenderer>().material = EndRoomMat;
+                GameObject collectableCylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                collectableCylinder.transform.SetParent(floor.transform, false);
+                collectableCylinder.transform.localPosition = new Vector3(0, 1, 0);
+                collectableCylinder.GetComponent<Collider>().isTrigger = true;
+
+                collectableCylinder.AddComponent<TestCollectable>().collectableType = CollectableType.cylinder;
+                collectableCylinder.GetComponent<MeshRenderer>().material = collectableMaterial;
+
 
             }
 
-            if (room.RoomType == RoomType.End)
+            else if(room.RoomType == RoomType.DeadEnd)
             {
 
                 floor.GetComponent<MeshRenderer>().material = EndRoomMat;
+                GameObject collectableSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                collectableSphere.transform.SetParent(floor.transform, false);
+                collectableSphere.transform.localPosition = new Vector3(0, 1, 0);
+                collectableSphere.GetComponent<Collider>().isTrigger = true;
+
+                collectableSphere.AddComponent<TestCollectable>().collectableType = CollectableType.sphere;
+                collectableSphere.GetComponent<MeshRenderer>().material = collectableMaterial;
+
+            } else if (room.RoomType != RoomType.Corridor)
+            {
+                // when is just a normal room
+                GameObject collectableCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                collectableCube.transform.SetParent(floor.transform, false);
+                collectableCube.transform.localPosition = new Vector3(0,1,0);
+                collectableCube.GetComponent<Collider>().isTrigger = true;
+
+                collectableCube.AddComponent<TestCollectable>().collectableType= CollectableType.cube;
+                collectableCube.GetComponent<MeshRenderer>().material = collectableMaterial;
+
             }
         }
 

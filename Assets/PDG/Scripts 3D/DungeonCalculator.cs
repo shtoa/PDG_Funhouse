@@ -13,6 +13,8 @@ namespace dungeonGenerator {
         private int dungeonWidth;
         private int dungeonLength;
 
+        
+        
         public DungeonCalculator(int dungeonWidth, int dungeonLength)
         {
             this.dungeonWidth = dungeonWidth;
@@ -32,6 +34,8 @@ namespace dungeonGenerator {
             // 2. Extract the leaves, which represent the possible room positions
             var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
 
+    
+
 
             // 3. Place rooms within the possible room bounds taking into account room offset
             RoomGenerator roomGenerator = new RoomGenerator(maxIterations, roomWidthMin, roomLengthMin, wallThickness);
@@ -43,7 +47,23 @@ namespace dungeonGenerator {
 
 
             // 5. Pick starting and ending rooms
-            var startAndEnd = GraphHelper.ChooseStartAndEnd(roomSpaces);
+            var startAndEnd = GraphHelper.ChooseStartAndEnd(roomSpaces); // change the data structure here
+
+
+            // get edge rooms  
+            // MOVE THIS INTO SEPARATE FUNCTION
+            var deadEnds = GraphHelper.GetLeaves(startAndEnd[0], false);
+            foreach(var deadEnd in deadEnds)
+            {
+                if (deadEnd != startAndEnd[1])
+                {
+                    deadEnd.RoomType = RoomType.DeadEnd;
+                }
+            }
+
+            // REFACTOR !!!
+            GameMaster.numberOfSpheres = deadEnds.Count-1;
+            GameMaster.numberOfCubes = roomSpaces.Count - 2 - GameMaster.numberOfSpheres;
 
             // 6. Return a list of bounds on which the floor will be (Rooms and Corridors) 
             return new List<Node>(rooms).Concat(corridorList).ToList();

@@ -7,39 +7,67 @@ using UnityEditor.MemoryProfiler;
 
 namespace dungeonGenerator
 {
+
     public class GraphHelper
     {
-        static public List<Node> GetLeaves(Node parentNode)
+     
+        // genaralize this function for bsp and connections
+        static public List<Node> GetLeaves(Node parentNode, bool isBSP = true)
         {
             Queue<Node> nodesToCheck = new Queue<Node>();
             List<Node> leaves = new List<Node>();
 
             // if rootnode is passed
-            if (parentNode.ChildrenNodeList.Count == 0)
+            if ((isBSP ? parentNode.ChildrenNodeList.Count : parentNode.ConnectionsList.Count) == 0)
             {
                 return new List<Node> { parentNode };
             }
 
             // add all parents children to check for leaves
-            foreach (var child in parentNode.ChildrenNodeList)
+            foreach (var child in (isBSP ? parentNode.ChildrenNodeList : parentNode.ConnectionsList))
             {
-                nodesToCheck.Enqueue(child);
-            }
-            
-            while (nodesToCheck.Count > 0)
-            {
-                Node currentNode = nodesToCheck.Dequeue();
-
-                if(currentNode.ChildrenNodeList.Count > 0)
+                if (!isBSP)
                 {
-                    foreach (var child in currentNode.ChildrenNodeList)
+                    if (parentNode.ConnectionDepthIndex < child.ConnectionDepthIndex)
                     {
                         nodesToCheck.Enqueue(child);
                     }
                 }
                 else
                 {
-                    leaves.Add(currentNode);
+                    nodesToCheck.Enqueue(child);
+                }
+            }
+            
+            while (nodesToCheck.Count > 0)
+            {
+                Node currentNode = nodesToCheck.Dequeue();
+
+                if((isBSP ? currentNode.ChildrenNodeList.Count : currentNode.ConnectionsList.Count) > 0)
+                {
+                    foreach (var child in ((isBSP ? currentNode.ChildrenNodeList : currentNode.ConnectionsList)))
+                    {
+
+                        if (!isBSP)
+                        {
+                            if (currentNode.ConnectionDepthIndex < child.ConnectionDepthIndex)
+                            {
+                                nodesToCheck.Enqueue(child);
+                            }
+                            else if (currentNode.ConnectionsList.Count == 1)
+                            {
+                                leaves.Add(currentNode);
+                            }
+                        } else
+                        {
+                            nodesToCheck.Enqueue(child);
+                        }
+
+                    }
+                }
+                else
+                {
+                    leaves.Add(currentNode); // never happens for connectionslist
                 }
             }
 

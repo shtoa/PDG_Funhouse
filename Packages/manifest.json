@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.andywiecko.burst.triangulator": "https://github.com/andywiecko/BurstTriangulator.git",
+    "com.jimmycushnie.noisynodes": "https://github.com/JimmyCushnie/Noisy-Nodes.git",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.collab-proxy": "2.5.2",
     "com.unity.feature.characters-animation": "1.0.0",

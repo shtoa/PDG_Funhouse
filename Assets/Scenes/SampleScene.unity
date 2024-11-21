@@ -598,6 +598,7 @@ GameObject:
   - component: {fileID: 152659510}
   - component: {fileID: 152659512}
   - component: {fileID: 152659511}
+  - component: {fileID: 152659513}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -644,7 +645,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Hello this is a test
+  m_text: 'Collect the Shapes within the time!
+
+    Go Into the First Room to Start
+    :3'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: e73a58f6e2794ae7b1b7e50b7fb811b0, type: 2}
@@ -758,6 +762,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &152659513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152659509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a63ae7adab176464a8a4809c1433016f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dungeonGenerator: {fileID: 404951506}
+  player: {fileID: 1111336602}
 --- !u!4 &304432568 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7702177165684206301, guid: ee4397fcf1b60cf409af35b20be9baa7,
@@ -845,6 +863,8 @@ MonoBehaviour:
   doorThickness: 0
   floorMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
   ceilingMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
+  collectableMaterial: {fileID: -876546973899608171, guid: 5da1697aa19379346900a5a147cd610c,
+    type: 3}
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0
@@ -2900,6 +2920,12 @@ Transform:
   m_Children: []
   m_Father: {fileID: 457370170}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1111336602 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8958962267532284925, guid: 78cd805d35111bb428ae8a751dd939e9,
+    type: 3}
+  m_PrefabInstance: {fileID: 4019703021039348871}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1149558951 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7702177165684206301, guid: ee4397fcf1b60cf409af35b20be9baa7,
@@ -4505,6 +4531,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.z
       value: -2.5100002
+      objectReference: {fileID: 0}
+    - target: {fileID: 2205336828055143702, guid: 78cd805d35111bb428ae8a751dd939e9,
+        type: 3}
+      propertyPath: runSpeed
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2205336828055143702, guid: 78cd805d35111bb428ae8a751dd939e9,
         type: 3}

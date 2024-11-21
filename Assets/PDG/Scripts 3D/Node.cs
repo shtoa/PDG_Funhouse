@@ -16,7 +16,8 @@ namespace dungeonGenerator
         None,
         Start,
         End,
-        Corridor
+        Corridor,
+        DeadEnd
     }
     public class Node
     {
@@ -55,7 +56,7 @@ namespace dungeonGenerator
             }
 
             RoomType = RoomType.None;
-
+            
         }
 
         public void addChild(Node node)
