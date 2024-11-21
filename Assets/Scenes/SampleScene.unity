@@ -865,6 +865,8 @@ MonoBehaviour:
   ceilingMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
   collectableMaterial: {fileID: -876546973899608171, guid: 5da1697aa19379346900a5a147cd610c,
     type: 3}
+  collectableOutline: {fileID: -876546973899608171, guid: 2ea376af93c0db747a623c9838806636,
+    type: 3}
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0

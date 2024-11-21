@@ -15,6 +15,7 @@ public class TestCollectableUI : MonoBehaviour
     public GameObject player;
 
     private GameObject startRoom;
+  
    
     
     // Start is called before the first frame update

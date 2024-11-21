@@ -15,9 +15,19 @@ public enum
 public class TestCollectable : MonoBehaviour
 {
     public CollectableType collectableType;
+    public bool isCollected;
+
+    private float postCollectionTime;
+    public void Start()
+    {
+
+        postCollectionTime = 0f;
+        isCollected = false;
+
+    }
     public void OnTriggerEnter(Collider other)
     {
-        if(other.tag == "Player")
+        if(other.CompareTag("Player") && isCollected == false)
         {
             if(collectableType == CollectableType.sphere)
             {
@@ -36,7 +46,25 @@ public class TestCollectable : MonoBehaviour
             }
 
             // destroy collectable aftyer collision
-            Destroy(transform.gameObject);
+            isCollected = true;
+        }
+    }
+
+    public void Update()
+    {
+        if(isCollected)
+        {
+            postCollectionTime += 0.01f; // or time delta time
+            GetComponent<MeshRenderer>().materials[0].SetFloat("_isCollected", 1);
+            GetComponent<MeshRenderer>().materials[0].SetFloat("_collectedTime", postCollectionTime);
+            GetComponent<MeshRenderer>().materials[1].SetFloat("_isCollected", 1);
+            GetComponent<MeshRenderer>().materials[1].SetFloat("_collectedTime", postCollectionTime);
+
+        }
+
+        if(postCollectionTime > 1f && isCollected) 
+        {
+            Destroy(gameObject);
         }
     }
 }
