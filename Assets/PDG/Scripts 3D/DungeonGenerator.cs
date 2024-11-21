@@ -32,11 +32,11 @@ namespace dungeonGenerator {
         private Vector2Int roomSizeMin;
 
 
-        [Range(0f, 1)] 
-        public float roomOffsetWidthPercent;
-        [Range(0f, 1)]
-        public float roomOffsetLengthPercent;
-        private Vector2 roomOffset;
+        [Range(0, 10)] 
+        public int roomOffsetX;
+        [Range(0, 10)]
+        public int roomOffsetY;
+        private Vector2Int roomOffset;
 
         [Range(0f, 1)]
         public int roomRandomnessWidth;
@@ -86,9 +86,10 @@ namespace dungeonGenerator {
         {
                 splitCenterDeviation = new Vector2(splitCenterDeviationWidthPercent, splitCenterDeviationLengthPercent);
                 roomSizeMin = new Vector2Int(roomWidthMin, roomLengthMin);
-                roomOffset = new Vector2(roomOffsetWidthPercent, roomOffsetLengthPercent);
+                roomOffset = new Vector2Int((int)(roomOffsetX), (int)(roomOffsetY));
                 roomRandomness = new Vector2(roomRandomnessWidth, roomRandomnessLength);
-                corridorWidthAndWall = wallThickness + corridorWidth;
+                corridorWidthAndWall = corridorWidth + 2 * wallThickness;
+                CorridorNode.wallThickness = wallThickness;
 
         }
 
@@ -107,7 +108,7 @@ namespace dungeonGenerator {
         private void GenerateDungeon()
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonWidth, dungeonLength);
-            roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidthAndWall, roomSizeMin, wallThickness);
+            roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidthAndWall, roomSizeMin, wallThickness, roomOffset);
 
                 
             DrawRooms(roomList);
@@ -437,8 +438,8 @@ namespace dungeonGenerator {
                     );
 
                 BoundsInt door1 = new BoundsInt(
-                       new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f) - this.wallThickness, 0, (int)((bounds.min.z + bounds.min.z) / 2f) - wallThickness),
-                       new Vector3Int(this.corridorWidth - this.wallThickness*2, this.wallHeight, this.wallThickness)
+                       new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f  - corridorWidth/2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f) - wallThickness),
+                       new Vector3Int(this.corridorWidth, this.wallHeight, this.wallThickness) //  - this.wallThickness*2
                     );
                 
                 var splitWalls = splitWall(door1, wall1);

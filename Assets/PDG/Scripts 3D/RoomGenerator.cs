@@ -14,22 +14,21 @@ namespace dungeonGenerator
         private int roomWidthMin;
         private int roomLengthMin;
         private int wallThickness;
+        private Vector2Int roomOffset;
 
-       
-        public RoomGenerator(int maxIterations, int roomWidthMin, int roomLengthMin, int wallThickness)
+        public RoomGenerator(int maxIterations, int roomWidthMin, int roomLengthMin, int wallThickness, Vector2Int roomOffset)
         {
             this.maxIterations = maxIterations;
             this.roomWidthMin = roomWidthMin;
             this.roomLengthMin = roomLengthMin;
             this.wallThickness = wallThickness;
+            this.roomOffset = roomOffset;
         }
 
         public List<SpaceNode> PlaceRoomsInSpaces(List<Node> roomSpaces)
 
         {
             List<SpaceNode> rooms = new List<SpaceNode>();
-
-            int roomOffset = 3;
 
             foreach(var roomSpace in roomSpaces)
             {
@@ -40,7 +39,7 @@ namespace dungeonGenerator
 
 ;
                 BoundsInt bounds = new BoundsInt(roomSpace.Bounds.position,
-                    roomSpace.Bounds.size - new Vector3Int(1, 0, 1) * (roomOffset+wallThickness)
+                    roomSpace.Bounds.size - new Vector3Int(this.roomOffset.x+wallThickness, 0, this.roomOffset.y+wallThickness)
                     );
                 roomSpace.Bounds = bounds;
 

@@ -620,9 +620,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 925960313}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 17.100098, y: -6.5}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: -165.74, y: -12.599976}
   m_SizeDelta: {x: 20, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &152659511
@@ -675,14 +675,14 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 141.63
-  m_fontSizeBase: 141.63
+  m_fontSize: 169.7
+  m_fontSizeBase: 169.7
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -844,16 +844,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dungeonWidth: 40
   dungeonLength: 40
-  maxIterations: 10
+  maxIterations: 50
   splitCenterDeviationWidthPercent: 0.358
   splitCenterDeviationLengthPercent: 0.601
-  roomWidthMin: 10
-  roomLengthMin: 10
-  roomOffsetWidthPercent: 0.507
-  roomOffsetLengthPercent: 0.488
+  roomWidthMin: 2
+  roomLengthMin: 2
+  roomOffsetX: 3
+  roomOffsetY: 3
   roomRandomnessWidth: 0
   roomRandomnessLength: 0
-  corridorWidth: 5
+  corridorWidth: 1
   wallThickness: 1
   wallHeight: 2
   wallMaterial: {fileID: 2100000, guid: 1efffa6d0fa88d84eae2e37de1ddc1ab, type: 2}

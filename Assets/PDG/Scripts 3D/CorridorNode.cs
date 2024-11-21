@@ -17,6 +17,7 @@ namespace dungeonGenerator
         private int corridorWidth;
         private int modifierDistanceFromWall = 3;
         private Vector2Int maxDeviation;
+        public static int wallThickness;
 
         public CorridorNode(Node node1, Node node2, int corridorWidth, Vector2Int maxDeviation) : base(null) // null since it doesnt have any parents
         {
@@ -66,23 +67,57 @@ namespace dungeonGenerator
                 int maxX = sortedLeftSpace[0].Bounds.max.x;
 
                 // the deviation has to be less than max room size to not go throug rooms
-                sortedLeftSpace = sortedLeftSpace.Where(Child => Math.Abs(maxX-Child.Bounds.max.x) < 5).ToList(); // find rooms that have the least deviation from maxX
+                sortedLeftSpace = sortedLeftSpace.Where(Child => Math.Abs(maxX-Child.Bounds.max.x) < 2).ToList(); // find rooms that have the least deviation from maxX
 
                 // select a random room from valid rooms
-                leftSpace = sortedLeftSpace[Random.RandomRange(0, sortedLeftSpace.Count)];
+                leftSpace = sortedLeftSpace[Random.Range(0, sortedLeftSpace.Count)];
 
             }
 
             // find possible connection for the most left aligned room in the right space
-            var neighborsInLeftSpaceList = rightSpaceLeaves.Where(
-                child => GetCorridorPositionLeftRightZ(leftSpace, child) != -1
+            //var neighborsInLeftSpaceList = rightSpaceLeaves.Where(
+            //    child => GetCorridorPositionLeftRightZ(leftSpace, child) != -1
 
-                ).OrderBy(child => child.Bounds.min.x).ToList(); // order by ascending (smallest) x
+            //    ).OrderBy(child => child.Bounds.min.x).ToList(); // order by ascending (smallest) x
 
-            if(neighborsInLeftSpaceList.Count() <= 0)
+
+            var sortedRightSpace = rightSpaceLeaves.OrderBy(child => child.Bounds.min.x).ToList();
+            int minX = sortedRightSpace[0].Bounds.min.x;
+            sortedRightSpace = sortedRightSpace.Where(Child => Math.Abs(minX - Child.Bounds.min.x) < 2).ToList();
+
+            var neighborsInLeftSpaceList = sortedRightSpace.Where(
+               child => GetCorridorPositionLeftRightZ(leftSpace, child) != -1
+
+               ).OrderBy(child => child.Bounds.min.x).ToList(); // order by ascending (smallest) x
+
+
+            if (neighborsInLeftSpaceList.Count() <= 0 && node1.ChildrenNodeList.Count == 0)
             {
                 rightSpace = node1;
-            } else
+            }
+            else if (neighborsInLeftSpaceList.Count() <= 0)
+            {
+                // Check the code here to check for compliance in the generation
+                //sortedLeftSpace.Remove(leftSpace);
+
+                foreach(var sLeftSpace in sortedLeftSpace)
+                {
+                    sortedRightSpace = rightSpaceLeaves.OrderBy(child => child.Bounds.min.x).ToList();
+                    minX = sortedRightSpace[0].Bounds.min.x;
+                    sortedRightSpace = sortedRightSpace.Where(child => Math.Abs(minX - child.Bounds.min.x) < 2).ToList();
+                    neighborsInLeftSpaceList = sortedRightSpace.Where(child => GetCorridorPositionLeftRightZ(sLeftSpace, child) != -1).OrderBy(child => child.Bounds.min.x).ToList();
+
+                    if(neighborsInLeftSpaceList.Count() > 0)
+                    {
+                        leftSpace = sLeftSpace;
+                        rightSpace = neighborsInLeftSpaceList[0];
+                        break;
+                    }
+}
+
+
+            }
+            else 
             {
                 // possibly can randomize this
                 rightSpace = neighborsInLeftSpaceList[0];
@@ -91,20 +126,24 @@ namespace dungeonGenerator
             // potentially add check for not enough clearance
             int corridorZ = GetCorridorPositionLeftRightZ(leftSpace, rightSpace);
 
-            while(corridorZ == -1 && sortedLeftSpace.Count > 1)
+            //while(corridorZ == -1 && sortedLeftSpace.Count > 1)
+            //{
+            //    // Remove previous space if it was incorrect
+            //    sortedLeftSpace.Remove(leftSpace);
+               
+
+            //    // Get Next Possible Neightbour
+            //    leftSpace = sortedLeftSpace[0];
+            //    corridorZ = GetCorridorPositionLeftRightZ(leftSpace, rightSpace); // test if neighbour can be connected using a straight corridor
+            //}
+
+            if(corridorZ == -1)
             {
-                // Remove previous space if it was incorrect
-                sortedLeftSpace.Remove(leftSpace);
-                
-                // Get Next Possible Neightbour
-                leftSpace = sortedLeftSpace[0];
-                corridorZ = GetCorridorPositionLeftRightZ(leftSpace, rightSpace); // test if neighbour can be connected using a straight corridor
+                Debug.Log("Wrong Size");
             }
 
-            
 
-
-            var midPointX = (rightSpace.Bounds.min.x + leftSpace.Bounds.max.x)/2f;
+                var midPointX = (rightSpace.Bounds.min.x + leftSpace.Bounds.max.x)/2f;
             var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
 
             var pos = new Vector3Int((int)midPointX-sizeX/2, 0, corridorZ- this.corridorWidth/2); //+this.corridorWidth/2
@@ -143,7 +182,7 @@ namespace dungeonGenerator
             // right space is above left space
             if (leftSpace.Bounds.max.z >= rightSpace.Bounds.min.z && rightSpace.Bounds.min.z > leftSpace.Bounds.min.z){
 
-                if (leftSpace.Bounds.max.z - rightSpace.Bounds.min.z <= this.corridorWidth)
+                if (leftSpace.Bounds.max.z - rightSpace.Bounds.min.z <= this.corridorWidth+wallThickness)
                 {
 
                     return -1;
@@ -160,7 +199,7 @@ namespace dungeonGenerator
             if(rightSpace.Bounds.max.z >= leftSpace.Bounds.min.z && leftSpace.Bounds.min.z > rightSpace.Bounds.min.z) // before was >=
             {
 
-                if (rightSpace.Bounds.max.z - leftSpace.Bounds.min.z <= this.corridorWidth)
+                if (rightSpace.Bounds.max.z - leftSpace.Bounds.min.z <= this.corridorWidth+wallThickness)
                 {
                     return -1;
                 }
@@ -179,7 +218,7 @@ namespace dungeonGenerator
         public Vector3Int CalculateMiddlePoint(Vector3Int a, Vector3Int b)
         {
             var res = (Vector3)(a + b) / 2f;
-            return new Vector3Int((int)res.x, (int)res.y, (int)Mathf.Round(res.z));; // does this cause rounding errors?
+            return new Vector3Int((int)res.x, (int)res.y, (int)(res.z));; // does this cause rounding errors?
         }
 
         private void GenerateCorridorTopBottom(Node node1, Node node2)
@@ -200,7 +239,7 @@ namespace dungeonGenerator
             {
                 // add randomness to which rooms are connected 
                 int minZ = sortedTopSpace[0].Bounds.min.z;
-                sortedTopSpace = sortedTopSpace.Where(Child => Math.Abs(minZ - Child.Bounds.min.z) < 5).ToList(); // find rooms that have the least deviation from maxX
+                sortedTopSpace = sortedTopSpace.Where(Child => Math.Abs(minZ - Child.Bounds.min.z) < 2).ToList(); // find rooms that have the least deviation from maxX
 
                 // select a random room from valid rooms
                 topSpace = sortedTopSpace[Random.RandomRange(0, sortedTopSpace.Count)];
@@ -208,14 +247,43 @@ namespace dungeonGenerator
             }
 
             // find possible connection for the most left aligned room in the right space
-            var neighborsInTopSpaceList = bottomSpaceLeaves.Where(
-                child => GetCorridorPositionTopBottomX(topSpace, child) != -1
+            //var neighborsInTopSpaceList = bottomSpaceLeaves.Where(
+            //    child => GetCorridorPositionTopBottomX(topSpace, child) != -1
 
-                ).OrderByDescending(child => child.Bounds.max.z).ToList(); // order by ascending (smallest) x
+            //    ).OrderByDescending(child => child.Bounds.max.z).ToList(); // order by ascending (smallest) x
 
-            if (neighborsInTopSpaceList.Count() <= 0)
+
+            var sortedBottomSpace = bottomSpaceLeaves.OrderByDescending(child => child.Bounds.max.z).ToList();
+            int maxZ = sortedBottomSpace[0].Bounds.max.z;
+            sortedBottomSpace = sortedBottomSpace.Where(Child => Math.Abs(maxZ - Child.Bounds.max.z) < 2).ToList();
+
+            var neighborsInTopSpaceList = sortedBottomSpace.Where(
+               child => GetCorridorPositionTopBottomX(topSpace, child) != -1
+
+               ).OrderBy(child => child.Bounds.min.x).ToList(); // order by ascending (smallest) x
+
+            if (neighborsInTopSpaceList.Count() <= 0 && node1.ChildrenNodeList.Count() == 0)
             {
                 bottomSpace = node1;
+            }
+            else if (neighborsInTopSpaceList.Count() <= 0)
+            {
+                foreach (var tTopSpace in sortedTopSpace)
+                {
+                    sortedBottomSpace = bottomSpaceLeaves.OrderByDescending(child => child.Bounds.max.z).ToList();
+                    maxZ = sortedBottomSpace[0].Bounds.max.z;
+                    sortedBottomSpace = sortedBottomSpace.Where(Child => Math.Abs(maxZ - Child.Bounds.max.z) < 2).ToList();
+
+                    neighborsInTopSpaceList = sortedBottomSpace.Where(child => GetCorridorPositionTopBottomX(tTopSpace, child) != -1).OrderBy(child => child.Bounds.min.x).ToList();
+                    
+
+                    if (neighborsInTopSpaceList.Count() > 0)
+                    {
+                        topSpace = tTopSpace;
+                        bottomSpace = neighborsInTopSpaceList[0];
+                        break;
+                    }
+                }
             }
             else
             {
@@ -226,15 +294,15 @@ namespace dungeonGenerator
             // potentially add check for not enough clearance
             int corridorX = GetCorridorPositionTopBottomX(topSpace, bottomSpace);
 
-            while (corridorX == -1 && sortedTopSpace.Count > 1)
-            {
-                // Remove previous space if it was incorrect
-                sortedTopSpace.Remove(topSpace);
+            //while (corridorX == -1 && sortedTopSpace.Count > 1)
+            //{
+            //    // Remove previous space if it was incorrect
+            //    sortedTopSpace.Remove(topSpace);
 
-                // Get Next Possible Neightbour
-                topSpace = sortedTopSpace[0];
-                corridorX = GetCorridorPositionLeftRightZ(topSpace, bottomSpace); // test if neighbour can be connected using a straight corridor
-            }
+            //    // Get Next Possible Neightbour
+            //    topSpace = sortedTopSpace[0];
+            //    corridorX = GetCorridorPositionLeftRightZ(topSpace, bottomSpace); // test if neighbour can be connected using a straight corridor
+            //}
 
 
 
@@ -256,6 +324,39 @@ namespace dungeonGenerator
 
         private int GetCorridorPositionTopBottomX(Node topSpace, Node bottomSpace)
         {
+
+            // right space is above left space
+            if (topSpace.Bounds.max.x >= bottomSpace.Bounds.min.x && bottomSpace.Bounds.min.x > topSpace.Bounds.min.x)
+            {
+
+                if (topSpace.Bounds.max.x - bottomSpace.Bounds.min.x <= this.corridorWidth + wallThickness)
+                {
+
+                    return -1;
+
+                }
+
+
+                return CalculateMiddlePoint(
+                    bottomSpace.Bounds.min,
+                    topSpace.Bounds.max
+                    ).x;
+            }
+            // right space is bellow left space
+            if (bottomSpace.Bounds.max.x >= topSpace.Bounds.min.x && topSpace.Bounds.min.x > bottomSpace.Bounds.min.x) // before was >=
+            {
+
+                if (bottomSpace.Bounds.max.x - topSpace.Bounds.min.x <= this.corridorWidth + wallThickness)
+                {
+                    return -1;
+                }
+
+
+                return CalculateMiddlePoint(
+                   topSpace.Bounds.min,
+                   bottomSpace.Bounds.max
+                ).x;
+            }
             // right space is within bounds of left space
             if (topSpace.Bounds.max.x >= bottomSpace.Bounds.max.x && bottomSpace.Bounds.min.x >= topSpace.Bounds.min.x)
             {
@@ -273,38 +374,7 @@ namespace dungeonGenerator
                 ).x;
             }
 
-            // right space is above left space
-            if (topSpace.Bounds.max.x >= bottomSpace.Bounds.min.x && bottomSpace.Bounds.min.x > topSpace.Bounds.min.x)
-            {
-
-                if (topSpace.Bounds.max.x - bottomSpace.Bounds.min.x <= this.corridorWidth)
-                {
-
-                    return -1;
-
-                }
-
-
-                return CalculateMiddlePoint(
-                    bottomSpace.Bounds.min,
-                    topSpace.Bounds.max
-                    ).x;
-            }
-            // right space is bellow left space
-            if (bottomSpace.Bounds.max.x >= topSpace.Bounds.min.x && topSpace.Bounds.min.x > bottomSpace.Bounds.min.x) // before was >=
-            {
-
-                if (bottomSpace.Bounds.max.x - topSpace.Bounds.min.x <= this.corridorWidth)
-                {
-                    return -1;
-                }
-
-
-                return CalculateMiddlePoint(
-                   topSpace.Bounds.min,
-                   bottomSpace.Bounds.max
-                ).x;
-            }
+           
 
 
             return -1;

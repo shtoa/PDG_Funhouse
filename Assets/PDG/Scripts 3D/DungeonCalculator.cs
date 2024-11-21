@@ -25,11 +25,11 @@ namespace dungeonGenerator {
         /// Calculate the dungeon floor bounds that can be used to generate the dungeon meshes
         /// </summary>
 
-        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent, int corridorWidth, Vector2Int maxDeviation, int wallThickness)
+        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent, int corridorWidth, Vector2Int maxDeviation, int wallThickness, Vector2Int roomOffset)
         {
             // 1. Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
             BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength);
-            var allNodeSpaces = bsp.PartitionSpace(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviationPercent);
+            var allNodeSpaces = bsp.PartitionSpace(maxIterations, roomWidthMin+roomOffset.x+wallThickness, roomLengthMin+roomOffset.y+wallThickness, splitCenterDeviationPercent);
 
             // 2. Extract the leaves, which represent the possible room positions
             var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
@@ -38,7 +38,7 @@ namespace dungeonGenerator {
 
 
             // 3. Place rooms within the possible room bounds taking into account room offset
-            RoomGenerator roomGenerator = new RoomGenerator(maxIterations, roomWidthMin, roomLengthMin, wallThickness);
+            RoomGenerator roomGenerator = new RoomGenerator(maxIterations, roomWidthMin, roomLengthMin, wallThickness, roomOffset);
             var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
 
             // 4. Generate the corridors to connect the rooms
