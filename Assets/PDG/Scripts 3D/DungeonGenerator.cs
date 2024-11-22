@@ -170,6 +170,7 @@ namespace dungeonGenerator {
 
             int uvUnit = 1;
             GameObject floor = MeshHelper.CreatePlane(room.Bounds.size, uvUnit);
+            floor.transform.tag = "Floor";
 
             floor.transform.SetParent(transform, false);
 
