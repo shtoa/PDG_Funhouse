@@ -15,8 +15,10 @@ public class TestCollectableUI : MonoBehaviour
     public GameObject player;
 
     private GameObject startRoom;
-  
-   
+
+    GameObject cylinderCounter;
+    GameObject cubeCounter;
+    GameObject sphereCounter;
     
     // Start is called before the first frame update
     void Start()
@@ -30,6 +32,30 @@ public class TestCollectableUI : MonoBehaviour
         GameMaster.cubesCollected = 0;
         GameMaster.spheresCollected = 0;
 
+
+        cylinderCounter = createCounter("cylinders", GameMaster.cylinderCollected, GameMaster.numberOfCylinders);
+        cubeCounter = createCounter("cubes", GameMaster.cubesCollected, GameMaster.cubesCollected);
+        sphereCounter = createCounter("spheres", GameMaster.spheresCollected, GameMaster.spheresCollected);
+
+        cubeCounter.transform.position = cylinderCounter.GetComponent<TextMeshPro>().bounds.max;
+        sphereCounter.transform.position = cubeCounter.GetComponent<TextMeshPro>().bounds.max;
+
+    }
+
+    private GameObject createCounter(string name, int curCount, int outOff)
+    {
+        GameObject counterObj = new GameObject();
+        counterObj.AddComponent<TextMeshPro>();
+        TextMeshPro tmp = counterObj.GetComponent<TextMeshPro>();
+        counterObj.transform.localScale = Vector3.one * 5f;
+        tmp.autoSizeTextContainer = true;
+        tmp.alignment = TextAlignmentOptions.Left;
+        tmp.text = $"{name}: {curCount} / {outOff}";
+
+
+        counterObj.GetComponent<RectTransform>().anchoredPosition = Vector3.zero;
+        tmp.transform.SetParent(transform.parent, false);
+        return counterObj;
     }
 
     // Update is called once per frame

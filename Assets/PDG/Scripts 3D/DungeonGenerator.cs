@@ -74,6 +74,7 @@ namespace dungeonGenerator {
         [Header("Collectable Properties")] // move this to different class
         public Material collectableMaterial;
         public Material collectableOutline;
+        [SerializeField] public AnimationCurve materialFadeOut;
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
@@ -153,6 +154,7 @@ namespace dungeonGenerator {
             door.GetComponent<MeshRenderer>().SetPropertyBlock(matBlock);
             door.GetComponent<MeshRenderer>().material = DoorMat;
             door.AddComponent<DoorInteraction>();
+            //door.layer = LayerMask.NameToLayer("Dungeon");
         }
 
         private void DrawWalls(BoundsInt wallBound)
@@ -162,6 +164,12 @@ namespace dungeonGenerator {
 
             wall.transform.localPosition = wallBound.center;
             wall.GetComponent<MeshRenderer>().material = wallMaterial;
+            //wall.layer = LayerMask.NameToLayer("Dungeon");
+
+            // draw wall minimap object
+            GameObject miniMapObject = GameObject.Instantiate(wall, wall.transform.position, wall.transform.rotation);
+            miniMapObject.layer = LayerMask.NameToLayer("MiniMap");
+            miniMapObject.transform.parent = wall.transform;
         }
 
         private void DrawFloor(Node room)
@@ -171,6 +179,7 @@ namespace dungeonGenerator {
             int uvUnit = 1;
             GameObject floor = MeshHelper.CreatePlane(room.Bounds.size, uvUnit);
             floor.transform.tag = "Floor";
+            //floor.layer = LayerMask.NameToLayer("Dungeon");
 
             floor.transform.SetParent(transform, false);
 
@@ -190,6 +199,7 @@ namespace dungeonGenerator {
                 floor.GetComponent<MeshRenderer>().material = StartRoomMat;
                 startRoom = floor;
                 floor.AddComponent<FloorTriggers>().roomType = room.RoomType;
+        
 
                 // remove this
                 BoxCollider m = floor.AddComponent<BoxCollider>();
@@ -211,6 +221,7 @@ namespace dungeonGenerator {
                 collectableCylinder.GetComponent<Collider>().isTrigger = true;
 
                 collectableCylinder.AddComponent<TestCollectable>().collectableType = CollectableType.cylinder;
+                collectableCylinder.GetComponent<TestCollectable>().materialFadeOut = materialFadeOut;
 
                 collectableCylinder.GetComponent<MeshRenderer>().SetMaterials(mList);
 
@@ -229,6 +240,7 @@ namespace dungeonGenerator {
                 collectableSphere.GetComponent<Collider>().isTrigger = true;
 
                 collectableSphere.AddComponent<TestCollectable>().collectableType = CollectableType.sphere;
+                collectableSphere.GetComponent<TestCollectable>().materialFadeOut = materialFadeOut;
                 collectableSphere.GetComponent<MeshRenderer>().SetMaterials(mList);
 
             } else if (room.RoomType != RoomType.Corridor)
@@ -241,9 +253,21 @@ namespace dungeonGenerator {
                 collectableCube.GetComponent<Collider>().isTrigger = true;
 
                 collectableCube.AddComponent<TestCollectable>().collectableType= CollectableType.cube;
+                collectableCube.GetComponent<TestCollectable>().materialFadeOut = materialFadeOut;
                 collectableCube.GetComponent<MeshRenderer>().SetMaterials(mList);
 
             }
+
+            // draw the minimap floor
+            GameObject miniMapObject = GameObject.Instantiate(floor, floor.transform.position, floor.transform.rotation);
+
+            foreach (Transform child in floor.transform)
+            {
+                Destroy(child.gameObject);
+            }
+
+            miniMapObject.layer = LayerMask.NameToLayer("MiniMap");
+            miniMapObject.transform.parent = floor.transform;
         }
 
         private void DrawCeiling(Node room)
