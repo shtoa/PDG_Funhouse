@@ -37,6 +37,39 @@ public class TestCollectableUI : MonoBehaviour
         GameMaster.cubesCollected = 0;
         GameMaster.spheresCollected = 0;
 
+   
+
+
+    }
+
+    private void DrawUICollectables()
+    {
+        GenerateCollectableUI(PrimitiveType.Cylinder, new Vector2(80, 80));
+        GenerateCollectableUI(PrimitiveType.Cube, new Vector2(80+110, 80));
+        GenerateCollectableUI(PrimitiveType.Sphere, new Vector2(80+110*2, 80));
+
+    }
+
+    private void GenerateCollectableUI(PrimitiveType ptype, Vector3 anchoredPosition)
+    {
+        List<Material> mList = new List<Material>();
+        mList.Add(DungeonGenerator.CollectableMaterial);
+        mList.Add(DungeonGenerator.CollectableOutline);
+
+        GameObject collectable = GameObject.CreatePrimitive(ptype);
+        collectable.transform.SetParent(transform.parent, false);
+        collectable.transform.localPosition = new Vector3(0, 0, 0);
+        collectable.transform.localScale = Vector3.one * 0.25f;
+        collectable.GetComponent<Collider>().enabled = false;
+        RectTransform rectTransform = collectable.AddComponent<RectTransform>();
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = Vector2.zero;
+        rectTransform.pivot = Vector2.one * 0.5f;
+        rectTransform.anchoredPosition = anchoredPosition;
+        rectTransform.localPosition = rectTransform.localPosition + new Vector3(0, 0, 1) * 10f;
+        rectTransform.localScale = Vector3.one * 20f;
+        collectable.GetComponent<MeshRenderer>().SetMaterials(mList);
+        collectable.layer = LayerMask.NameToLayer("UI");
     }
 
     private GameObject createCounter(string name, int curCount, int outOff)
@@ -67,18 +100,14 @@ public class TestCollectableUI : MonoBehaviour
         tmp.text = $"{name}: {curCount} / {outOff}";
     }
 
+
+
+
     // Update is called once per frame
     void Update()
     {
         
-        if(GameMaster.cylinderCollected == 1 && GameMaster.cubesCollected == GameMaster.numberOfCubes && GameMaster.spheresCollected == GameMaster.numberOfSpheres
-
-
-
-            )
-        {
-            GameMaster.gameState = GameMaster.GameState.Ended;
-        }
+      
 
 
 
@@ -98,6 +127,9 @@ public class TestCollectableUI : MonoBehaviour
 
                 cubeCounter.GetComponent<RectTransform>().anchoredPosition = cylinderCounter.GetComponent<RectTransform>().anchoredPosition + new Vector2(cylinderCounter.GetComponent<RectTransform>().rect.size.x*5f + 30f, cylinderCounter.GetComponent<RectTransform>().rect.min.y);
                 sphereCounter.GetComponent<RectTransform>().anchoredPosition = cubeCounter.GetComponent<RectTransform>().anchoredPosition + new Vector2(cubeCounter.GetComponent<RectTransform>().rect.size.x * 5f + 10f, cubeCounter.GetComponent<RectTransform>().rect.min.y);
+
+                DrawUICollectables();
+
 
                 areCountersInitialized = true;
 
@@ -125,7 +157,20 @@ public class TestCollectableUI : MonoBehaviour
         {
             GetComponent<TextMeshPro>().text = "Well Done All Shapes Collected!";
         }
+
+
+        if (GameMaster.cylinderCollected == 1 && GameMaster.cubesCollected == GameMaster.numberOfCubes && GameMaster.spheresCollected == GameMaster.numberOfSpheres
+
+
+
+          )
+        {
+            GameMaster.gameState = GameMaster.GameState.Ended;
         }
+
+    }
+
+
 }
 
 

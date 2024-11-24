@@ -82,15 +82,21 @@ namespace dungeonGenerator {
 
         public List<Node> roomList { get; private set; }
         public GameObject startRoom { get; private set; }
+        public static AnimationCurve MaterialFadeOut;
+        public static Material CollectableMaterial;
+        public static Material CollectableOutline;
 
         private void Awake()
         {
-                splitCenterDeviation = new Vector2(splitCenterDeviationWidthPercent, splitCenterDeviationLengthPercent);
-                roomSizeMin = new Vector2Int(roomWidthMin, roomLengthMin);
-                roomOffset = new Vector2Int((int)(roomOffsetX), (int)(roomOffsetY));
-                roomRandomness = new Vector2(roomRandomnessWidth, roomRandomnessLength);
-                corridorWidthAndWall = corridorWidth + 2 * wallThickness;
-                CorridorNode.wallThickness = wallThickness;
+            splitCenterDeviation = new Vector2(splitCenterDeviationWidthPercent, splitCenterDeviationLengthPercent);
+            roomSizeMin = new Vector2Int(roomWidthMin, roomLengthMin);
+            roomOffset = new Vector2Int((int)(roomOffsetX), (int)(roomOffsetY));
+            roomRandomness = new Vector2(roomRandomnessWidth, roomRandomnessLength);
+            corridorWidthAndWall = corridorWidth + 2 * wallThickness;
+            CorridorNode.wallThickness = wallThickness;
+            MaterialFadeOut = materialFadeOut;
+            CollectableMaterial = collectableMaterial;
+            CollectableOutline = collectableOutline;    
 
         }
 
@@ -103,6 +109,7 @@ namespace dungeonGenerator {
 
 
             GenerateDungeon();
+           
  
         }
 
@@ -172,6 +179,7 @@ namespace dungeonGenerator {
             miniMapObject.transform.parent = wall.transform;
         }
 
+
         private void DrawFloor(Node room)
         {
             // maybe convert rooms to gameobjects? to allow to give them individual effect!!!
@@ -221,7 +229,7 @@ namespace dungeonGenerator {
                 collectableCylinder.GetComponent<Collider>().isTrigger = true;
 
                 collectableCylinder.AddComponent<TestCollectable>().collectableType = CollectableType.cylinder;
-                collectableCylinder.GetComponent<TestCollectable>().materialFadeOut = materialFadeOut;
+                collectableCylinder.GetComponent<TestCollectable>().materialFadeOut = MaterialFadeOut;
 
                 collectableCylinder.GetComponent<MeshRenderer>().SetMaterials(mList);
 
@@ -240,7 +248,7 @@ namespace dungeonGenerator {
                 collectableSphere.GetComponent<Collider>().isTrigger = true;
 
                 collectableSphere.AddComponent<TestCollectable>().collectableType = CollectableType.sphere;
-                collectableSphere.GetComponent<TestCollectable>().materialFadeOut = materialFadeOut;
+                collectableSphere.GetComponent<TestCollectable>().materialFadeOut = MaterialFadeOut;
                 collectableSphere.GetComponent<MeshRenderer>().SetMaterials(mList);
 
             } else if (room.RoomType != RoomType.Corridor)
@@ -253,7 +261,7 @@ namespace dungeonGenerator {
                 collectableCube.GetComponent<Collider>().isTrigger = true;
 
                 collectableCube.AddComponent<TestCollectable>().collectableType= CollectableType.cube;
-                collectableCube.GetComponent<TestCollectable>().materialFadeOut = materialFadeOut;
+                collectableCube.GetComponent<TestCollectable>().materialFadeOut = MaterialFadeOut;
                 collectableCube.GetComponent<MeshRenderer>().SetMaterials(mList);
 
             }
