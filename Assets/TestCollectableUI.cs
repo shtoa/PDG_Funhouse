@@ -4,7 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TestCollectableUI : MonoBehaviour
 {
@@ -34,17 +36,17 @@ public class TestCollectableUI : MonoBehaviour
 
 
         cylinderCounter = createCounter("cylinders", GameMaster.cylinderCollected, GameMaster.numberOfCylinders);
-        cubeCounter = createCounter("cubes", GameMaster.cubesCollected, GameMaster.cubesCollected);
+        cubeCounter = createCounter("cubes", GameMaster.cubesCollected, GameMaster.numberOfCubes);
         sphereCounter = createCounter("spheres", GameMaster.spheresCollected, GameMaster.spheresCollected);
 
-        cubeCounter.transform.position = cylinderCounter.GetComponent<TextMeshPro>().bounds.max;
-        sphereCounter.transform.position = cubeCounter.GetComponent<TextMeshPro>().bounds.max;
+        cubeCounter.GetComponent<RectTransform>().localPosition = cubeCounter.GetComponent<RectTransform>().localPosition + new Vector3(150, 0, 0);
+        sphereCounter.transform.localPosition = cubeCounter.transform.localPosition + new Vector3(130, 0, 0);
 
     }
 
     private GameObject createCounter(string name, int curCount, int outOff)
     {
-        GameObject counterObj = new GameObject();
+        GameObject counterObj = new GameObject(name + "Counter");
         counterObj.AddComponent<TextMeshPro>();
         TextMeshPro tmp = counterObj.GetComponent<TextMeshPro>();
         counterObj.transform.localScale = Vector3.one * 5f;
@@ -52,9 +54,15 @@ public class TestCollectableUI : MonoBehaviour
         tmp.alignment = TextAlignmentOptions.Left;
         tmp.text = $"{name}: {curCount} / {outOff}";
 
+        
+        counterObj.GetComponent<RectTransform>().pivot = Vector3.zero;
+        counterObj.GetComponent<RectTransform>().anchorMin = Vector2.zero;
+        counterObj.GetComponent<RectTransform>().anchorMax = Vector2.zero;
 
-        counterObj.GetComponent<RectTransform>().anchoredPosition = Vector3.zero;
-        tmp.transform.SetParent(transform.parent, false);
+        tmp.fontMaterial = FontManager.MainFontMaterial;
+        tmp.font = FontManager.TmpFontAssetMain;
+        counterObj.transform.SetParent(transform.parent, false);
+        counterObj.GetComponent<RectTransform>().localPosition = new Vector3(-transform.parent.GetComponent<CanvasScaler>().referenceResolution.x/2f+10f, 0, 0);
         return counterObj;
     }
 
