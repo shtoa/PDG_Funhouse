@@ -7,6 +7,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using static Unity.Burst.Intrinsics.X86.Avx;
 
 public class TestCollectableUI : MonoBehaviour
 {
@@ -17,6 +18,8 @@ public class TestCollectableUI : MonoBehaviour
     public GameObject player;
 
     private GameObject startRoom;
+
+    private bool areCountersInitialized = false;
 
     GameObject cylinderCounter;
     GameObject cubeCounter;
@@ -34,14 +37,6 @@ public class TestCollectableUI : MonoBehaviour
         GameMaster.cubesCollected = 0;
         GameMaster.spheresCollected = 0;
 
-
-        cylinderCounter = createCounter("cylinders", GameMaster.cylinderCollected, GameMaster.numberOfCylinders);
-        cubeCounter = createCounter("cubes", GameMaster.cubesCollected, GameMaster.numberOfCubes);
-        sphereCounter = createCounter("spheres", GameMaster.spheresCollected, GameMaster.spheresCollected);
-
-        cubeCounter.GetComponent<RectTransform>().localPosition = cubeCounter.GetComponent<RectTransform>().localPosition + new Vector3(150, 0, 0);
-        sphereCounter.transform.localPosition = cubeCounter.transform.localPosition + new Vector3(130, 0, 0);
-
     }
 
     private GameObject createCounter(string name, int curCount, int outOff)
@@ -58,12 +53,18 @@ public class TestCollectableUI : MonoBehaviour
         counterObj.GetComponent<RectTransform>().pivot = Vector3.zero;
         counterObj.GetComponent<RectTransform>().anchorMin = Vector2.zero;
         counterObj.GetComponent<RectTransform>().anchorMax = Vector2.zero;
+        counterObj.GetComponent<RectTransform>().anchoredPosition = new Vector2(20f, 10f);
 
         tmp.fontMaterial = FontManager.MainFontMaterial;
         tmp.font = FontManager.TmpFontAssetMain;
         counterObj.transform.SetParent(transform.parent, false);
-        counterObj.GetComponent<RectTransform>().localPosition = new Vector3(-transform.parent.GetComponent<CanvasScaler>().referenceResolution.x/2f+10f, 0, 0);
         return counterObj;
+    }
+
+    private void updateCounter(GameObject counterObj,string name, int curCount, int outOff)
+    {
+        TextMeshPro tmp = counterObj.GetComponent<TextMeshPro>();
+        tmp.text = $"{name}: {curCount} / {outOff}";
     }
 
     // Update is called once per frame
@@ -83,16 +84,41 @@ public class TestCollectableUI : MonoBehaviour
 
         if (GameMaster.gameState == GameMaster.GameState.Started)
         {
-            string text = $"Collect the Shapes \n - Cylinders: {GameMaster.cylinderCollected}/1 \n - Cubes: {GameMaster.cubesCollected}/{GameMaster.numberOfCubes} \n";
-            if (GameMaster.numberOfSpheres > 0)
-            {
-                text = text + $" - Spheres: {GameMaster.spheresCollected}/{GameMaster.numberOfSpheres} \n";
 
-               
-                
+            if(!areCountersInitialized)
+            {
+
+
+                cylinderCounter = createCounter("cylinders", GameMaster.cylinderCollected, GameMaster.numberOfCylinders);
+                cubeCounter = createCounter("cubes", GameMaster.cubesCollected, GameMaster.numberOfCubes);
+                sphereCounter = createCounter("spheres", GameMaster.spheresCollected, GameMaster.numberOfCubes);
+
+
+                // do not use scale use font size
+
+                cubeCounter.GetComponent<RectTransform>().anchoredPosition = cylinderCounter.GetComponent<RectTransform>().anchoredPosition + new Vector2(cylinderCounter.GetComponent<RectTransform>().rect.size.x*5f + 30f, cylinderCounter.GetComponent<RectTransform>().rect.min.y);
+                sphereCounter.GetComponent<RectTransform>().anchoredPosition = cubeCounter.GetComponent<RectTransform>().anchoredPosition + new Vector2(cubeCounter.GetComponent<RectTransform>().rect.size.x * 5f + 10f, cubeCounter.GetComponent<RectTransform>().rect.min.y);
+
+                areCountersInitialized = true;
+
+            } else { 
+
+                updateCounter(cylinderCounter, "cylinder", GameMaster.cylinderCollected, GameMaster.numberOfCylinders);
+                updateCounter(cubeCounter, "cube", GameMaster.cubesCollected, GameMaster.numberOfCubes);
+                updateCounter(sphereCounter, "sphere", GameMaster.spheresCollected, GameMaster.numberOfSpheres);
+
             }
 
-            GetComponent<TextMeshPro>().text = text;
+            //string text = $"Collect the Shapes \n - Cylinders: {GameMaster.cylinderCollected}/1 \n - Cubes: {GameMaster.cubesCollected}/{GameMaster.numberOfCubes} \n";
+            //if (GameMaster.numberOfSpheres > 0)
+            //{
+            //    text = text + $" - Spheres: {GameMaster.spheresCollected}/{GameMaster.numberOfSpheres} \n";
+
+
+
+            //}
+
+            //GetComponent<TextMeshPro>().text = text;
 
         }
         else if (GameMaster.gameState == GameMaster.GameState.Ended)
