@@ -8,6 +8,7 @@ TagManager:
   - platforms
   - Waypoints
   - Floor
+  - minimap
   layers:
   - Default
   - TransparentFX

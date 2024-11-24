@@ -66,7 +66,7 @@ public class TestCollectableUI : MonoBehaviour
         rectTransform.anchorMax = Vector2.zero;
         rectTransform.pivot = Vector2.one * 0.5f;
         rectTransform.anchoredPosition = anchoredPosition;
-        rectTransform.localPosition = rectTransform.localPosition + new Vector3(0, 0, 1) * 10f;
+        rectTransform.localPosition = rectTransform.localPosition + new Vector3(0, 0, 1) * 20f;
         rectTransform.localScale = Vector3.one * 20f;
         collectable.GetComponent<MeshRenderer>().SetMaterials(mList);
         collectable.layer = LayerMask.NameToLayer("UI");

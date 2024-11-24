@@ -1281,7 +1281,7 @@ GameObject:
   - component: {fileID: 417024918}
   m_Layer: 0
   m_Name: MinimapRenderTexture
-  m_TagString: Untagged
+  m_TagString: minimap
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1312,7 +1312,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 417024916}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
   m_Name: 
@@ -3540,13 +3540,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1440306411}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.23225076, y: 0.9203382, z: 0.250053, w: -0.19107807}
-  m_LocalPosition: {x: -0.13, y: 7.46, z: -4.18}
+  m_LocalRotation: {x: 0.00764523, y: 0.12853238, z: -0.96726805, w: -0.21866308}
+  m_LocalPosition: {x: -0.14339244, y: -74.6, z: -4.142097}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -33.3, y: 196.37, z: 23.4}
+  m_Father: {fileID: 733189343}
+  m_LocalEulerAnglesHint: {x: -194.2, y: 175.8, z: -386}
 --- !u!1 &1461293178
 GameObject:
   m_ObjectHideFlags: 0
@@ -5330,6 +5330,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1766483101563237531, guid: 78cd805d35111bb428ae8a751dd939e9,
         type: 3}
       insertIndex: 0
+      addedObject: {fileID: 1440306414}
+    - targetCorrespondingSourceObject: {fileID: 1766483101563237531, guid: 78cd805d35111bb428ae8a751dd939e9,
+        type: 3}
+      insertIndex: 1
       addedObject: {fileID: 925960313}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2653614715499021735, guid: 78cd805d35111bb428ae8a751dd939e9,
@@ -5356,4 +5360,3 @@ SceneRoots:
   - {fileID: 87232027}
   - {fileID: 217350214}
   - {fileID: 144486441}
-  - {fileID: 1440306414}

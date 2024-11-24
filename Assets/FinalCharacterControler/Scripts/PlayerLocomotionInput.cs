@@ -2,8 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using UnityEngine.UIElements;
+using Cursor = UnityEngine.Cursor;
 
 // run first
 [DefaultExecutionOrder(-2)]
@@ -113,5 +118,21 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
         
         }
     }
-    #endregion
-}
+
+    public void OnToggleMinimap(InputAction.CallbackContext context)
+    {
+        GameObject minimap = GameObject.FindGameObjectWithTag("minimap");
+        if (context.performed)
+        {
+            minimap.GetComponent<RawImage>().enabled = true;
+        }
+
+        else if (context.canceled)
+        {
+           
+           minimap.GetComponent<RawImage>().enabled = false;
+
+        }
+        }
+        #endregion
+    }
