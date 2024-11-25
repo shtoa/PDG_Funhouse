@@ -24,6 +24,8 @@ public class TestCollectableUI : MonoBehaviour
     GameObject cylinderCounter;
     GameObject cubeCounter;
     GameObject sphereCounter;
+
+    private float gameTime = 0;
     
     // Start is called before the first frame update
     void Start()
@@ -114,7 +116,10 @@ public class TestCollectableUI : MonoBehaviour
         if (GameMaster.gameState == GameMaster.GameState.Started)
         {
 
-            if(!areCountersInitialized)
+
+            gameTime += Time.deltaTime;
+            GetComponent<TextMeshPro>().text = GetFormatedTime(gameTime);
+            if (!areCountersInitialized)
             {
 
 
@@ -125,7 +130,7 @@ public class TestCollectableUI : MonoBehaviour
 
                 // do not use scale use font size
 
-                cubeCounter.GetComponent<RectTransform>().anchoredPosition = cylinderCounter.GetComponent<RectTransform>().anchoredPosition + new Vector2(cylinderCounter.GetComponent<RectTransform>().rect.size.x*5f + 30f, cylinderCounter.GetComponent<RectTransform>().rect.min.y);
+                cubeCounter.GetComponent<RectTransform>().anchoredPosition = cylinderCounter.GetComponent<RectTransform>().anchoredPosition + new Vector2(cylinderCounter.GetComponent<RectTransform>().rect.size.x * 5f + 30f, cylinderCounter.GetComponent<RectTransform>().rect.min.y);
                 sphereCounter.GetComponent<RectTransform>().anchoredPosition = cubeCounter.GetComponent<RectTransform>().anchoredPosition + new Vector2(cubeCounter.GetComponent<RectTransform>().rect.size.x * 5f + 10f, cubeCounter.GetComponent<RectTransform>().rect.min.y);
 
                 DrawUICollectables();
@@ -133,7 +138,9 @@ public class TestCollectableUI : MonoBehaviour
 
                 areCountersInitialized = true;
 
-            } else { 
+            }
+            else
+            {
 
                 updateCounter(cylinderCounter, "cylinder", GameMaster.cylinderCollected, GameMaster.numberOfCylinders);
                 updateCounter(cubeCounter, "cube", GameMaster.cubesCollected, GameMaster.numberOfCubes);
@@ -141,21 +148,13 @@ public class TestCollectableUI : MonoBehaviour
 
             }
 
-            //string text = $"Collect the Shapes \n - Cylinders: {GameMaster.cylinderCollected}/1 \n - Cubes: {GameMaster.cubesCollected}/{GameMaster.numberOfCubes} \n";
-            //if (GameMaster.numberOfSpheres > 0)
-            //{
-            //    text = text + $" - Spheres: {GameMaster.spheresCollected}/{GameMaster.numberOfSpheres} \n";
-
-
-
-            //}
-
-            //GetComponent<TextMeshPro>().text = text;
-
         }
         else if (GameMaster.gameState == GameMaster.GameState.Ended)
+
+
         {
-            GetComponent<TextMeshPro>().text = "Well Done All Shapes Collected!";
+
+            GetComponent<TextMeshPro>().text = $"Well Done All Shapes Collected! \n in {GetFormatedTime(gameTime)}";
         }
 
 
@@ -170,7 +169,13 @@ public class TestCollectableUI : MonoBehaviour
 
     }
 
+    private string GetFormatedTime(float time)
+    {
 
+        TimeSpan t = TimeSpan.FromSeconds(time);
+        return $"<mspace=0.75em> {t.Minutes.ToString("d2")}:{t.Seconds.ToString("d2")}:{t.Milliseconds.ToString("d3")} </mspace>";
+
+    }
 }
 
 
