@@ -29,16 +29,13 @@ namespace dungeonGenerator {
         {
             // 1. Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
             BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength);
-            var allNodeSpaces = bsp.PartitionSpace(maxIterations, roomWidthMin+roomOffset.x+wallThickness, roomLengthMin+roomOffset.y+wallThickness, splitCenterDeviationPercent);
+            var allNodeSpaces = bsp.PartitionSpace(maxIterations, roomWidthMin + roomOffset.x + wallThickness, roomLengthMin + roomOffset.y + wallThickness, splitCenterDeviationPercent);
 
             // 2. Extract the leaves, which represent the possible room positions
             var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
 
-    
-
-
             // 3. Place rooms within the possible room bounds taking into account room offset
-            RoomGenerator roomGenerator = new RoomGenerator(maxIterations, roomWidthMin, roomLengthMin, wallThickness, roomOffset);
+            RoomCalculator roomGenerator = new RoomCalculator(maxIterations, roomWidthMin, roomLengthMin, wallThickness, roomOffset);
             var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
 
             // 4. Generate the corridors to connect the rooms
@@ -53,7 +50,7 @@ namespace dungeonGenerator {
             // get edge rooms  
             // MOVE THIS INTO SEPARATE FUNCTION
             var deadEnds = GraphHelper.GetLeaves(startAndEnd[0], false);
-            foreach(var deadEnd in deadEnds)
+            foreach (var deadEnd in deadEnds)
             {
                 if (deadEnd != startAndEnd[1])
                 {
@@ -62,8 +59,9 @@ namespace dungeonGenerator {
             }
 
             // REFACTOR !!!
-            GameMaster.numberOfSpheres = deadEnds.Count-1;
-            GameMaster.numberOfCubes = roomSpaces.Count - 2 - GameMaster.numberOfSpheres;
+            GameManager.Instance.total[CollectableType.cylinder] = 1;
+            GameManager.Instance.total[CollectableType.sphere] = deadEnds.Count - 1;
+            GameManager.Instance.total[CollectableType.cube] = roomSpaces.Count - 2 - GameManager.Instance.total[CollectableType.sphere];
 
             // 6. Return a list of bounds on which the floor will be (Rooms and Corridors) 
             return new List<Node>(rooms).Concat(corridorList).ToList();

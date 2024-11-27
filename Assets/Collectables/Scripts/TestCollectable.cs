@@ -4,15 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public enum
-    CollectableType
-{
-    sphere,
-    cylinder,
-    cube
-}
-
-
 public class TestCollectable : MonoBehaviour
 {
     public CollectableType collectableType;
@@ -37,27 +28,27 @@ public class TestCollectable : MonoBehaviour
     }
     public void OnTriggerEnter(Collider other)
     {
-        if(other.CompareTag("Player") && isCollected == false && !isMinimapObject)
-        {
-            if(collectableType == CollectableType.sphere )
-            {
-                GameMaster.spheresCollected++;
+        //if(other.CompareTag("Player") && isCollected == false && !isMinimapObject)
+        //{
+        //    if(collectableType == CollectableType.sphere )
+        //    {
+        //        GameManager.spheresCollected++;
                 
-            } else if(collectableType== CollectableType.cube){
+        //    } else if(collectableType== CollectableType.cube){
 
 
-                GameMaster.cubesCollected++;
+        //        GameManager.cubesCollected++;
 
 
-            } else if(collectableType == CollectableType.cylinder)
-            {
-                GameMaster.cylinderCollected++;
+        //    } else if(collectableType == CollectableType.cylinder)
+        //    {
+        //        GameManager.cylinderCollected++;
 
-            }
+        //    }
 
-            // destroy collectable aftyer collision
-            isCollected = true;
-        }
+        //    // destroy collectable aftyer collision
+        //    isCollected = true;
+        //}
     }
 
     private GameObject minimapObject;

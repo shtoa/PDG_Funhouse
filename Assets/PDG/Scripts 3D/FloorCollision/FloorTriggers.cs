@@ -16,7 +16,7 @@ public class FloorTriggers : MonoBehaviour
         {
             if(roomType == RoomType.Start)
             {
-                GameMaster.gameState = GameMaster.GameState.Started;
+                GameManager.Instance.gameState = GameManager.GameState.Started;
             }
         }
     }

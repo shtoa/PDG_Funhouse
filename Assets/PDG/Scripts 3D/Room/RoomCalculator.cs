@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 
 namespace dungeonGenerator
 {
-    public class RoomGenerator
+    public class RoomCalculator
     {
         private int maxIterations;
         private int roomWidthMin;
@@ -16,7 +16,7 @@ namespace dungeonGenerator
         private int wallThickness;
         private Vector2Int roomOffset;
 
-        public RoomGenerator(int maxIterations, int roomWidthMin, int roomLengthMin, int wallThickness, Vector2Int roomOffset)
+        public RoomCalculator(int maxIterations, int roomWidthMin, int roomLengthMin, int wallThickness, Vector2Int roomOffset)
         {
             this.maxIterations = maxIterations;
             this.roomWidthMin = roomWidthMin;

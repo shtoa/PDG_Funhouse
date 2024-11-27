@@ -90,7 +90,7 @@ public class DoorInteraction : MonoBehaviour, IInteractable
     {
         if (animationTimer < 1f)
         {
-            animationTimer += 0.02f;
+            animationTimer += Time.deltaTime*2f;
             transform.position = Vector3.Lerp(closedPosition + transform.up * 1f, closedPosition, ezEase.Evaluate(animationTimer));
             prevPosition = transform.position;
         }
@@ -104,7 +104,7 @@ public class DoorInteraction : MonoBehaviour, IInteractable
     {
         if (animationTimer < 1f)
         {
-            animationTimer += 0.01f;
+            animationTimer += Time.deltaTime;
             transform.position = Vector3.Lerp(closedPosition, closedPosition + transform.up * 1f, ezEase.Evaluate(animationTimer));
             prevPosition = transform.position;
         }
