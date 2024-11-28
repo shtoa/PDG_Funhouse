@@ -73,32 +73,26 @@ public class TestCollectableUI : MonoBehaviour
 
     private void CreateUICollectables()
     {
-        //CreateCollectableUI(PrimitiveType.Cylinder, new Vector2(80, 80));
-        //CreateCollectableUI(PrimitiveType.Cube, new Vector2(80 + 110, 80));
-        //CreateCollectableUI(PrimitiveType.Sphere, new Vector2(80 + 110 * 2, 80));
+
+        foreach (CollectableType collectableType in Enum.GetValues(typeof(CollectableType)))
+        {
+            CreateUICollectable(collectableType);
+        }
 
     }
 
-    private void CreateCollectableUI(PrimitiveType ptype, Vector3 anchoredPosition)
+    private void CreateUICollectable(CollectableType collectableType)
     {
-        List<Material> mList = new List<Material>();
 
-        GameObject collectable = GameObject.CreatePrimitive(ptype);
-        collectable.transform.SetParent(transform.parent, false);
-        collectable.transform.localPosition = new Vector3(0, 0, 0);
-        collectable.transform.localScale = Vector3.one * 0.25f;
-        collectable.GetComponent<Collider>().enabled = false;
+        GameObject g = MeshCollectableCreator.Instance.GenerateCollectable(collectableType, Counters[collectableType].transform);
+        g.transform.localScale = new Vector3(5, 5, 5);
 
-        RectTransform rectTransform = collectable.AddComponent<RectTransform>();
-        rectTransform.anchorMin = Vector2.zero;
-        rectTransform.anchorMax = Vector2.zero;
-        rectTransform.pivot = Vector2.one * 0.5f;
-        rectTransform.anchoredPosition = anchoredPosition;
-        rectTransform.localPosition = rectTransform.localPosition + new Vector3(0, 0, 1) * 20f;
-        rectTransform.localScale = Vector3.one * 20f;
 
-        collectable.GetComponent<MeshRenderer>().SetMaterials(mList);
-        collectable.layer = LayerMask.NameToLayer("UI");
+        // need to make the width of the counters the same
+        g.transform.localPosition = new Vector3(4.5f, 20, 3);
+        g.layer = LayerMask.NameToLayer("UI");
+        g.GetComponent<Collider>().enabled = false; // change this to make it more scalable
+
     }
 
     private GameObject CreateCounter(string name, Vector2 anchorPos)
@@ -111,7 +105,7 @@ public class TestCollectableUI : MonoBehaviour
         // Add text object to the componenet 
         TextMeshPro tmp = counterObj.AddComponent<TextMeshPro>();
         tmp.autoSizeTextContainer = true;
-        tmp.alignment = TextAlignmentOptions.Left;
+        tmp.alignment = TextAlignmentOptions.Center;
         tmp.text = $"{name}:";
 
         // change the transform on the UI Screen 
@@ -121,12 +115,17 @@ public class TestCollectableUI : MonoBehaviour
         rectTransform.anchorMin = Vector2.zero;
         rectTransform.anchorMax = Vector2.zero;
         rectTransform.anchoredPosition = anchorPos;
+  
 
         tmp.fontMaterial = FontManager.MainFontMaterial;
         tmp.font = FontManager.TmpFontAssetMain;
         counterObj.transform.SetParent(transform.parent, false);
 
+     
+
         Canvas.ForceUpdateCanvases();
+
+        rectTransform.sizeDelta = Vector2.one * 10f;
 
         return counterObj;
     }

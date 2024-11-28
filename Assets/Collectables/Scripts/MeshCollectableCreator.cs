@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-
+using UnityEngine.InputSystem.Utilities;
 
 public enum
     CollectableType
@@ -35,10 +35,12 @@ public class MeshCollectableCreator : MonoBehaviour
             Instance = this;
         }
 
+        mList.Clear();
+
         mList.Add(CollectableMaterial);
         mList.Add(CollectableOutline);
     }
-    public void GenerateCollectable(CollectableType collectableType, Transform parentTransform)
+    public GameObject GenerateCollectable(CollectableType collectableType, Transform parentTransform)
     {
         GameObject collectable = null;
 
@@ -62,12 +64,13 @@ public class MeshCollectableCreator : MonoBehaviour
         {
 
             collectable.transform.SetParent(parentTransform, false);
-            collectable.transform.localPosition = new Vector3(0, 0.35f, 0);
-            collectable.transform.localScale = Vector3.one * 0.25f;
+
             collectable.GetComponent<Collider>().isTrigger = true;
             collectable.GetComponent<MeshRenderer>().SetMaterials(mList);
             //collectable.GetComponent<MeshCollectable>().materialFadeOut = MaterialFadeOut;
 
         }
+
+        return collectable;
     }
 }

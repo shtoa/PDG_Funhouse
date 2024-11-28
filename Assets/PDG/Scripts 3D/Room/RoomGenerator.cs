@@ -114,6 +114,7 @@ namespace dungeonGenerator
             floor.transform.localPosition = room.Bounds.center;
             floor.GetComponent<MeshRenderer>().material = floorMaterial;
 
+            GameObject collectable = null;
 
             switch (room.RoomType)
             {
@@ -137,7 +138,7 @@ namespace dungeonGenerator
 
 
                     floor.GetComponent<MeshRenderer>().material = EndRoomMat;
-                    MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.cylinder, floor.transform);
+                    collectable = MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.cylinder, floor.transform);
                     break;
 
 
@@ -146,18 +147,23 @@ namespace dungeonGenerator
 
 
                     floor.GetComponent<MeshRenderer>().material = EndRoomMat;
-                    MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.sphere, floor.transform);
+                    collectable = MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.sphere, floor.transform);
                     break;
 
                 case RoomType.None:
 
                     // when is just a normal room
-                    MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.cube, floor.transform);
+                    collectable = MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.cube, floor.transform);
                     break;
 
 
             }
 
+            if (collectable != null)
+            {
+                collectable.transform.localPosition = new Vector3(0, 0.35f, 0);
+                collectable.transform.localScale = Vector3.one * 0.25f;
+            }
             //// draw the minimap floor
             //GameObject miniMapObject = GameObject.Instantiate(floor, floor.transform.position, floor.transform.rotation);
 
