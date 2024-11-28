@@ -10,7 +10,7 @@ The goal will be to create a more scalable generator to allow extension.
 <summary> Project Installation </summary>
 
 #### Project Dependencies
-- Unity 2022.3.28f1
+- [Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)
 
 To run the project please install the above version of Unity. Then proceed to clone the project to create a local repository using the following commands:
 
@@ -23,7 +23,7 @@ git clone https://gitlab.doc.gold.ac.uk/miliy001/PDG_Funhouse.git
 ```   
 git clone git@gitlab.doc.gold.ac.uk:miliy001/PDG_Funhouse.git
 ```
-After cloning the repo, open the file via Unity Hub, with the correct Unity version (Unity 2022.3.28f1).
+After cloning the repo, open the file via Unity Hub, with the correct Unity version ([Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)).
 </details>
 
 ---
