@@ -7,6 +7,25 @@ The goal will be to create a more scalable generator to allow extension.
 --- 
 <details open>
 
+<summary> Acknowledgements </summary>
+
+<br/>
+
+- **Third Person Character Controller** - developed from tutorial by *spaderdabomb*
+
+Spaderdabomb (2024). *FinalCharacterController*. URL: https://github.com/spaderdabomb/FinalCharacterController
+
+- **BSP Dungeon Generation Architecture** - adapted from *SunnyValleyStudio* [MIT Licence]
+
+SunnyValleyStudio (2020). *Unity_Procedural_Dungeon_binary_space_partitioning*. URL: https://github.com/SunnyValleyStudio/Unity_Procedural_Dungeon_binary_space_partitioning
+
+  
+</details>
+
+--- 
+
+<details open>
+
 <summary> Project Installation </summary>
 
 #### Project Dependencies
