@@ -54,23 +54,12 @@ namespace dungeonGenerator
         public int wallThickness;
         [Range(1, 10)]
         public int wallHeight;
-        public Material wallMaterial;
 
-        [Header("Start Room")]
-        public Material StartRoomMat;
-
-        [Header("End Room")]
-        public Material EndRoomMat;
 
         [Header("Door")]
-        public Material DoorMat;
         [Range(0, 1)]
         public float doorThickness;
-        [Header("Floor Properties")]
-        public Material floorMaterial;
-
-        [Header("Ceiling Properties")]
-        public Material ceilingMaterial;
+       
  
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
@@ -113,7 +102,7 @@ namespace dungeonGenerator
 
             InitializeStartAndEnd(calculator.roomSpaces);
 
-            RoomGenerator rg = new RoomGenerator(roomList, this);
+            RoomGenerator rg = new RoomGenerator(roomList, this.gameObject);
             rg.GenerateRooms(roomList);
         }
 

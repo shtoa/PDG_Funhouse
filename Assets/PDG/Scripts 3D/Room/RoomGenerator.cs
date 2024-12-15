@@ -1,10 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-
-using dungeonGenerator;
-
 
 namespace dungeonGenerator
 {
@@ -19,24 +14,36 @@ namespace dungeonGenerator
         private Material ceilingMaterial;
         private int corridorWidth;
         private DungeonGenerator dungeonGenerator;
+        private DungeonDecorator dungeonDecorator;
 
         public Material DoorMat { get; private set; }
         public Material StartRoomMat { get; private set; }
         public Material EndRoomMat { get; private set; }
 
-        public RoomGenerator(List<Node> RoomSpaces, DungeonGenerator _dungeonGenerator)
+        public RoomGenerator(List<Node> RoomSpaces, GameObject dungeonObject)
         {
-            wallThickness = _dungeonGenerator.wallThickness;
-            wallMaterial = _dungeonGenerator.wallMaterial;
-            wallHeight = _dungeonGenerator.wallHeight;
-            ceilingMaterial = _dungeonGenerator.ceilingMaterial;
-            corridorWidth = _dungeonGenerator.corridorWidth;
-            dungeonGenerator = _dungeonGenerator;
-            DoorMat = _dungeonGenerator.DoorMat;
-            StartRoomMat = _dungeonGenerator.StartRoomMat;
-            EndRoomMat = _dungeonGenerator.EndRoomMat;
-            floorMaterial = _dungeonGenerator.floorMaterial;
 
+            DungeonDecorator dungeonDecorator = dungeonObject.GetComponent<DungeonDecorator>();
+            this.dungeonDecorator = dungeonDecorator;
+            this.wallMaterial = dungeonDecorator.wallMaterial;
+            this.StartRoomMat = dungeonDecorator.StartRoomMat;
+            this.EndRoomMat = dungeonDecorator.EndRoomMat;
+            this.floorMaterial = dungeonDecorator.floorMaterial;
+            this.ceilingMaterial = dungeonDecorator.ceilingMaterial;
+            this.DoorMat = dungeonDecorator.DoorMat;
+
+            
+            
+            
+            DungeonGenerator dungeonGenerator = dungeonObject.GetComponent<DungeonGenerator>();
+
+            this.dungeonGenerator = dungeonGenerator;
+
+            // set the dungeon properties
+            this.wallThickness = dungeonGenerator.wallThickness;
+            this.wallHeight = dungeonGenerator.wallHeight;
+            this.corridorWidth = dungeonGenerator.corridorWidth;
+    
         }
 
 
