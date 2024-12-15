@@ -114,8 +114,34 @@ namespace dungeonGenerator
             DungeonCalculator calculator = new DungeonCalculator(dungeonWidth, dungeonLength);
             roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidthAndWall, roomSizeMin, wallThickness, roomOffset);
 
+
+            InitializeStartAndEnd(calculator.roomSpaces);
+
             RoomGenerator rg = new RoomGenerator(roomList, this);
             rg.GenerateRooms(roomList);
+        }
+
+
+        private void InitializeStartAndEnd(List<Node> roomSpaces)
+        {
+            // 5. Pick starting and ending rooms
+            var startAndEnd = GraphHelper.ChooseStartAndEnd(roomSpaces); // change the data structure here
+
+
+            // get edge rooms  
+            // MOVE THIS INTO SEPARATE FUNCTION
+            var deadEnds = GraphHelper.GetLeaves(startAndEnd[0], false);
+            foreach (var deadEnd in deadEnds)
+            {
+                if (deadEnd != startAndEnd[1])
+                {
+                    deadEnd.RoomType = RoomType.DeadEnd;
+                }
+            }
+
+            GameManager.Instance.total[CollectableType.cylinder] = 1;
+            GameManager.Instance.total[CollectableType.sphere] = deadEnds.Count - 1;
+            GameManager.Instance.total[CollectableType.cube] = roomSpaces.Count - 2 - GameManager.Instance.total[CollectableType.sphere];
         }
 
     }

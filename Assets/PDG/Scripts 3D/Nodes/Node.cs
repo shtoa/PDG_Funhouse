@@ -66,7 +66,6 @@ namespace dungeonGenerator
 
         public void addConnection(Node node)
         {
-            Debug.Log("Adding Conneciton!");
             connectionsList.Add(node);
         }
 

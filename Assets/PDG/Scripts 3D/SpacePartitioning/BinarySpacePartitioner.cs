@@ -4,168 +4,199 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 
-using dungeonGenerator;
-using System;
-using tutorialGenerator;
 
 namespace dungeonGenerator
 {
     public class BinarySpacePartitioner
+    
     {
-        private int dungeonWidth;
-        private int dungeonHeight;
+        // Class Fields
         private SpaceNode rootNode;
 
+        // Getter - Setters
         public SpaceNode RootNode { get => rootNode; set => rootNode = value; }
+
+        /* <summary>
+            Instantiate BSP with root node equal to the size of the Dungeon
+        </summary> */
 
         public BinarySpacePartitioner(int dungeonWidth, int dungeonHeight)
         {
-            this.dungeonWidth = dungeonWidth;
-            this.dungeonHeight = dungeonHeight;
+            // Create the root of the BSP tree equal to the starting space to split ie. dungeonWidth, dungeonHeight
             this.RootNode = new SpaceNode(new BoundsInt(
                 Vector3Int.zero,
                 new Vector3Int(dungeonWidth, 0, dungeonHeight)),
                 null, 0);
         }
 
-        public List<SpaceNode> PartitionSpace(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent)
+        /* <summary>
+            Partitions the rootNode till the maxiterations have been exceeded or no more partitions are possible.
+        </summary> */
+
+        public List<SpaceNode> PartitionSpace(int maxIterations, Vector2Int minSpaceDim, Vector2 splitCenterDeviationPercent)
         {
       
             Queue<SpaceNode> spacesToSplit = new Queue<SpaceNode>(); // initialize queue of spaces to split
             List<SpaceNode> allSpaces = new List<SpaceNode>(); // initialize list of split spaces to return 
 
+            spacesToSplit.Enqueue(RootNode); // add RootNode to be split
+            allSpaces.Add(RootNode); // add RootNode to the spaces to return forming the BSP graph
 
-            spacesToSplit.Enqueue(RootNode);
-            allSpaces.Add(RootNode);
+            int iterations = 0; // initialize n iteration to 0
 
-            int iterations = 0;
 
-            while (iterations < maxIterations && spacesToSplit.Count > 0) { 
-            
+            // while the iterations are not exceeded and there are spaces to split, split the spaces
+            while (iterations < maxIterations && spacesToSplit.Count > 0)
+            {
+
+                SpaceNode spaceToSplit = spacesToSplit.Dequeue(); // dequeue space to split
+                var splitSpaces = SplitSpace(spaceToSplit, minSpaceDim, splitCenterDeviationPercent); // split the space
+
+                addSplitSpaces(spacesToSplit, allSpaces, splitSpaces);
+
+                // Increment the iterations 
                 iterations++;
-                SpaceNode currentSpace = spacesToSplit.Dequeue();
 
-          
-                SplitSpaces(currentSpace, allSpaces, roomWidthMin, roomLengthMin, spacesToSplit, splitCenterDeviationPercent); // start splitting spaces
-                
             }
 
-            return allSpaces;
+            return allSpaces; // return the spaces that for the BSP tree
+        }
+
+        private static void addSplitSpaces(Queue<SpaceNode> spacesToSplit, List<SpaceNode> allSpaces, (SpaceNode, SpaceNode) splitSpaces)
+        {
+            // add split rooms to splitSpaces and spaces to Split
+            if (splitSpaces.Item1 is not null && splitSpaces.Item2 is not null)
+            {
+                allSpaces.Add(splitSpaces.Item1);
+                allSpaces.Add(splitSpaces.Item2);
+
+                spacesToSplit.Enqueue(splitSpaces.Item1);
+                spacesToSplit.Enqueue(splitSpaces.Item2);
+
+            }
         }
 
         #region Splitting Helper Methods
 
-        /// <summary>
-        /// Split the rooms based on their current width and height
-        /// </summary>
+        /* <summary>
+            Split the space based on their current width and height
+        </summary> */
 
-        private void SplitSpaces(SpaceNode currentSpace, List<SpaceNode> splitSpaces, int roomWidthMin, int roomLengthMin, Queue<SpaceNode> spacesToSplit, Vector2 splitCenterDeviationPercent)
+        private (SpaceNode, SpaceNode) SplitSpace(SpaceNode spaceToSplit, Vector2Int minSpaceDim, Vector2 splitCenterDeviationPercent)
         {
-            int spaceWidth = currentSpace.Bounds.size.x;
-            int spaceHeight = currentSpace.Bounds.size.z;
+            // get the width and height of the spaceToSplit 
+            // TODO: Change to Vector2Int
+            int spaceWidth = spaceToSplit.Bounds.size.x;
+            int spaceHeight = spaceToSplit.Bounds.size.z;
 
-            if (spaceWidth > 2*roomWidthMin && spaceHeight > 2 * roomLengthMin)
+
+            // TODO: Check if this returns expected behaviour
+            Vector2Int splitPositions = new Vector2Int(
+                getSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x),
+                getSplitPosition(spaceHeight, minSpaceDim.y, splitCenterDeviationPercent.y)
+
+            );
+
+
+            // check if both width and height are large enough to split
+            if (spaceWidth > 2 * minSpaceDim.x && spaceHeight > 2 * minSpaceDim.y)
             {
-                // if both width and height are enough to split split randomly
-                if(currentSpace.SplitPosition.Equals(SplitPosition.Left) || currentSpace.SplitPosition.Equals(SplitPosition.Right)) // Random.Range(0,1) == 0
+                // TODO: Add random splitting / more control
+                if (spaceToSplit.SplitPosition.Equals(SplitPosition.Left) || spaceToSplit.SplitPosition.Equals(SplitPosition.Right))
                 {
-                    splitHorizontally(currentSpace, splitSpaces, roomLengthMin, spacesToSplit, splitCenterDeviationPercent.x);
-                } else
+                    return SplitHorizontally(spaceToSplit, splitPositions.y);
+                }
+                else
                 {
-                    splitVertically(currentSpace, splitSpaces, roomWidthMin, spacesToSplit, splitCenterDeviationPercent.y);
+                    return SplitVertically(spaceToSplit, splitPositions.x);
                 }
 
-            } else if (spaceWidth > 2 * roomWidthMin)
+            }
+            else if (spaceWidth > 2 * minSpaceDim.x) // if only width is large enough to split, split vertically
             {
-                // if only width is large enough to split, split vertically
-                splitVertically(currentSpace, splitSpaces, roomWidthMin, spacesToSplit, splitCenterDeviationPercent.y);
-            } else if (spaceHeight > 2 * roomLengthMin)
+                return SplitVertically(spaceToSplit, splitPositions.x);
+            }
+            else if (spaceHeight > 2 * minSpaceDim.y)  // if only height is large enough to split, split horizontally
             {
-                // if only height is large enough to split, split horizontally
-                splitHorizontally(currentSpace, splitSpaces, roomLengthMin, spacesToSplit, splitCenterDeviationPercent.x);
-            } 
+                return SplitHorizontally(spaceToSplit, splitPositions.y);
+            }
+
+            return (null, null); // FIXME: Might Pose Future Errors
+
         }
 
-       
-        private void splitVertically(SpaceNode currentSpace, List<SpaceNode> splitSpaces, int roomWidthMin, Queue<SpaceNode> spacesToSplit, float splitCenterDeviationPercent)
+        private int getSplitPosition(int size, int minSize, float splitCenterDeviationPercent)
+        {
+            int center = size / 2;
+            int centerDeviation = (center - minSize);
+
+            int splitPosition = (int)Random.Range(center - centerDeviation * splitCenterDeviationPercent,
+                                                   center + centerDeviation * splitCenterDeviationPercent);
+
+            return splitPosition;
+        }
+
+        /* <summary>
+            Split the space Vertically
+        </summary> */
+
+        private (SpaceNode, SpaceNode) SplitVertically(SpaceNode spaceToSplit, int vSplitPosition)
         {
             SpaceNode leftNode, rightNode;
 
-            //int vSplitPosition = Random.Range(roomWidthMin, currentSpace.Bounds.size.x - roomWidthMin);
-            float center = currentSpace.Bounds.size.x / 2f;
-            float centerDeviation = (center - roomWidthMin);
-
-            int vSplitPosition = (int)Random.Range(center - centerDeviation*splitCenterDeviationPercent, 
-                                                   center + centerDeviation*splitCenterDeviationPercent); 
-
+            // set left node 
             leftNode = new SpaceNode(
-                new BoundsInt(currentSpace.Bounds.min,
-                new Vector3Int(vSplitPosition, currentSpace.Bounds.size.y, currentSpace.Bounds.size.z)),
-                currentSpace,
-                currentSpace.TreeLayerIndex + 1
+                new BoundsInt(spaceToSplit.Bounds.min,
+                new Vector3Int(vSplitPosition, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z)),
+                spaceToSplit,
+                spaceToSplit.TreeLayerIndex + 1
             );
 
+            leftNode.SplitPosition = SplitPosition.Left;
+
+            // set right node            
             rightNode = new SpaceNode(
-                new BoundsInt(currentSpace.Bounds.min + new Vector3Int(vSplitPosition,0,0),
-                new Vector3Int(currentSpace.Bounds.size.x - vSplitPosition, currentSpace.Bounds.size.y, currentSpace.Bounds.size.z)),
-                currentSpace,
-                currentSpace.TreeLayerIndex + 1
+                new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(vSplitPosition,0,0),
+                new Vector3Int(spaceToSplit.Bounds.size.x - vSplitPosition, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z)),
+                spaceToSplit,
+                spaceToSplit.TreeLayerIndex + 1
 
             );
 
-            leftNode.SplitPosition = SplitPosition.Left; 
             rightNode.SplitPosition = SplitPosition.Right;
-
-            // can separate further
-            spacesToSplit.Enqueue( leftNode );
-            spacesToSplit.Enqueue( rightNode );
-
-            splitSpaces.Add(leftNode );
-            splitSpaces.Add(rightNode);
+            
+            // return left and right nodes
+            return( leftNode, rightNode );
 
         }
 
-        private void splitHorizontally(SpaceNode currentSpace, List<SpaceNode> splitSpaces, int roomLengthMin, Queue<SpaceNode> spacesToSplit, float splitCenterDeviationPercent)
+        private (SpaceNode, SpaceNode) SplitHorizontally(SpaceNode spaceToSplit, int hSplitPosition)
         {
+            // intialize top and bottom nodes
             SpaceNode topNode, bottomNode;
 
-            //int hSplitPosition = Random.Range(roomLengthMin, currentSpace.Bounds.size.z - roomLengthMin);
-            int center = currentSpace.Bounds.size.z / 2;
-            float centerDeviation = (center - roomLengthMin);
-            int hSplitPosition = (int)Random.Range(center - centerDeviation*splitCenterDeviationPercent,
-                                                   center + centerDeviation*splitCenterDeviationPercent);
-
-
-
-
-
-
-            var randVal = Random.value;
-
+            // set top node
             topNode = new SpaceNode(
-                new BoundsInt(currentSpace.Bounds.min,
-                new Vector3Int(currentSpace.Bounds.size.x, currentSpace.Bounds.size.y, hSplitPosition)),
-                currentSpace,
-                currentSpace.TreeLayerIndex + 1
+                new BoundsInt(spaceToSplit.Bounds.min,
+                new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, hSplitPosition)),
+                spaceToSplit,
+                spaceToSplit.TreeLayerIndex + 1
             );
-            topNode.SplitPosition = SplitPosition.Top;
-            spacesToSplit.Enqueue(topNode);
-            splitSpaces.Add(topNode);
-
-
-
-            bottomNode = new SpaceNode(
-                new BoundsInt(currentSpace.Bounds.min + new Vector3Int(0, 0, hSplitPosition),
-                new Vector3Int(currentSpace.Bounds.size.x, currentSpace.Bounds.size.y, currentSpace.Bounds.size.z - hSplitPosition)),
-                currentSpace,
-                currentSpace.TreeLayerIndex + 1
-            );
-            bottomNode.SplitPosition = SplitPosition.Bottom;
-            spacesToSplit.Enqueue(bottomNode);
-            splitSpaces.Add(bottomNode);
-
             
+            topNode.SplitPosition = SplitPosition.Top; // TODO: Decouple this for a more general solution
+          
+            // set bottom node
+            bottomNode = new SpaceNode(
+                new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(0, 0, hSplitPosition),
+                new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z - hSplitPosition)),
+                spaceToSplit,
+                spaceToSplit.TreeLayerIndex + 1
+            );
 
+            bottomNode.SplitPosition = SplitPosition.Bottom;
+            
+            // return the results of the split
+            return (bottomNode, topNode);
 
         }
         #endregion
