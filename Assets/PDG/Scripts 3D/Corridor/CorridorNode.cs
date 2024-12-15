@@ -242,7 +242,7 @@ namespace dungeonGenerator
                 sortedTopSpace = sortedTopSpace.Where(Child => Math.Abs(minZ - Child.Bounds.min.z) < 2).ToList(); // find rooms that have the least deviation from maxX
 
                 // select a random room from valid rooms
-                topSpace = sortedTopSpace[Random.RandomRange(0, sortedTopSpace.Count)];
+                topSpace = sortedTopSpace[Random.Range(0, sortedTopSpace.Count)];
 
             }
 

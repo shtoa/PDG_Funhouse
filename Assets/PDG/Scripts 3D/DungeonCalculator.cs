@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using Autodesk.Fbx;
 
 namespace dungeonGenerator {
     public class DungeonCalculator
@@ -36,8 +37,8 @@ namespace dungeonGenerator {
                  
                 // TODO: Add check if this value is impossible
                 var minSpaceDim = new Vector2Int(
-                    roomWidthMin + roomOffset.x + wallThickness,
-                    roomLengthMin + roomOffset.y + wallThickness
+                    roomWidthMin + roomOffset.x + wallThickness*2,
+                    roomLengthMin + roomOffset.y + wallThickness*2
                 );
 
                 var allNodeSpaces = bsp.PartitionSpace(maxIterations, minSpaceDim, splitCenterDeviationPercent);  // include roomOffset and wallThickness to have correct placement
@@ -50,9 +51,18 @@ namespace dungeonGenerator {
             #endregion
 
             #region 2. Room Placement
-               
+
+                // TODO: Make this be passed into the generator
+                var minRoomDim = new Vector2Int(
+                    roomWidthMin,
+                    roomLengthMin
+                );
+
+                // FIXME: Check if this value is correct
+                var totalRoomOffset = roomOffset + Vector2Int.one * wallThickness * 2;
+            
                 // 2.1 Place rooms within the possible room bounds taking into account room offset
-                RoomCalculator roomGenerator = new RoomCalculator(maxIterations, roomWidthMin, roomLengthMin, wallThickness, roomOffset);
+                RoomCalculator roomGenerator = new RoomCalculator(minRoomDim, totalRoomOffset, corridorWidth); // FIXME: Make more general remove corriodr width dependency
                 var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
             
             #endregion

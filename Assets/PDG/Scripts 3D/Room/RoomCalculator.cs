@@ -10,55 +10,57 @@ namespace dungeonGenerator
 {
     public class RoomCalculator
     {
-        private int maxIterations;
-        private int roomWidthMin;
-        private int roomLengthMin;
-        private int wallThickness;
-        private Vector2Int roomOffset;
+        private Vector2Int minRoomBounds;
+        private Vector2Int totalRoomOffset;
+        private float corridorWidth;
 
-        public RoomCalculator(int maxIterations, int roomWidthMin, int roomLengthMin, int wallThickness, Vector2Int roomOffset)
+        public RoomCalculator(Vector2Int minRoomBounds, Vector2Int totalRoomOffest, float corridorWidth)
         {
-            this.maxIterations = maxIterations;
-            this.roomWidthMin = roomWidthMin;
-            this.roomLengthMin = roomLengthMin;
-            this.wallThickness = wallThickness;
-            this.roomOffset = roomOffset;
+            this.minRoomBounds = minRoomBounds;
+            this.totalRoomOffset = totalRoomOffest;
+            this.corridorWidth = corridorWidth;
         }
 
         public List<SpaceNode> PlaceRoomsInSpaces(List<Node> roomSpaces)
 
         {
+            // list of rooms to return
             List<SpaceNode> rooms = new List<SpaceNode>();
 
+            // loop over spaces placing rooms in each
             foreach(var roomSpace in roomSpaces)
             {
-
-                // extend to be able to place anywhere within the given space
-
-                // add offset into the partitioning to account for the room sizes ... 
-
-;
-                BoundsInt bounds = new BoundsInt(roomSpace.Bounds.position,
-                    roomSpace.Bounds.size - new Vector3Int(this.roomOffset.x+wallThickness, 0, this.roomOffset.y+wallThickness)
+                // TODO: Add check if totalRoomOffset Greater than room Size
+                BoundsInt bounds = new BoundsInt(
+                    roomSpace.Bounds.position,
+                    roomSpace.Bounds.size - new Vector3Int(this.totalRoomOffset.x, 0, this.totalRoomOffset.y)
                     );
                 roomSpace.Bounds = bounds;
 
-                //// try to make boxier rooms
-
+                // TODO: extend to be able to place anywhere within the given space
                 #region add rooms randomly inside space
-                //Vector3Int newSize = new Vector3Int(
-                //    Random.Range(roomWidthMin, roomSpace.Bounds.size.x) - roomOffset,
-                //    roomSpace.Bounds.size.y,
-                //    Random.Range(roomLengthMin, roomSpace.Bounds.size.z) - roomOffset
+
+                //var maxSize = roomSpace.Bounds.size - new Vector3Int(this.totalRoomOffset.x, 0, this.totalRoomOffset.y);
+                //var minSize = new Vector3Int(minRoomBounds.x, 0, minRoomBounds.y);
+
+                //// randomize Size 
+                //var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), 0, Random.Range(minSize.z, maxSize.z));
+
+                //// randomize Position
+                //var deltaSize = size - minSize;
+                //Debug.Log(deltaSize);
+
+
+                //var position = roomSpace.Bounds.position + new Vector3Int(Random.Range(-deltaSize.x / 4, deltaSize.x / 4), 0, Random.Range(-deltaSize.z / 4, deltaSize.z / 4));
+
+                //BoundsInt testBounds = new BoundsInt(
+                //    position,
+                //    size
                 //);
 
-                //Vector3Int newPos = new Vector3Int(
-                //   Random.Range(roomSpace.Bounds.position.x+roomOffset, roomSpace.Bounds.max.x-roomOffset-newSize.x),
-                //   roomSpace.Bounds.position.y,
-                //   Random.Range(roomSpace.Bounds.position.z+roomOffset, roomSpace.Bounds.max.z-roomOffset-newSize.z)
-                //);
+                //roomSpace.Bounds = testBounds;
 
-                //room.Bounds = new BoundsInt(newPos, newSize);
+
                 #endregion
 
                 rooms.Add((SpaceNode)roomSpace);

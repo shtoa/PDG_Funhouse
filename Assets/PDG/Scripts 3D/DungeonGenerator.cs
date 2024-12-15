@@ -71,11 +71,7 @@ namespace dungeonGenerator
 
         [Header("Ceiling Properties")]
         public Material ceilingMaterial;
-
-        [Header("Collectable Properties")] // move this to different class
-        public Material collectableMaterial;
-        public Material collectableOutline;
-        [SerializeField] public AnimationCurve materialFadeOut;
+ 
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();

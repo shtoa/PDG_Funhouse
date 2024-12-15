@@ -69,7 +69,7 @@ namespace dungeonGenerator
 
         public void DrawDoors(BoundsInt doorBound)
         {
-            GameObject door = MeshHelper.CreateCuboid(doorBound.size, 1);
+            GameObject door = MeshHelper.CreateCuboid(doorBound.size, 1); // TODO: Make door thickness possible to manipulate
             door.transform.SetParent(dungeonGenerator.transform, false);
 
             door.transform.localPosition = doorBound.center;
