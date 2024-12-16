@@ -8,7 +8,7 @@ namespace dungeonGenerator
 {
     public class CorridorGenerator
     {  
-        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth, Vector2Int maxDeviation)
+        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth)
         {
             List<Node> corridorList = new List<Node>();
             
@@ -28,7 +28,7 @@ namespace dungeonGenerator
                 }
                 else 
                 {
-                    CorridorNode corridor = new CorridorNode(space.ChildrenNodeList[0], space.ChildrenNodeList[1], corridorWidth, maxDeviation);
+                    CorridorNode corridor = new CorridorNode(space.ChildrenNodeList[0], space.ChildrenNodeList[1], corridorWidth);
                     corridor.RoomType = RoomType.Corridor;
                     corridorList.Add(corridor);
                 }

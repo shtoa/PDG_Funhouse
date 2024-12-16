@@ -16,17 +16,15 @@ namespace dungeonGenerator
         private Node node2;
         private int corridorWidth;
         private int modifierDistanceFromWall = 3;
-        private Vector2Int maxDeviation;
         public static int wallThickness;
 
-        public CorridorNode(Node node1, Node node2, int corridorWidth, Vector2Int maxDeviation) : base(null) // null since it doesnt have any parents
+        public CorridorNode(Node node1, Node node2, int corridorWidth) : base(null) // null since it doesnt have any parents
         {
             this.node1 = node1;
             this.node2 = node2;
             this.corridorWidth = corridorWidth;
 
             GenerateCorridor();
-            this.maxDeviation = maxDeviation;
         }
 
         private void GenerateCorridor()

@@ -749,6 +749,7 @@ GameObject:
   m_Component:
   - component: {fileID: 404951507}
   - component: {fileID: 404951506}
+  - component: {fileID: 404951508}
   m_Layer: 0
   m_Name: DungeonGen
   m_TagString: Untagged
@@ -768,64 +769,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8457e47f06f0ea646b4cc7b7e0e3e4c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dungeonWidth: 40
-  dungeonLength: 40
-  maxIterations: 50
-  splitCenterDeviationWidthPercent: 0.358
-  splitCenterDeviationLengthPercent: 0.601
-  roomWidthMin: 3
-  roomLengthMin: 3
-  roomOffsetX: 3
-  roomOffsetY: 3
-  roomRandomnessWidth: 0
-  roomRandomnessLength: 0
+  maxIterations: 100
+  dungeonBounds:
+    m_Position: {x: 0, y: 0, z: 0}
+    m_Size: {x: 40, y: 0, z: 40}
+  splitCenterDeviation: {x: 0.5, y: 0.5}
+  roomBoundsMin:
+    m_Position: {x: 0, y: 0, z: 0}
+    m_Size: {x: 5, y: 0, z: 5}
+  roomOffset: {x: 1, y: 1}
+  roomPlacementRand: {x: 0, y: 0}
   corridorWidth: 1
   wallThickness: 1
-  wallHeight: 2
-  wallMaterial: {fileID: 2100000, guid: 1efffa6d0fa88d84eae2e37de1ddc1ab, type: 2}
-  StartRoomMat: {fileID: 2100000, guid: e26c759fcffc57e4bab5d3bed04e4f40, type: 2}
-  EndRoomMat: {fileID: 2100000, guid: a89b910f44110e44a9da3cb49b27006e, type: 2}
-  DoorMat: {fileID: -876546973899608171, guid: 94f75d363746557419a5fc5336a86b2d, type: 3}
-  doorThickness: 0
-  floorMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
-  ceilingMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
-  collectableMaterial: {fileID: -876546973899608171, guid: 5da1697aa19379346900a5a147cd610c,
-    type: 3}
-  collectableOutline: {fileID: -876546973899608171, guid: 2ea376af93c0db747a623c9838806636,
-    type: 3}
-  materialFadeOut:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 2
-      outSlope: 2
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.28835365
-      value: 0.8983586
-      inSlope: 0.8638573
-      outSlope: 0.47198743
-      tangentMode: 1
-      weightedMode: 0
-      inWeight: 1
-      outWeight: 0.16248272
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
+  wallHeight: 1
+  doorThickness: 1
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0
@@ -841,6 +798,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &404951508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404951505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f398d0d69cafb0b498897cf972fe3165, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wallMaterial: {fileID: 2100000, guid: 1efffa6d0fa88d84eae2e37de1ddc1ab, type: 2}
+  StartRoomMat: {fileID: 2100000, guid: e26c759fcffc57e4bab5d3bed04e4f40, type: 2}
+  EndRoomMat: {fileID: 2100000, guid: 26852af115d0ad440a99f0d99117af43, type: 2}
+  DoorMat: {fileID: -876546973899608171, guid: 94f75d363746557419a5fc5336a86b2d, type: 3}
+  floorMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
+  ceilingMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -965,12 +940,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1087894975}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &642868126 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8583702678789654855, guid: 97160d262edabcd45a6e6e3e7f9fd900,
-    type: 3}
-  m_PrefabInstance: {fileID: 1087894975}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &642868127
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1055,37 +1024,6 @@ MonoBehaviour:
     type: 3}
   CollectableOutline: {fileID: -876546973899608171, guid: 2ea376af93c0db747a623c9838806636,
     type: 3}
---- !u!1 &829170844
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 829170845}
-  m_Layer: 3
-  m_Name: PlayerParts
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &829170845
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 829170844}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 642868126}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1087894975
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1174,11 +1112,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 8583702678789654855, guid: 97160d262edabcd45a6e6e3e7f9fd900,
-        type: 3}
-      insertIndex: 0
-      addedObject: {fileID: 829170845}
+    m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8958962267532284925, guid: 97160d262edabcd45a6e6e3e7f9fd900,
         type: 3}
@@ -1199,7 +1133,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1208027435}
   - component: {fileID: 1208027434}
-  - component: {fileID: 1208027433}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -1207,26 +1140,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1208027433
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1208027432}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
 --- !u!114 &1208027434
 MonoBehaviour:
   m_ObjectHideFlags: 0

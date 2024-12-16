@@ -12,10 +12,12 @@ namespace dungeonGenerator {
         private int dungeonLength;
 
         public List<Node> roomSpaces;
-        public DungeonCalculator(int dungeonWidth, int dungeonLength)
+        public DungeonCalculator(BoundsInt dungeonDimensions)
         {
-            this.dungeonWidth = dungeonWidth;
-            this.dungeonLength = dungeonLength;
+
+            // TODO: Further Refactor this
+            this.dungeonWidth = dungeonDimensions.size.x;
+            this.dungeonLength = dungeonDimensions.size.z;
         }
 
         /* <summary>
@@ -24,10 +26,14 @@ namespace dungeonGenerator {
         
         </summary>*/
 
-        public List<Node> CalculateDungeon(int maxIterations, int roomWidthMin, int roomLengthMin, Vector2 splitCenterDeviationPercent, int corridorWidth, Vector2Int maxDeviation, int wallThickness, Vector2Int roomOffset)
+        public List<Node> CalculateDungeon(int maxIterations, BoundsInt roomBoundsMin, Vector2 splitCenterDeviationPercent, int corridorWidth, int wallThickness, Vector2Int roomOffset)
         {
             // Calculate the Dungeon Floor Bounds:
 
+            // FIX ME:
+            var roomWidthMin = roomBoundsMin.size.x;
+            var roomLengthMin = roomBoundsMin.size.z;
+            
             #region 1. Space Partitioning
 
                 // 1.1 Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
@@ -70,7 +76,7 @@ namespace dungeonGenerator {
             #region 3. Generate Corridors
             
                 CorridorGenerator corridorGenerator = new CorridorGenerator();
-                var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, maxDeviation);
+                var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth);
             
             #endregion
 

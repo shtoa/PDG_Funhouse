@@ -15,35 +15,19 @@ namespace dungeonGenerator
     {
         [Header("Dungeon Properties")]
 
-        public int dungeonWidth;
-        public int dungeonLength;
         public int maxIterations;
+        public BoundsInt dungeonBounds; // TODO: Find Way to Visualize the bounds inside a mini Window
 
-        [Header("Space Properties")]
-        [Range(0f, 1)]
-        public float splitCenterDeviationWidthPercent;
-        [Range(0f, 1)]
-        public float splitCenterDeviationLengthPercent;
-        private Vector2 splitCenterDeviation;
+        [Header("Split Properties")] 
+        public Vector2 splitCenterDeviation;
 
 
         [Header("Room Properties")]
-        public int roomWidthMin;
-        public int roomLengthMin;
-        private Vector2Int roomSizeMin;
+        public BoundsInt roomBoundsMin;
+        public Vector2Int roomOffset;
 
+        public Vector2Int roomPlacementRandomness;
 
-        [Range(0, 10)]
-        public int roomOffsetX;
-        [Range(0, 10)]
-        public int roomOffsetY;
-        private Vector2Int roomOffset;
-
-        [Range(0f, 1)]
-        public int roomRandomnessWidth;
-        [Range(0f, 1)]
-        public int roomRandomnessLength;
-        private Vector2 roomRandomness;
         private int corridorWidthAndWall;
         [Header("Corridor Properties")]
         [Range(1, 10)]
@@ -59,7 +43,6 @@ namespace dungeonGenerator
         [Header("Door")]
         [Range(0, 1)]
         public float doorThickness;
-       
  
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
@@ -72,13 +55,7 @@ namespace dungeonGenerator
 
         private void Awake()
         {
-            splitCenterDeviation = new Vector2(splitCenterDeviationWidthPercent, splitCenterDeviationLengthPercent);
-            roomSizeMin = new Vector2Int(roomWidthMin, roomLengthMin);
-            roomOffset = new Vector2Int((int)(roomOffsetX), (int)(roomOffsetY));
-            roomRandomness = new Vector2(roomRandomnessWidth, roomRandomnessLength);
-            corridorWidthAndWall = corridorWidth + 2 * wallThickness;
             CorridorNode.wallThickness = wallThickness;
-
         }
 
         void Start()
@@ -88,7 +65,7 @@ namespace dungeonGenerator
                 GameObject.Destroy(transform.GetChild(i).gameObject);
             }
 
-
+            corridorWidthAndWall = corridorWidth + 2 * wallThickness;
             GenerateDungeon();
 
 
@@ -96,14 +73,15 @@ namespace dungeonGenerator
 
         private void GenerateDungeon()
         {
-            DungeonCalculator calculator = new DungeonCalculator(dungeonWidth, dungeonLength);
-            roomList = calculator.CalculateDungeon(maxIterations, roomWidthMin, roomLengthMin, splitCenterDeviation, corridorWidthAndWall, roomSizeMin, wallThickness, roomOffset);
+            DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
+            // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
+            roomList = calculator.CalculateDungeon(maxIterations, roomBoundsMin, splitCenterDeviation, corridorWidthAndWall, wallThickness, roomOffset);
 
 
             InitializeStartAndEnd(calculator.roomSpaces);
 
-            RoomGenerator rg = new RoomGenerator(roomList, this.gameObject);
-            rg.GenerateRooms(roomList);
+            RoomGenerator roomGenerator = new RoomGenerator(roomList, this.gameObject);
+            roomGenerator.GenerateRooms(roomList);
         }
 
 
@@ -129,5 +107,66 @@ namespace dungeonGenerator
             GameManager.Instance.total[CollectableType.cube] = roomSpaces.Count - 2 - GameManager.Instance.total[CollectableType.sphere];
         }
 
+
+        /*
+         
+        
+            Add checks for UI sliders to be in range
+         
+          
+         */
+
+        [ExecuteInEditMode]
+        void OnValidate()
+        {
+
+            // TODO: Make this more modular 
+
+            // Max Iterations
+            maxIterations = Mathf.Max(maxIterations,0);
+
+            // wallThickness
+            wallThickness = Mathf.Max(1, wallThickness);
+
+            // Dungeon Bounds 
+            // --- Dont Allow Dungeons of Negative sizes
+            // TODO: Find Method to do it in one call
+            dungeonBounds = new BoundsInt(dungeonBounds.position,
+                new Vector3Int(
+                    Mathf.Max(dungeonBounds.size.x, 1+2*wallThickness),
+                    Mathf.Max(dungeonBounds.size.y, 0),
+                    Mathf.Max(dungeonBounds.size.z,1+2*wallThickness)
+                )
+            );
+
+            // Split Center Deviation
+            // --- Clamp between 0-1
+            splitCenterDeviation.x = Mathf.Clamp01(splitCenterDeviation.x);
+            splitCenterDeviation.y = Mathf.Clamp01(splitCenterDeviation.y);
+
+
+            // Room Bounds 
+            // --- Dont Allow Rooms larger than the dungeon
+            // TODO: Find Method to do it in one call
+            roomBoundsMin = new BoundsInt(dungeonBounds.position,
+                new Vector3Int(
+                    Mathf.Clamp(roomBoundsMin.size.x, 1, dungeonBounds.size.x),
+                    Mathf.Clamp(roomBoundsMin.size.y, 0, dungeonBounds.size.y),
+                    Mathf.Clamp(roomBoundsMin.size.z, 1, dungeonBounds.size.z)
+                )
+            );
+
+            // Corridor Width
+            // --- Dont Allow Corridors larger than the minimum size dimension (width / length)
+
+            var minDim = Mathf.Min(roomBoundsMin.size.x, roomBoundsMin.size.z);
+
+
+            corridorWidth = Mathf.Clamp(corridorWidth,1, minDim);
+
+        }
+
     }
+
+
 }
