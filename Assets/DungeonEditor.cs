@@ -12,66 +12,47 @@ using System.Drawing;
 
 namespace dungeonGenerator
 {
+    /*
+     * <summary>
+     *  Class for Visualising and Manipulating the Dungeon Bounds within the Editor 
+     * </summary>
+     */
 
     [CustomEditor(typeof(DungeonGenerator))]
     public class DungeonEditor : Editor
     {
+        // ref to DungeonGenerator
         DungeonGenerator dungeonGenerator;
-        BoxBoundsHandle h;
-       
-
-
 
         private void OnEnable()
         {
-
-            if (this.h == null)
-            {
-                this.h = new BoxBoundsHandle();
-            }
-
-     
-
-            // FIXME: Add only if dungoen generator Exists
+            // Get Instance of DungeonGenerator Script
             dungeonGenerator = target.GetComponent<DungeonGenerator>();
-            
-            var dungeonBounds = dungeonGenerator.dungeonBounds;
-
-            this.h.size = dungeonBounds.size;
-            this.h.center = target.GameObject().transform.position + new Vector3(dungeonBounds.size.x/2f, dungeonBounds.size.y / 2f, dungeonBounds.size.z /2f); // FIX ME: Encode into Single Value
-        
-        }
-
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
         }
 
         private void OnSceneGUI()
         {
-
-            this.h.size = Vector3Int.FloorToInt(this.h.size);
-
-            var dungeonBounds = dungeonGenerator.dungeonBounds;
-            dungeonGenerator.dungeonBounds.size = Vector3Int.FloorToInt(this.h.size);
-            this.h.center = target.GameObject().transform.position + new Vector3(dungeonBounds.size.x / 2f, dungeonBounds.size.y / 2f, dungeonBounds.size.z / 2f);
-
-            Handles.DrawWireCube(this.h.center, this.h.size);
-
-
-            EditorGUI.BeginChangeCheck();
-            Vector3 scale = Handles.ScaleHandle(this.h.size, this.h.center, ((DungeonGenerator)target).transform.rotation);
-            Vector3 clampedScale = new Vector3(Mathf.Max(scale.x, 1), Mathf.Max(scale.y, 1), Mathf.Max(scale.z, 1));
-
-            if (EditorGUI.EndChangeCheck())
+            // run only in edit mode
+            if (Application.isPlaying == false)
             {
-                this.h.size = Vector3Int.FloorToInt(clampedScale);
-                          
+                var dungeonBounds = dungeonGenerator.dungeonBounds; // get the bounds of the dungeon
+                dungeonBounds.position = Vector3Int.CeilToInt(((DungeonGenerator)target).transform.position); // set the dungeonBounds position to the transform of the gameObject
+
+                Handles.DrawWireCube(dungeonBounds.center, dungeonBounds.size); // draw an indication of the dungeonBounds in the editor
+
+                EditorGUI.BeginChangeCheck();
+
+                Vector3 scale = Handles.ScaleHandle(dungeonBounds.size, dungeonBounds.center, ((DungeonGenerator)target).transform.rotation); // get the scale from the scale handler
+                Vector3 clampedScale = new Vector3(Mathf.Max(scale.x, 1), Mathf.Max(scale.y, 1), Mathf.Max(scale.z, 1)); // clamp the scale to be at least one
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RecordObject(target, "scaleDungeon");
+
+                   dungeonGenerator.dungeonBounds.size = Vector3Int.FloorToInt(clampedScale); // set the new size to the Dungeon Bounds
+                }
             }
 
-
         }
-
-
     }
 }

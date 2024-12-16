@@ -58,8 +58,6 @@ namespace dungeonGenerator
         private void Awake()
         {
             CorridorNode.wallThickness = wallThickness;
-
-    
         }
 
         void Start()
@@ -71,10 +69,7 @@ namespace dungeonGenerator
 
             corridorWidthAndWall = corridorWidth + 2 * wallThickness;
             GenerateDungeon();
-
       
-
-
         }
 
         private void GenerateDungeon()

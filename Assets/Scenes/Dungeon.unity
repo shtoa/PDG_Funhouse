@@ -733,7 +733,7 @@ Transform:
   m_GameObject: {fileID: 217350211}
   serializedVersion: 2
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 5.2170258, y: -3.151091, z: 23.696476}
+  m_LocalPosition: {x: 5.2170258, y: 50, z: 23.696476}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -771,14 +771,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonBounds:
-    m_Position: {x: 0, y: 0, z: 0}
-    m_Size: {x: 37, y: 5, z: 11}
-  maxIterations: 0
+    m_Position: {x: 10, y: 1, z: 40}
+    m_Size: {x: 46, y: 3, z: 64}
+  maxIterations: 10
   splitCenterDeviation: {x: 0.5, y: 0.5}
   roomBoundsMin:
-    m_Position: {x: 0, y: 0, z: 0}
+    m_Position: {x: 10, y: 1, z: 40}
     m_Size: {x: 3, y: 1, z: 3}
-  roomOffset: {x: 0, y: 0}
+  roomOffset: {x: 1, y: 1}
   roomPlacementRandomness: {x: 0, y: 0}
   corridorWidth: 1
   wallThickness: 1
@@ -791,8 +791,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 404951505}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9, y: 8, z: 13}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -10, y: 0, z: 8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1126,6 +1126,41 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: snuggleTooth
+      objectReference: {fileID: 0}
+    - target: {fileID: 8966785593727365616, guid: 97160d262edabcd45a6e6e3e7f9fd900,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8966785593727365616, guid: 97160d262edabcd45a6e6e3e7f9fd900,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8966785593727365616, guid: 97160d262edabcd45a6e6e3e7f9fd900,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.5100005
+      objectReference: {fileID: 0}
+    - target: {fileID: 8966785593727365616, guid: 97160d262edabcd45a6e6e3e7f9fd900,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8966785593727365616, guid: 97160d262edabcd45a6e6e3e7f9fd900,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8966785593727365616, guid: 97160d262edabcd45a6e6e3e7f9fd900,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8966785593727365616, guid: 97160d262edabcd45a6e6e3e7f9fd900,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
