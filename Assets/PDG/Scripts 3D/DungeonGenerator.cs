@@ -27,7 +27,7 @@ namespace dungeonGenerator
 
         [Header("Room Properties")]
         public BoundsInt roomBoundsMin;
-        public Vector2Int roomOffset;
+        public Vector2Int roomOffsetMin;
 
         public Vector2Int roomPlacementRandomness;
 
@@ -76,7 +76,7 @@ namespace dungeonGenerator
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
             // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
-            roomList = calculator.CalculateDungeon(maxIterations, roomBoundsMin, splitCenterDeviation, corridorWidthAndWall, wallThickness, roomOffset);
+            roomList = calculator.CalculateDungeon(maxIterations, roomBoundsMin, splitCenterDeviation, corridorWidthAndWall, wallThickness, roomOffsetMin);
 
 
             InitializeStartAndEnd(calculator.roomSpaces);
@@ -134,9 +134,9 @@ namespace dungeonGenerator
             // TODO: Find Method to do it in one call
             dungeonBounds = new BoundsInt(dungeonBounds.position,
                 new Vector3Int(
-                    Mathf.Max(dungeonBounds.size.x, 1+2*wallThickness),
+                    Mathf.Max(dungeonBounds.size.x, 1 + 2 * wallThickness + roomOffsetMin.x),
                     Mathf.Max(dungeonBounds.size.y, 1),
-                    Mathf.Max(dungeonBounds.size.z,1+2*wallThickness)
+                    Mathf.Max(dungeonBounds.size.z, 1 + 2 * wallThickness + + roomOffsetMin.y)
                 )
             );
 
@@ -149,7 +149,7 @@ namespace dungeonGenerator
             // Room Bounds 
             // --- Dont Allow Rooms larger than the dungeon
             // TODO: Find Method to do it in one call
-            roomBoundsMin = new BoundsInt(dungeonBounds.position,
+            roomBoundsMin = new BoundsInt(Vector3Int.zero,
                 new Vector3Int(
                     Mathf.Clamp(roomBoundsMin.size.x, 1, dungeonBounds.size.x),
                     Mathf.Clamp(roomBoundsMin.size.y, 1, dungeonBounds.size.y),
@@ -163,7 +163,7 @@ namespace dungeonGenerator
             var minDim = Mathf.Min(roomBoundsMin.size.x, roomBoundsMin.size.z);
 
 
-            corridorWidth = Mathf.Clamp(corridorWidth,1, minDim);
+            this.corridorWidth = Mathf.Clamp(corridorWidth,1, minDim);
 
 
             

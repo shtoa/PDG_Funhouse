@@ -141,7 +141,7 @@ namespace dungeonGenerator
             }
 
 
-                var midPointX = (rightSpace.Bounds.min.x + leftSpace.Bounds.max.x)/2f;
+            var midPointX = (rightSpace.Bounds.min.x + leftSpace.Bounds.max.x)/2f;
             var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
 
             var pos = new Vector3Int((int)midPointX-sizeX/2, 0, corridorZ- this.corridorWidth/2); //+this.corridorWidth/2

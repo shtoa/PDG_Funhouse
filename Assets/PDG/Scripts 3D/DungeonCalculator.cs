@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using Autodesk.Fbx;
+using UnityEngine.UIElements;
 
 namespace dungeonGenerator {
     public class DungeonCalculator
@@ -70,12 +71,12 @@ namespace dungeonGenerator {
                 // 2.1 Place rooms within the possible room bounds taking into account room offset
                 RoomCalculator roomGenerator = new RoomCalculator(minRoomDim, totalRoomOffset, corridorWidth); // FIXME: Make more general remove corriodr width dependency
                 var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
-            
+
             #endregion
 
             #region 3. Generate Corridors
-            
-                CorridorGenerator corridorGenerator = new CorridorGenerator();
+
+            CorridorGenerator corridorGenerator = new CorridorGenerator();
                 var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth);
             
             #endregion
