@@ -750,6 +750,7 @@ GameObject:
   - component: {fileID: 404951507}
   - component: {fileID: 404951506}
   - component: {fileID: 404951508}
+  - component: {fileID: 404951509}
   m_Layer: 0
   m_Name: DungeonGen
   m_TagString: Untagged
@@ -769,20 +770,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8457e47f06f0ea646b4cc7b7e0e3e4c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxIterations: 100
   dungeonBounds:
     m_Position: {x: 0, y: 0, z: 0}
-    m_Size: {x: 40, y: 0, z: 40}
+    m_Size: {x: 37, y: 5, z: 11}
+  maxIterations: 0
   splitCenterDeviation: {x: 0.5, y: 0.5}
   roomBoundsMin:
     m_Position: {x: 0, y: 0, z: 0}
-    m_Size: {x: 5, y: 0, z: 5}
-  roomOffset: {x: 1, y: 1}
-  roomPlacementRand: {x: 0, y: 0}
+    m_Size: {x: 3, y: 1, z: 3}
+  roomOffset: {x: 0, y: 0}
+  roomPlacementRandomness: {x: 0, y: 0}
   corridorWidth: 1
   wallThickness: 1
-  wallHeight: 1
-  doorThickness: 1
+  doorThickness: 0
 --- !u!4 &404951507
 Transform:
   m_ObjectHideFlags: 0
@@ -792,7 +792,7 @@ Transform:
   m_GameObject: {fileID: 404951505}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.7, y: 0, z: 10.22}
+  m_LocalPosition: {x: -9, y: 8, z: 13}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -816,6 +816,18 @@ MonoBehaviour:
   DoorMat: {fileID: -876546973899608171, guid: 94f75d363746557419a5fc5336a86b2d, type: 3}
   floorMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
   ceilingMaterial: {fileID: 2100000, guid: 39e8715bc7ad9b24a861854af530ead7, type: 2}
+--- !u!114 &404951509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404951505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3686a75f412f072458812e94b18c1009, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1054,6 +1066,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_characterSpacing
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8157145194642398203, guid: 97160d262edabcd45a6e6e3e7f9fd900,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -12.600098
       objectReference: {fileID: 0}
     - target: {fileID: 8583702678789654855, guid: 97160d262edabcd45a6e6e3e7f9fd900,
         type: 3}

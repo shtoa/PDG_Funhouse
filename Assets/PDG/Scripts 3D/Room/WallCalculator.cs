@@ -81,7 +81,7 @@ namespace dungeonGenerator
                     wall.position,
                     new Vector3Int(
                         door.min.x - wall.min.x,
-                        dungeonGenerator.wallHeight,
+                        dungeonGenerator.dungeonBounds.size.y,
                         dungeonGenerator.wallThickness
 
                     )
@@ -96,7 +96,7 @@ namespace dungeonGenerator
                     ),
                     new Vector3Int(
                         wall.max.x - door.max.x,
-                        dungeonGenerator.wallHeight,
+                        dungeonGenerator.dungeonBounds.size.y,
                         dungeonGenerator.wallThickness
                     )
                 ));
@@ -109,7 +109,7 @@ namespace dungeonGenerator
                     wall.position,
                     new Vector3Int(
                         dungeonGenerator.wallThickness,
-                        dungeonGenerator.wallHeight,
+                        dungeonGenerator.dungeonBounds.size.y,
                         door.min.z - wall.min.z
 
                     )
@@ -123,7 +123,7 @@ namespace dungeonGenerator
                     ),
                    new Vector3Int(
                        dungeonGenerator.wallThickness,
-                       dungeonGenerator.wallHeight,
+                       dungeonGenerator.dungeonBounds.size.y,
                        wall.max.z - door.max.z
 
                    )
@@ -163,13 +163,13 @@ namespace dungeonGenerator
 
             Vector3Int horizontalWallSize = new Vector3Int(
                bounds.size.x, //- dungeonGenerator.wallThickness
-               dungeonGenerator.wallHeight,
+               dungeonGenerator.dungeonBounds.size.y,
                dungeonGenerator.wallThickness
            );
 
             Vector3Int verticalWallSize = new Vector3Int(
                dungeonGenerator.wallThickness,
-               dungeonGenerator.wallHeight,
+               dungeonGenerator.dungeonBounds.size.y,
                bounds.size.z //  - dungeonGenerator.wallThickness
             );
 
@@ -193,7 +193,7 @@ namespace dungeonGenerator
 
                 BoundsInt door1 = new BoundsInt(
                        new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f - dungeonGenerator.corridorWidth / 2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f) - dungeonGenerator.wallThickness),
-                       new Vector3Int(dungeonGenerator.corridorWidth, dungeonGenerator.wallHeight, dungeonGenerator.wallThickness) //  - dungeonGenerator.wallThickness*2
+                       new Vector3Int(dungeonGenerator.corridorWidth, dungeonGenerator.dungeonBounds.size.y, dungeonGenerator.wallThickness) //  - dungeonGenerator.wallThickness*2
                     );
 
                 var splitWalls = splitWall(door1, wall1);

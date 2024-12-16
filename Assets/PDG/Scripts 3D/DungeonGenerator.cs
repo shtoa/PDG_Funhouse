@@ -4,19 +4,22 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.AI;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using UnityEngine;
 namespace dungeonGenerator
 {
 
-
-
     public class DungeonGenerator : MonoBehaviour
     {
+
+        //[HideInInspector]
+        public BoundsInt dungeonBounds; // TODO: Find Way to Visualize the bounds inside a mini Window
+        
+        
         [Header("Dungeon Properties")]
 
         public int maxIterations;
-        public BoundsInt dungeonBounds; // TODO: Find Way to Visualize the bounds inside a mini Window
 
         [Header("Split Properties")] 
         public Vector2 splitCenterDeviation;
@@ -36,8 +39,7 @@ namespace dungeonGenerator
         [Header("Wall Properties")]
         [Range(1, 3)] // change to being a percent
         public int wallThickness;
-        [Range(1, 10)]
-        public int wallHeight;
+  
 
 
         [Header("Door")]
@@ -56,6 +58,8 @@ namespace dungeonGenerator
         private void Awake()
         {
             CorridorNode.wallThickness = wallThickness;
+
+    
         }
 
         void Start()
@@ -67,6 +71,8 @@ namespace dungeonGenerator
 
             corridorWidthAndWall = corridorWidth + 2 * wallThickness;
             GenerateDungeon();
+
+      
 
 
         }
@@ -134,7 +140,7 @@ namespace dungeonGenerator
             dungeonBounds = new BoundsInt(dungeonBounds.position,
                 new Vector3Int(
                     Mathf.Max(dungeonBounds.size.x, 1+2*wallThickness),
-                    Mathf.Max(dungeonBounds.size.y, 0),
+                    Mathf.Max(dungeonBounds.size.y, 1),
                     Mathf.Max(dungeonBounds.size.z,1+2*wallThickness)
                 )
             );
@@ -151,7 +157,7 @@ namespace dungeonGenerator
             roomBoundsMin = new BoundsInt(dungeonBounds.position,
                 new Vector3Int(
                     Mathf.Clamp(roomBoundsMin.size.x, 1, dungeonBounds.size.x),
-                    Mathf.Clamp(roomBoundsMin.size.y, 0, dungeonBounds.size.y),
+                    Mathf.Clamp(roomBoundsMin.size.y, 1, dungeonBounds.size.y),
                     Mathf.Clamp(roomBoundsMin.size.z, 1, dungeonBounds.size.z)
                 )
             );
@@ -164,7 +170,13 @@ namespace dungeonGenerator
 
             corridorWidth = Mathf.Clamp(corridorWidth,1, minDim);
 
+
+            
+
         }
+
+
+
 
     }
 

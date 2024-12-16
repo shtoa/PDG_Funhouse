@@ -41,7 +41,7 @@ namespace dungeonGenerator
 
             // set the dungeon properties
             this.wallThickness = dungeonGenerator.wallThickness;
-            this.wallHeight = dungeonGenerator.wallHeight;
+            this.wallHeight = dungeonGenerator.dungeonBounds.y; // FIX ME: Possibly change to a wallHeight variable
             this.corridorWidth = dungeonGenerator.corridorWidth;
     
         }
@@ -79,7 +79,7 @@ namespace dungeonGenerator
             GameObject door = MeshHelper.CreateCuboid(doorBound.size, 1); // TODO: Make door thickness possible to manipulate
             door.transform.SetParent(dungeonGenerator.transform, false);
 
-            door.transform.localPosition = doorBound.center;
+            door.transform.localPosition = doorBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
 
 
             MaterialPropertyBlock matBlock = new MaterialPropertyBlock();
@@ -96,7 +96,7 @@ namespace dungeonGenerator
             GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
             wall.transform.SetParent(dungeonGenerator.transform, false);
 
-            wall.transform.localPosition = wallBound.center;
+            wall.transform.localPosition = wallBound.center+new Vector3(1,0,1)*wallThickness; // CHECK ME: May be wrong
             wall.GetComponent<MeshRenderer>().material = wallMaterial;
             //wall.layer = LayerMask.NameToLayer("Dungeon");
 
@@ -118,7 +118,7 @@ namespace dungeonGenerator
 
             floor.transform.SetParent(dungeonGenerator.transform, false);
 
-            floor.transform.localPosition = room.Bounds.center;
+            floor.transform.localPosition = room.Bounds.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
             floor.GetComponent<MeshRenderer>().material = floorMaterial;
 
             GameObject collectable = null;
@@ -192,7 +192,7 @@ namespace dungeonGenerator
             ceiling.transform.SetParent(dungeonGenerator.transform, false);
             ceiling2.transform.SetParent(ceiling.transform, false);
 
-            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight; // should be 0.25f
+            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight + new Vector3(1, 0, 1) * wallThickness; // should be 0.25f
             ceiling2.transform.localPosition = 0.1f * Vector3.up;
             ceiling2.transform.localScale = Vector3.one * 1.1f;
 
