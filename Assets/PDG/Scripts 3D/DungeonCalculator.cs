@@ -11,8 +11,9 @@ namespace dungeonGenerator {
         // Dungeon Properties 
         private int dungeonWidth;
         private int dungeonLength;
+        public List<Node> RoomSpaces { get => roomSpaces;}
 
-        public List<Node> roomSpaces;
+        private List<Node> roomSpaces;
         public DungeonCalculator(BoundsInt dungeonDimensions)
         {
 
@@ -20,6 +21,7 @@ namespace dungeonGenerator {
             this.dungeonWidth = dungeonDimensions.size.x;
             this.dungeonLength = dungeonDimensions.size.z;
         }
+
 
         /* <summary>
         

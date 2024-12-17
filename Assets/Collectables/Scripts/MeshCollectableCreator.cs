@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem.Utilities;
 
@@ -12,10 +13,34 @@ public enum
     cube
 }
 
+[InitializeOnLoadAttribute]
+[ExecuteAlways]
 public class MeshCollectableCreator : MonoBehaviour
 
 {
-    public static MeshCollectableCreator Instance;
+    public static MeshCollectableCreator instance;
+
+
+
+    /// <summary>
+    /// singleton logic from: <see href="https://stackoverflow.com/a/67717318"> stackOverflow: derHugo </see>
+    /// </summary>
+    public static MeshCollectableCreator Instance
+    {
+        get
+        {
+            // if instance exists return
+            if (instance) return instance;
+
+            // if object exists in scene return object
+            instance = FindObjectOfType<MeshCollectableCreator>();
+            if (instance) return instance;
+
+            // if object doesnt exist return new object
+            instance = new GameObject("MeshCollectableCreator").AddComponent<MeshCollectableCreator>();
+            return instance;
+        }
+    }
 
     [SerializeField]
     public AnimationCurve MaterialFadeOut;
@@ -24,15 +49,16 @@ public class MeshCollectableCreator : MonoBehaviour
 
     private List<Material> mList = new List<Material>();
 
+
     public void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (instance != null && instance != this)
         {
             Destroy(this.gameObject);
         }
         else
         {
-            Instance = this;
+            instance = this;
         }
 
         mList.Clear();

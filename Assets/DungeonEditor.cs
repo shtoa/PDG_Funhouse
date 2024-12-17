@@ -23,11 +23,27 @@ namespace dungeonGenerator
     {
         // ref to DungeonGenerator
         DungeonGenerator dungeonGenerator;
-
         private void OnEnable()
         {
             // Get Instance of DungeonGenerator Script
             dungeonGenerator = target.GetComponent<DungeonGenerator>();
+        }
+
+        public override void OnInspectorGUI()
+        {
+            DungeonGenerator myTarget = (DungeonGenerator)target;
+
+            DrawDefaultInspector();
+
+            if (GUILayout.Button("Regenerate Dungeon"))
+            {
+                myTarget.RegenerateDungeon();
+            }
+
+            if (GUILayout.Button("Delete Dungeon"))
+            {
+                myTarget.DeleteDungeon();
+            }
         }
 
         private void OnSceneGUI()
@@ -43,7 +59,7 @@ namespace dungeonGenerator
 
                 EditorGUI.BeginChangeCheck();
 
-                Vector3 scale = Handles.ScaleHandle(dungeonBounds.size, dungeonBounds.center, ((DungeonGenerator)target).transform.rotation); // get the scale from the scale handler
+                Vector3 scale = Handles.ScaleHandle(dungeonBounds.size, dungeonBounds.position + dungeonBounds.size, ((DungeonGenerator)target).transform.rotation); // get the scale from the scale handler
 
 
                 Vector3 clampedScale = new Vector3(
@@ -52,12 +68,11 @@ namespace dungeonGenerator
                     Mathf.Max(scale.z, 2 * dungeonGenerator.wallThickness + dungeonGenerator.roomOffsetMin.y + +dungeonGenerator.roomBoundsMin.size.z)
                 ); // clamp the scale to be at least one
 
-                if (EditorGUI.EndChangeCheck())
-                {
-                   Undo.RecordObject(target, "scaleDungeon"); // add ability to undo dungeon scaling
-
-                   dungeonGenerator.dungeonBounds.size = Vector3Int.FloorToInt(clampedScale); // set the new size to the Dungeon Bounds
-                }
+               
+                
+                Undo.RecordObject(target, "scaleDungeon"); // add ability to undo dungeon scaling
+                dungeonGenerator.dungeonBounds.size = Vector3Int.FloorToInt(clampedScale); // set the new size to the Dungeon Bounds
+                
             }
 
         }

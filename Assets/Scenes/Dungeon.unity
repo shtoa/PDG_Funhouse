@@ -765,19 +765,19 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 404951505}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8457e47f06f0ea646b4cc7b7e0e3e4c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonBounds:
     m_Position: {x: 10, y: 1, z: 40}
-    m_Size: {x: 37, y: 2, z: 33}
+    m_Size: {x: 62, y: 2, z: 76}
   maxIterations: 10
   splitCenterDeviation: {x: 0.5, y: 0.5}
   roomBoundsMin:
     m_Position: {x: 0, y: 0, z: 0}
-    m_Size: {x: 3, y: 1, z: 3}
+    m_Size: {x: 4, y: 1, z: 4}
   roomOffsetMin: {x: 1, y: 1}
   roomPlacementRandomness: {x: 0, y: 0}
   corridorWidth: 1

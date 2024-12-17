@@ -9,14 +9,13 @@ using UnityEditorInternal;
 using UnityEngine;
 namespace dungeonGenerator
 {
-
     public class DungeonGenerator : MonoBehaviour
     {
 
         //[HideInInspector]
         public BoundsInt dungeonBounds; // TODO: Find Way to Visualize the bounds inside a mini Window
-        
-        
+
+
         [Header("Dungeon Properties")]
 
         public int maxIterations;
@@ -49,32 +48,29 @@ namespace dungeonGenerator
         public List<Node> roomList { get; private set; }
         public GameObject startRoom { get; private set; }
 
-
-        private void Awake()
+        public void RegenerateDungeon()
         {
-
+            DeleteDungeon();
+            corridorWidthAndWall = corridorWidth + 2 * wallThickness;
+            GenerateDungeon();
         }
 
-        void Start()
+        public void DeleteDungeon()
         {
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
-                GameObject.Destroy(transform.GetChild(i).gameObject);
+                GameObject.DestroyImmediate(transform.GetChild(i).gameObject);
             }
-
-            corridorWidthAndWall = corridorWidth + 2 * wallThickness;
-            GenerateDungeon();
-      
         }
 
         private void GenerateDungeon()
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
+            
             // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
             roomList = calculator.CalculateDungeon(maxIterations, roomBoundsMin, splitCenterDeviation, corridorWidthAndWall, wallThickness, roomOffsetMin);
 
-
-            InitializeStartAndEnd(calculator.roomSpaces);
+            InitializeStartAndEnd(calculator.RoomSpaces);
 
             RoomGenerator roomGenerator = new RoomGenerator(roomList, this.gameObject);
             roomGenerator.GenerateRooms(roomList);
@@ -141,11 +137,15 @@ namespace dungeonGenerator
             // TODO: Find Method to do it in one call
             roomBoundsMin = new BoundsInt(Vector3Int.zero,
                 new Vector3Int(
-                    Mathf.Clamp(roomBoundsMin.size.x, 3, dungeonBounds.size.x),
+                    Mathf.Clamp(roomBoundsMin.size.x, 3, dungeonBounds.size.x), // minimum dungeon size is set to 3 as otherwise corridor positioning looks weird 
                     Mathf.Clamp(roomBoundsMin.size.y, 1, dungeonBounds.size.y),
                     Mathf.Clamp(roomBoundsMin.size.z, 3, dungeonBounds.size.z)
                 )
             );
+
+            // TODO: Change to allow Dungeons without Offset
+            // --- Dont Allow Rooms larger than the dungeon
+            roomOffsetMin = new Vector2Int(Mathf.Max(1,roomOffsetMin.x),Mathf.Max(1,roomOffsetMin.y));
 
             // Corridor Width
             // --- Dont Allow Corridors larger than the minimum size dimension (width / length)

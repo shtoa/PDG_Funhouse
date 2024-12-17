@@ -2,12 +2,39 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
+
+[InitializeOnLoadAttribute]
+[ExecuteAlways]
 public class GameManager : MonoBehaviour 
 {
 
-    public static GameManager Instance;
+    public static GameManager Instance {
+        /// <summary>
+        /// singleton logic from: <see href="https://stackoverflow.com/a/67717318"> stackOverflow: derHugo </see>
+        /// </summary>
+        get
+        {
+            // if instance exists return
+            if(instance) return instance; 
+
+
+            // if object exists in scene return object
+            instance = FindObjectOfType<GameManager>();
+            if (instance) return instance;
+
+            // if object doesnt exist return new object
+            instance = new GameObject("GameManager").AddComponent<GameManager>();
+            return instance;
+        }
+    }
+
+    private static GameManager instance;
+    
     public enum GameState
     {
         PreStart,
@@ -20,35 +47,41 @@ public class GameManager : MonoBehaviour
     public Dictionary<CollectableType, int> numCollected = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
     public Dictionary<CollectableType, int> total = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
 
-  
 
-    private void Awake()
+    public void OnAfterAssemblyReload()
     {
-        if(Instance != null && Instance != this)
+
+        Debug.Log("AWAKENED");
+
+        if(instance != null && instance != this)
         {
             Destroy(this.gameObject);
         } else
         {
-            Instance = this;    
+            instance = this;    
         }
 
         numCollected = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
         total = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
 
-    }
-
-    private void Start()
-    {
         gameState = GameState.PreStart;
     }
+
+    //private void Start()
+    //{
+       
+    //}
 
     private void Update()
     {
         // find alternative way to compare
-        if (numCollected.Values.SequenceEqual(total.Values))
+        if (Application.isPlaying)
         {
-            // need to do this after UI update
-            GameManager.Instance.gameState = GameManager.GameState.Ended;
+            if (numCollected.Values.SequenceEqual(total.Values))
+            {
+                // need to do this after UI update
+                GameManager.instance.gameState = GameManager.GameState.Ended;
+            }
         }
     }
 
