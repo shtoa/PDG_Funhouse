@@ -5,6 +5,7 @@ using System.Linq;
 using Unity.Mathematics;
 using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
 using Random = UnityEngine.Random;
 
 namespace dungeonGenerator
@@ -32,7 +33,6 @@ namespace dungeonGenerator
         /// <summary>
         /// Generate Corridor Based on relative Room Alignment
         /// </summary>
-
         private void GenerateCorridor()
         {
             switch (this.node1.SplitPosition)
@@ -52,7 +52,6 @@ namespace dungeonGenerator
             }
         }
 
-
         #region Helper Methods
         /// <summary>
         /// Calculate MidPoint Function
@@ -71,10 +70,10 @@ namespace dungeonGenerator
         #region Left-Right Generation
 
         #region Left-Right Helper Methods
-        private List<Node> ReturnRightMostSpaces(List<Node> nodes)
+        private List<Node> ReturnRightMostSpaces(List<Node> leftSpaces)
         {
 
-            var sortedLeftSpaces = nodes.OrderByDescending(space => space.Bounds.max.x).ToList(); // get right most children of left space
+            var sortedLeftSpaces = leftSpaces.OrderByDescending(space => space.Bounds.max.x).ToList(); // get right most children of left space
 
             if (sortedLeftSpaces.Count == 1)
             {
@@ -89,10 +88,10 @@ namespace dungeonGenerator
 
         }
 
-        private List<Node> ReturnLeftMostSpaces(List<Node> nodes)
+        private List<Node> ReturnLeftMostSpaces(List<Node> rightSpaces)
         {
 
-            var sortedRightSpaces = nodes.OrderBy(space => space.Bounds.min.x).ToList(); // get right most children of left space
+            var sortedRightSpaces = rightSpaces.OrderBy(space => space.Bounds.min.x).ToList(); // get right most children of left space
 
             if (sortedRightSpaces.Count == 1)
             {
@@ -275,121 +274,149 @@ namespace dungeonGenerator
         #endregion
 
         #region Top-Bottom Generation
-        private void GenerateCorridorTopBottom(Node node1, Node node2)
+
+        #region Top-Bottom Helpers
+        private List<Node> ReturnBottomMostSpaces(List<Node> TopSpaces)
         {
-            Node topSpace = null; // left space to connect
-            List<Node> topSpaceLeaves = GraphHelper.GetLeaves(node2);
 
-            Node bottomSpace = null; // right space to connect
-            List<Node> bottomSpaceLeaves = GraphHelper.GetLeaves(node1);
+            var sortedTopSpace = TopSpaces.OrderBy(space => space.Bounds.min.z).ToList(); // get bottom most children of top space
 
-            var sortedTopSpace = topSpaceLeaves.OrderBy(child => child.Bounds.min.z).ToList(); // get bottom most top children
             if (sortedTopSpace.Count == 1)
             {
-                topSpace = sortedTopSpace[0];
+                return sortedTopSpace; // if only one topSpace available select it (usually will just join the two deepest children)
+            }
+            else // select one of the bottom most topSpace if there are multiple
+            {
+                int minZ = sortedTopSpace[0].Bounds.min.z; // get the coordinates of the bottom most bound
+                sortedTopSpace = sortedTopSpace.Where(space => Math.Abs(minZ - space.Bounds.min.z) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
+                return sortedTopSpace;
+            }
 
+        }
+        private List<Node> ReturnTopMostSpaces(List<Node> BottomSpaces)
+        {
+
+            var sortedBottomSpace = BottomSpaces.OrderByDescending(space => space.Bounds.max.z).ToList(); // get Top most children of Bottom space
+
+            if (sortedBottomSpace.Count == 1)
+            {
+                return sortedBottomSpace; // if only one bottomSpace available select it (usually will just join the two deepest children)
+            }
+            else // select one of the top most BottomSpaces if there are multiple
+            {
+                int maxZ = sortedBottomSpace[0].Bounds.max.z; // get the coordinates of the top most bound
+                sortedBottomSpace = sortedBottomSpace.Where(space => Math.Abs(maxZ - space.Bounds.max.z) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
+                return sortedBottomSpace;
+            }
+
+        }
+        private List<Node> ReturnPossibleNeighborsBottomSpace(Node topSpace, List<Node> bottomSpaceNeighborCandidates)
+        {
+            return bottomSpaceNeighborCandidates.Where(bottomSpace =>
+                GetCorridorPositionTopBottomX(topSpace, bottomSpace) != -1
+            ).OrderByDescending(bottomSpace => bottomSpace.Bounds.max.z).ToList(); // order by descenmding (max) z
+
+        }
+        private (Node topSpace, Node bottomSpace) FindNeighborsTopBottom(List<Node> sortedTopSpace, List<Node> sortedBottomSpace)
+        {
+            // intialize output nodes
+            Node bottomSpace = null;
+            Node topSpace = null;
+
+            topSpace = sortedTopSpace[Random.Range(0, sortedTopSpace.Count)]; // pick a left space from candidates
+            var neighborsInBottomSpaceList = ReturnPossibleNeighborsBottomSpace(topSpace, sortedBottomSpace); // get possible neighbors in rightSpace
+
+            if (neighborsInBottomSpaceList.Count() > 0)
+            {
+                bottomSpace = neighborsInBottomSpaceList[Random.Range(0, neighborsInBottomSpaceList.Count)]; // if neighbors exist choose one at random 
             }
             else
             {
-                // add randomness to which rooms are connected 
-                int minZ = sortedTopSpace[0].Bounds.min.z;
-                sortedTopSpace = sortedTopSpace.Where(Child => Math.Abs(minZ - Child.Bounds.min.z) < minRoomDim.y).ToList(); // find rooms that have the least deviation from maxX
+                // --- Added Check if no neighbors are found to reselect leftSpace
 
-                // select a random room from valid rooms
-                topSpace = sortedTopSpace[Random.Range(0, sortedTopSpace.Count)];
+                sortedTopSpace.Remove(topSpace);
 
-            }
-
-            // find possible connection for the most left aligned room in the right space
-            //var neighborsInTopSpaceList = bottomSpaceLeaves.Where(
-            //    child => GetCorridorPositionTopBottomX(topSpace, child) != -1
-
-            //    ).OrderByDescending(child => child.Bounds.max.z).ToList(); // order by ascending (smallest) x
-
-
-            var sortedBottomSpace = bottomSpaceLeaves.OrderByDescending(child => child.Bounds.max.z).ToList();
-            int maxZ = sortedBottomSpace[0].Bounds.max.z;
-            sortedBottomSpace = sortedBottomSpace.Where(Child => Math.Abs(maxZ - Child.Bounds.max.z) < 2).ToList();
-
-            var neighborsInTopSpaceList = sortedBottomSpace.Where(
-               child => GetCorridorPositionTopBottomX(topSpace, child) != -1
-
-               ).OrderBy(child => child.Bounds.min.x).ToList(); // order by ascending (smallest) x
-
-            if (neighborsInTopSpaceList.Count() <= 0 && node1.ChildrenNodeList.Count() == 0)
-            {
-                bottomSpace = node1;
-            }
-            else if (neighborsInTopSpaceList.Count() <= 0)
-            {
-                foreach (var tTopSpace in sortedTopSpace)
+                foreach (var newTopSpace in sortedTopSpace)
                 {
-                    sortedBottomSpace = bottomSpaceLeaves.OrderByDescending(child => child.Bounds.max.z).ToList();
-                    maxZ = sortedBottomSpace[0].Bounds.max.z;
-                    sortedBottomSpace = sortedBottomSpace.Where(Child => Math.Abs(maxZ - Child.Bounds.max.z) < 2).ToList();
+                    neighborsInBottomSpaceList = ReturnPossibleNeighborsBottomSpace(newTopSpace, sortedBottomSpace); // select new LeftSpace and check if it has any neighbors
 
-                    neighborsInTopSpaceList = sortedBottomSpace.Where(child => GetCorridorPositionTopBottomX(tTopSpace, child) != -1).OrderBy(child => child.Bounds.min.x).ToList();
-
-
-                    if (neighborsInTopSpaceList.Count() > 0)
+                    if (neighborsInBottomSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
                     {
-                        topSpace = tTopSpace;
-                        bottomSpace = neighborsInTopSpaceList[0];
+                        topSpace = newTopSpace;
+                        bottomSpace = neighborsInBottomSpaceList[Random.Range(0, neighborsInBottomSpaceList.Count)];
                         break;
                     }
                 }
             }
-            else
-            {
-                // possibly can randomize this
-                bottomSpace = neighborsInTopSpaceList[0];
-            }
 
-            // potentially add check for not enough clearance
+            return (topSpace, bottomSpace);
+        }
+        public void GenerateCorridorBoundsTopBottom(Node topSpace, Node bottomSpace)
+        {
             int corridorX = GetCorridorPositionTopBottomX(topSpace, bottomSpace);
 
-            //while (corridorX == -1 && sortedTopSpace.Count > 1)
-            //{
-            //    // Remove previous space if it was incorrect
-            //    sortedTopSpace.Remove(topSpace);
+            #region Debug Corridor
+            if (corridorX == -1)
+            {
+                // Incase no Neighbours are Found 
+                // TODO: Move this to Unit Testing
+                Debug.Log("Wrong Size");
+            }
 
-            //    // Get Next Possible Neightbour
-            //    topSpace = sortedTopSpace[0];
-            //    corridorX = GetCorridorPositionLeftRightZ(topSpace, bottomSpace); // test if neighbour can be connected using a straight corridor
-            //}
+            if (topSpace == null || bottomSpace == null)
+            {
+                Debug.Log("Spaces not Found");
+            }
+            #endregion
 
-
-
-
-            var midPointZ = (topSpace.Bounds.min.z + bottomSpace.Bounds.max.z) / 2f;
+            // --- Generate Bounds for the Corridors --- 
             var sizeZ = topSpace.Bounds.min.z - bottomSpace.Bounds.max.z;
-
-            var pos = new Vector3Int(corridorX - this.corridorWidth / 2, 0, (int)midPointZ - sizeZ / 2);
+            var pos = new Vector3Int(corridorX - Mathf.FloorToInt(this.corridorWidth / 2f), 0, bottomSpace.Bounds.max.z);
 
             Bounds = new BoundsInt(
                 pos,
-                new Vector3Int(
-                (int)(this.corridorWidth), 0, sizeZ)
+                new Vector3Int(this.corridorWidth, 0, sizeZ)
             );
-
-            topSpace.addConnection(bottomSpace);
-            bottomSpace.addConnection(topSpace);
         }
+        #endregion
+        private void GenerateCorridorTopBottom(Node topNode, Node bottomNode)
+        {
+            // --- Initialize Leaves Arrays and Spaces to Connect ---
 
+            Node topSpace = null; // left space to connect
+            List<Node> topSpaceLeaves = GraphHelper.GetLeaves(topNode); // get all the leaves in the left space
+
+            Node bottomSpace = null; // right space to connect
+            List<Node> bottomSpaceLeaves = GraphHelper.GetLeaves(bottomNode); // get all the leaves in the right space
+
+            // --- select (right most) LeftSpace and (left most) RightSpace to Connect ---
+
+            var sortedTopSpaces = ReturnBottomMostSpaces(topSpaceLeaves);
+            var sortedBottomSpaces = ReturnTopMostSpaces(bottomSpaceLeaves);
+
+            // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
+
+            (topSpace, bottomSpace) = FindNeighborsTopBottom(sortedTopSpaces, sortedBottomSpaces);
+
+            // --- Generate Corridor Between LeftSpace and RightSpace --- 
+
+            GenerateCorridorBoundsTopBottom(topSpace, bottomSpace);
+
+            // --- Add Neighbours to the Connection List of Respective Nodes --- 
+
+            topSpace.ConnectionsList.Add(bottomSpace);
+            bottomSpace.ConnectionsList.Add(topSpace);
+
+        }
         private int GetCorridorPositionTopBottomX(Node topSpace, Node bottomSpace)
         {
-
             // right space is above left space
             if (topSpace.Bounds.max.x >= bottomSpace.Bounds.min.x && bottomSpace.Bounds.min.x > topSpace.Bounds.min.x)
             {
-
                 if (topSpace.Bounds.max.x - bottomSpace.Bounds.min.x <= this.corridorWidth + wallThickness)
                 {
-
                     return -1;
-
                 }
-
 
                 return CalculateMiddlePoint(
                     bottomSpace.Bounds.min,
@@ -404,7 +431,6 @@ namespace dungeonGenerator
                 {
                     return -1;
                 }
-
 
                 return CalculateMiddlePoint(
                    topSpace.Bounds.min,
@@ -427,9 +453,6 @@ namespace dungeonGenerator
                     topSpace.Bounds.max
                 ).x;
             }
-
-
-
 
             return -1;
         }

@@ -174,27 +174,28 @@ namespace dungeonGenerator
         {
             // intialize top and bottom nodes
             SpaceNode topNode, bottomNode;
-
-            // set top node
-            topNode = new SpaceNode(
-                new BoundsInt(spaceToSplit.Bounds.min,
-                new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, hSplitPosition)),
-                spaceToSplit,
-                spaceToSplit.TreeLayerIndex + 1
-            );
-            
-            topNode.SplitPosition = SplitPosition.Top; // TODO: Decouple this for a more general solution
-          
+        
             // set bottom node
-            bottomNode = new SpaceNode(
+            topNode = new SpaceNode(
                 new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(0, 0, hSplitPosition),
                 new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z - hSplitPosition)),
                 spaceToSplit,
                 spaceToSplit.TreeLayerIndex + 1
             );
 
-            bottomNode.SplitPosition = SplitPosition.Bottom;
-            
+            topNode.SplitPosition = SplitPosition.Top;
+
+            // set bottom node
+            bottomNode = new SpaceNode(
+                new BoundsInt(spaceToSplit.Bounds.min,
+                new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, hSplitPosition)),
+                spaceToSplit,
+                spaceToSplit.TreeLayerIndex + 1
+            );
+
+            bottomNode.SplitPosition = SplitPosition.Bottom; // TODO: Decouple this for a more general solution
+
+
             // return the results of the split
             return (bottomNode, topNode);
 

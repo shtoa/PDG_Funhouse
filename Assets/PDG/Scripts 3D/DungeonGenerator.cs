@@ -33,17 +33,12 @@ namespace dungeonGenerator
 
         private int corridorWidthAndWall;
         [Header("Corridor Properties")]
-        [Range(1, 10)]
         public int corridorWidth;
 
         [Header("Wall Properties")]
-        [Range(1, 3)] // change to being a percent
         public int wallThickness;
   
-
-
         [Header("Door")]
-        [Range(0, 1)]
         public float doorThickness;
  
 
@@ -88,12 +83,12 @@ namespace dungeonGenerator
 
         private void InitializeStartAndEnd(List<Node> roomSpaces)
         {
-            // 5. Pick starting and ending rooms
+            // Pick Start and End Rooms
             var startAndEnd = GraphHelper.ChooseStartAndEnd(roomSpaces); // change the data structure here
 
 
             // get edge rooms  
-            // MOVE THIS INTO SEPARATE FUNCTION
+            // TODO: MOVE THIS INTO SEPARATE FUNCTION
             var deadEnds = GraphHelper.GetLeaves(startAndEnd[0], false);
             foreach (var deadEnd in deadEnds)
             {
@@ -102,20 +97,15 @@ namespace dungeonGenerator
                     deadEnd.RoomType = RoomType.DeadEnd;
                 }
             }
-
+            // TODO: Refactor this to an event 
             GameManager.Instance.total[CollectableType.cylinder] = 1;
             GameManager.Instance.total[CollectableType.sphere] = deadEnds.Count - 1;
             GameManager.Instance.total[CollectableType.cube] = roomSpaces.Count - 2 - GameManager.Instance.total[CollectableType.sphere];
         }
 
-
-        /*
-         
-        
-            Add checks for UI sliders to be in range
-         
-          
-         */
+        /// <summary>
+        /// Add Checks for Slider Ranges for Valid Generation
+        /// </summary>
 
         [ExecuteInEditMode]
         void OnValidate()

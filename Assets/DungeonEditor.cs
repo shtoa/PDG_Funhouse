@@ -54,7 +54,7 @@ namespace dungeonGenerator
 
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObject(target, "scaleDungeon");
+                   Undo.RecordObject(target, "scaleDungeon"); // add ability to undo dungeon scaling
 
                    dungeonGenerator.dungeonBounds.size = Vector3Int.FloorToInt(clampedScale); // set the new size to the Dungeon Bounds
                 }
