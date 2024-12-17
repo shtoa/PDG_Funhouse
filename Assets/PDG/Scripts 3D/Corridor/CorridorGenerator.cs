@@ -10,17 +10,20 @@ namespace dungeonGenerator
 {
     public class CorridorGenerator
     {
-         
-         /// <summary>
-         /// Create corridors between a set of nodes.
-         /// At present the function relies on the consequence of the BSP tree.
-         /// </summary>
-         /// <param name="allNodeSpaces"></param>
-         /// <param name="corridorWidth"></param>
-         /// <returns>corridorList</returns>
+
+        /// <summary>
+        /// Create corridors between a set of nodes.
+        /// At present the function relies on the consequence of the BSP tree.
+        /// </summary>
+        /// <param name="allNodeSpaces"></param>
+        /// <param name="corridorWidth"></param>
+        /// <param name="minRoomDim"></param>
+        /// <returns>corridorList</returns>
 
 
-        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth)
+
+
+        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth, int wallThickness, Vector2Int minRoomDim)
         {
             List<Node> corridorList = new List<Node>(); // Create list of Corridors to return
             
@@ -39,7 +42,7 @@ namespace dungeonGenerator
                 }
                 else if (spaceToCheck.ChildrenNodeList.Count > 1) // check if there are two children to join
                 {
-                    CorridorNode corridor = new CorridorNode(spaceToCheck.ChildrenNodeList[0], spaceToCheck.ChildrenNodeList[1], corridorWidth); // create new corridor between the childeren
+                    CorridorNode corridor = new CorridorNode(spaceToCheck.ChildrenNodeList[0], spaceToCheck.ChildrenNodeList[1], corridorWidth, wallThickness, minRoomDim); // create new corridor between the childeren
                     corridor.RoomType = RoomType.Corridor; // set room type to corridor
                     corridorList.Add(corridor); // add created corridor for list to return 
                 }

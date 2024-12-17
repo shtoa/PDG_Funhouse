@@ -57,7 +57,7 @@ namespace dungeonGenerator
 
         private void Awake()
         {
-            CorridorNode.wallThickness = wallThickness;
+
         }
 
         void Start()
@@ -134,9 +134,9 @@ namespace dungeonGenerator
             // TODO: Find Method to do it in one call
             dungeonBounds = new BoundsInt(dungeonBounds.position,
                 new Vector3Int(
-                    Mathf.Max(dungeonBounds.size.x, 1 + 2 * wallThickness + roomOffsetMin.x),
+                    Mathf.Max(dungeonBounds.size.x, 2 * wallThickness + roomOffsetMin.x + roomBoundsMin.size.x),
                     Mathf.Max(dungeonBounds.size.y, 1),
-                    Mathf.Max(dungeonBounds.size.z, 1 + 2 * wallThickness + + roomOffsetMin.y)
+                    Mathf.Max(dungeonBounds.size.z, 2 * wallThickness + + roomOffsetMin.y + roomBoundsMin.size.z)
                 )
             );
 
@@ -151,9 +151,9 @@ namespace dungeonGenerator
             // TODO: Find Method to do it in one call
             roomBoundsMin = new BoundsInt(Vector3Int.zero,
                 new Vector3Int(
-                    Mathf.Clamp(roomBoundsMin.size.x, 1, dungeonBounds.size.x),
+                    Mathf.Clamp(roomBoundsMin.size.x, 3, dungeonBounds.size.x),
                     Mathf.Clamp(roomBoundsMin.size.y, 1, dungeonBounds.size.y),
-                    Mathf.Clamp(roomBoundsMin.size.z, 1, dungeonBounds.size.z)
+                    Mathf.Clamp(roomBoundsMin.size.z, 3, dungeonBounds.size.z)
                 )
             );
 
@@ -163,7 +163,7 @@ namespace dungeonGenerator
             var minDim = Mathf.Min(roomBoundsMin.size.x, roomBoundsMin.size.z);
 
 
-            this.corridorWidth = Mathf.Clamp(corridorWidth,1, minDim);
+            this.corridorWidth = Mathf.Clamp(corridorWidth,1, minDim-2);
 
 
             

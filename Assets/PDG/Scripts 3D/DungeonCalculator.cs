@@ -77,7 +77,7 @@ namespace dungeonGenerator {
             #region 3. Generate Corridors
 
             CorridorGenerator corridorGenerator = new CorridorGenerator();
-                var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth);
+                var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim);
             
             #endregion
 

@@ -32,6 +32,7 @@ namespace dungeonGenerator
 
         private void OnSceneGUI()
         {
+
             // run only in edit mode
             if (Application.isPlaying == false)
             {
@@ -43,7 +44,13 @@ namespace dungeonGenerator
                 EditorGUI.BeginChangeCheck();
 
                 Vector3 scale = Handles.ScaleHandle(dungeonBounds.size, dungeonBounds.center, ((DungeonGenerator)target).transform.rotation); // get the scale from the scale handler
-                Vector3 clampedScale = new Vector3(Mathf.Max(scale.x, 1 + 2 * dungeonGenerator.wallThickness + dungeonGenerator.roomOffsetMin.x), Mathf.Max(scale.y, 1), Mathf.Max(scale.z, 1 + 2 * dungeonGenerator.wallThickness + dungeonGenerator.roomOffsetMin.y)); // clamp the scale to be at least one
+
+
+                Vector3 clampedScale = new Vector3(
+                    Mathf.Max(scale.x, 2 * dungeonGenerator.wallThickness + dungeonGenerator.roomOffsetMin.x + dungeonGenerator.roomBoundsMin.size.x), 
+                    Mathf.Max(scale.y, 1), 
+                    Mathf.Max(scale.z, 2 * dungeonGenerator.wallThickness + dungeonGenerator.roomOffsetMin.y + +dungeonGenerator.roomBoundsMin.size.z)
+                ); // clamp the scale to be at least one
 
                 if (EditorGUI.EndChangeCheck())
                 {
