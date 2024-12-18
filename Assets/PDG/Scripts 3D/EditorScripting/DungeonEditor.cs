@@ -54,7 +54,8 @@ namespace dungeonGenerator
                 var dungeonBounds = dungeonGenerator.dungeonBounds; // get the bounds of the dungeon
                 dungeonBounds.position = Vector3Int.CeilToInt(((DungeonGenerator)target).transform.position); // set the dungeonBounds position to the transform of the gameObject
 
-                Handles.DrawWireCube(dungeonBounds.center, dungeonBounds.size); // draw an indication of the dungeonBounds in the editor
+                var offset = new Vector3Int(dungeonGenerator.roomOffsetMin.x, 0, dungeonGenerator.roomOffsetMin.y);
+                Handles.DrawWireCube(dungeonBounds.center-offset/2, dungeonBounds.size-offset); // draw an indication of the dungeonBounds in the editor
 
                 EditorGUI.BeginChangeCheck();
 

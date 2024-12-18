@@ -1,12 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 
+[assembly: InternalsVisibleTo("EditMode")]
 
 namespace dungeonGenerator
 {
+
     public class BinarySpacePartitioner
     
     {
@@ -62,7 +65,7 @@ namespace dungeonGenerator
             return allSpaces; // return the spaces that for the BSP tree
         }
 
-        private static void addSplitSpaces(Queue<SpaceNode> spacesToSplit, List<SpaceNode> allSpaces, (SpaceNode, SpaceNode) splitSpaces)
+        internal void addSplitSpaces(Queue<SpaceNode> spacesToSplit, List<SpaceNode> allSpaces, (SpaceNode, SpaceNode) splitSpaces)
         {
             // add split rooms to splitSpaces and spaces to Split
             if (splitSpaces.Item1 is not null && splitSpaces.Item2 is not null)
@@ -82,7 +85,7 @@ namespace dungeonGenerator
             Split the space based on their current width and height
         </summary> */
 
-        private (SpaceNode, SpaceNode) SplitSpace(SpaceNode spaceToSplit, Vector2Int minSpaceDim, Vector2 splitCenterDeviationPercent)
+        internal static (SpaceNode, SpaceNode) SplitSpace(SpaceNode spaceToSplit, Vector2Int minSpaceDim, Vector2 splitCenterDeviationPercent)
         {
             // get the width and height of the spaceToSplit 
             // TODO: Change to Vector2Int
@@ -125,7 +128,7 @@ namespace dungeonGenerator
 
         }
 
-        private int getSplitPosition(int size, int minSize, float splitCenterDeviationPercent)
+        internal static int getSplitPosition(int size, int minSize, float splitCenterDeviationPercent)
         {
             int center = size / 2;
             int centerDeviation = (center - minSize);
@@ -140,7 +143,7 @@ namespace dungeonGenerator
             Split the space Vertically
         </summary> */
 
-        private (SpaceNode, SpaceNode) SplitVertically(SpaceNode spaceToSplit, int vSplitPosition)
+        internal static (SpaceNode leftNode, SpaceNode rightNode) SplitVertically(SpaceNode spaceToSplit, int vSplitPosition)
         {
             SpaceNode leftNode, rightNode;
 
@@ -170,7 +173,7 @@ namespace dungeonGenerator
 
         }
 
-        private (SpaceNode, SpaceNode) SplitHorizontally(SpaceNode spaceToSplit, int hSplitPosition)
+        internal static (SpaceNode bottomNode, SpaceNode topNode) SplitHorizontally(SpaceNode spaceToSplit, int hSplitPosition)
         {
             // intialize top and bottom nodes
             SpaceNode topNode, bottomNode;
