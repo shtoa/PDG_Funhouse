@@ -772,7 +772,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dungeonBounds:
     m_Position: {x: 10, y: 1, z: 40}
-    m_Size: {x: 62, y: 2, z: 76}
+    m_Size: {x: 51, y: 1, z: 49}
   maxIterations: 10
   splitCenterDeviation: {x: 0.5, y: 0.5}
   roomBoundsMin:

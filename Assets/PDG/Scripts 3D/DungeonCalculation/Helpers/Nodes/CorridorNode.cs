@@ -2,8 +2,6 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Mathematics;
-using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
 using Random = UnityEngine.Random;

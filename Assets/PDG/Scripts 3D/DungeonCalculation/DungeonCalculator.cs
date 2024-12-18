@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-using Autodesk.Fbx;
 using UnityEngine.UIElements;
 
 namespace dungeonGenerator {

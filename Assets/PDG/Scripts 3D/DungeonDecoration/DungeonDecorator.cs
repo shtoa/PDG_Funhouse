@@ -21,4 +21,6 @@ public class DungeonDecorator : MonoBehaviour
 
     [Header("Ceiling Properties")]
     public Material ceilingMaterial;
+
+
 }
