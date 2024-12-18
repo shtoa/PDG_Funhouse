@@ -1,9 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using dungeonGenerator;
 using NUnit.Framework;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.TestTools;
+using Random = UnityEngine.Random;
 
 public class BinarySpacePartitionerTest
 {
@@ -100,6 +103,163 @@ public class BinarySpacePartitionerTest
         Assert.IsTrue(rightNode.Parent.Equals(testNode), "rightNode Parent");
         Assert.IsTrue(rightNode.TreeLayerIndex.Equals(testNode.TreeLayerIndex + 1), "rightNode layerIndex");
         Assert.IsTrue(rightNode.SplitPosition.Equals(SplitPosition.Right), "rightNode splitPosition");
+
+    }
+
+    [Test]
+    [TestCase(20,2,1f)]
+    [TestCase(20, 18, 0.5f)]
+    [TestCase(20, 5, 0f)]
+    [TestCase(20, 20, 0.3f)]
+    [TestCase(2, 2, 0.7f)]
+    public void GetSplitPositionTest(int size, int minSize, float splitCenterDeviationPercent)
+    {
+        // set Random seed for Testing 
+
+        Random.State orignalState = Random.state;
+        Random.InitState(10);
+
+        // Instead of Testing value, test if the value is appropriate
+    
+
+        if (size / 2 - minSize < 0)
+        {
+
+            // Check if exception is thrown for invalid Split Positions
+            // https://stackoverflow.com/a/50829971
+
+            Assert.That(() => 
+                  BinarySpacePartitioner.GetSplitPosition(size, minSize, splitCenterDeviationPercent),
+                  Throws.TypeOf<Exception>());
+
+        }
+        else
+        {
+            // Goal is to produce a split that contains a room of min size (test the behaviour)
+            int splitPos = BinarySpacePartitioner.GetSplitPosition(size, minSize, splitCenterDeviationPercent);
+
+            Assert.IsNotNull(splitPos, "splitPos not null");
+            Assert.GreaterOrEqual(splitPos, minSize);
+            Assert.LessOrEqual(splitPos, size - minSize);
+        }
+
+        Random.state = orignalState; // reset to original Random State
+    }
+
+    [Test]
+    [TestCase(20, 20, 2, 2, 1f, 1f)]
+    [TestCase(10, 14, 2, 14, 0.5f, 1f)]
+    [TestCase(13, 25, 13, 2, 1f, 0.5f)]
+    [TestCase(13, 13, 13, 13, 1f, 1f)]
+
+
+    public void SplitSpaceTest(int sizeX, int sizeZ, int minSpaceDimX, int minSpaceDimY, float splitCenterDeviationPercentX, float splitCenterDeviationPercentY)
+    {
+        /// This function will test if the behaviour of the SplitSpace function
+        /// The core aspect of the function is to produce the correct orrientation based on the inputs
+        /// Therefore only the SplitPosition of the nodes will be tested, as well as null outputs
+
+        // set Random seed for Testing 
+
+        Random.State orignalState = Random.state;
+        Random.InitState(10);
+
+        SpaceNode testNode = new SpaceNode(
+         new BoundsInt(
+             new Vector3Int(0, 0, 0),
+             new Vector3Int(sizeX, 0, sizeZ)
+         ), null, 0);
+
+        Vector2Int minSpaceDim = new Vector2Int(minSpaceDimX, minSpaceDimY);
+        Vector2 splitCenterDeviation = new Vector2(splitCenterDeviationPercentX, splitCenterDeviationPercentY);
+
+        SpaceNode node1, node2;
+
+        if (sizeX > 2*minSpaceDimX && sizeZ > 2 * minSpaceDimY)
+        {
+            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation);
+        }
+        else if (sizeX > 2 * minSpaceDimX)
+        {
+            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation);
+
+            Assert.True(node1.SplitPosition.Equals(SplitPosition.Left) || node1.SplitPosition.Equals(SplitPosition.Right), "Split Horizontally node1");
+            Assert.True(node2.SplitPosition.Equals(SplitPosition.Left) || node2.SplitPosition.Equals(SplitPosition.Right), "Split Horizontally node2");
+
+        } else if (sizeZ > 2 * minSpaceDimY)
+        {
+            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation);
+
+            Assert.True(node1.SplitPosition.Equals(SplitPosition.Top) || node1.SplitPosition.Equals(SplitPosition.Bottom), "Split Vertically node1");
+            Assert.True(node2.SplitPosition.Equals(SplitPosition.Top) || node2.SplitPosition.Equals(SplitPosition.Bottom), "Split Vertically node2");
+
+
+        } else
+        {
+            Assert.That(() => BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation),
+                Throws.TypeOf<Exception>());
+        }
+
+        Random.state = orignalState; // reset to original Random State
+
+    }
+
+    [Test]
+    [TestCase(10,10,2,2)]
+    [TestCase(5, 1, 2,1)]
+    [TestCase(2, 6, 2,3)]
+    public void GetSplitableAxisTest(int sizeX, int sizeZ, int minSpaceDimX, int minSpaceDimY)
+    {
+        SpaceNode testNode = new SpaceNode(
+            new BoundsInt(
+                new Vector3Int(0, 0, 0),
+                new Vector3Int(sizeX, 0, sizeZ)
+        ), null, 0);
+
+        Vector2Int minSpaceDim = new Vector2Int(minSpaceDimX, minSpaceDimY);
+
+        bool3 testAxis = BinarySpacePartitioner.GetSplitableAxis(testNode.Bounds, minSpaceDim);
+        
+        if (sizeX > 2 * minSpaceDimX)
+        {
+            Assert.True(testAxis.x, "splitable along x");
+        } else
+        {
+            Assert.False(testAxis.x, "not splitable along x");
+        }
+
+        if (sizeZ > 2 * minSpaceDimY)
+        {
+            Assert.True(testAxis.z, "splitable along z");
+        } else
+        {
+            Assert.False(testAxis.z, "not splitable along z");
+        }
+
+    }
+
+    [Test]
+    public void AddSplitSpacesTest()
+    {
+        BinarySpacePartitioner testPartitioner = new BinarySpacePartitioner(10, 10);
+
+        // Create empty ndoes
+        var testNode1 = new SpaceNode(new BoundsInt(), null, 0);
+        var testNode2 = new SpaceNode(new BoundsInt(), null, 0);
+
+        // try adding to queue and list
+        testPartitioner.AddSplitSpaces(testPartitioner.spacesToSplit, testPartitioner.allSpaces, (testNode1, testNode2));
+
+        // Check if added to spacesToSplit
+
+        Assert.Contains(testNode1, testPartitioner.spacesToSplit);
+        Assert.Contains(testNode2, testPartitioner.spacesToSplit);
+
+        // Check if added to allSpaces
+
+        Assert.Contains(testNode1, testPartitioner.allSpaces);
+        Assert.Contains(testNode2, testPartitioner.allSpaces);
+
 
     }
 

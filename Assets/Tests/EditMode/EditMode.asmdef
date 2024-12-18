@@ -2,9 +2,10 @@
     "name": "EditMode",
     "rootNamespace": "",
     "references": [
-        "DungeonGeneration",
+        "DungeonCalculation",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [
         "Editor"

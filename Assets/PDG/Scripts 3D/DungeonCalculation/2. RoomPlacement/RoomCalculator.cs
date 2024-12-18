@@ -81,6 +81,7 @@ namespace dungeonGenerator
 
             }
 
+            #region debug testing placement
             //// TESTING PLACEMENT
             //var rList = new List<Node>(rooms);
             //var rg = new RoomGenerator(rList, GameObject.Find("DungeonGen").gameObject);
@@ -90,8 +91,7 @@ namespace dungeonGenerator
             //    rg.DrawFloor(room);
 
             //};
-
-
+            #endregion
 
             return rooms;
         }
