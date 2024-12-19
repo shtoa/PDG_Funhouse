@@ -10,9 +10,9 @@ namespace dungeonGenerator
 {
     public class RoomCalculator
     {
-        private Vector2Int minRoomBounds;
-        private Vector2Int totalRoomOffset;
-        private float corridorWidth;
+        internal Vector2Int minRoomBounds;
+        internal Vector2Int totalRoomOffset;
+        internal float corridorWidth;
 
 
         /// <summary>
