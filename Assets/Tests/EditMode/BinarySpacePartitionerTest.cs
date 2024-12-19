@@ -300,6 +300,7 @@ public class BinarySpacePartitionerTest
 
     // Test
     [Test]
+    [TestCaseSource(nameof(GetSplitableAxisCases))]
     public void GetSplitableAxisTest((SpaceNode spaceToSplit, Vector2Int minSpaceDim) testData)
     {
         SpaceNode testNode = testData.spaceToSplit;
