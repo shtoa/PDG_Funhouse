@@ -92,7 +92,14 @@ After cloning the repo, open the file via Unity Hub:
 ## 3. Setting Up Generator
 
 
-Opening up the Unity file you will be greeted with an untitled scene. To setup the dungeon generator scene, navigate to:
+Opening up the Unity file you will be greeted with an untitled scene:
+
+<div align="center">
+![hierarchyLocation](markdownAssets/dungeonScene.png)
+</div>
+
+To setup the dungeon generator scene, navigate to:
+
 ```  
 ./Assets/Scenes
 ```  
@@ -111,17 +118,34 @@ double click the _Dungeon_ file to open the scene.
 <details>
 <summary align="center"> 🧱 Using the Generator 🧱 </summary>
 
-## 4. Using Generator
+## 4. Using the Generator
 
 #### DungeonGen GameObject
 The generator will be found on the left-hand side in the hierarchy labeled DungeonGen:
 
 ![hierarchyLocation](markdownAssets/DungeonGenLoc.png)
 
-It is possible to manipulate various fields by clicking on the DungeonGen game object such as the ones outlined below:
+It is possible to manipulate various properties of the dungeon such as the _Dungeon Properties_ and _Room Properties_ by clicking on the DungeonGen game object:
 
-![dgvalues](https://github.com/user-attachments/assets/d2f7d59a-b05c-438d-ac46-11b9b799b7aa)
+1. For the DungeonCalculator:
 
+<div align="center">
+![hierarchyLocation](markdownAssets/dungeonCalculator.png)
+</div>
+
+:warning: Door Thickness has not yet been implemented
+
+2. For the DungeonDecorator:
+
+<div align="center">
+![hierarchyLocation](markdownAssets/dungeonDecorator.png)
+</div>
+
+The gizmo on the dungeon generator can be moved and edited within the editor or in play mode:
+
+<div align="center">
+![hierarchyLocation](markdownAssets/regenerateDungeon.gif)
+</div>
 
 ---
 
