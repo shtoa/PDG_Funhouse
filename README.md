@@ -1,15 +1,14 @@
-### <div align="center"> 🧱 PDG_Funhouse 🧱 ◅(•-•)▻/* </div>
+# <div align="center"> 🧱 PDG_Funhouse 🧱 ◅(•-•)▻/* </div>
 ---
 
 **Final Funhouse**, is a procedural dungeon generator implementation based on the binary space partitioning algorithm. At the core of the generation are these three steps:
 
 
-<ol>
-<li> Room Connection </li>
-<li> Space Partitioning </li>
-<li> Corridor Generation </li>
-</ol>
-
+> <ol>
+> <li> Room Connection </li>
+> <li> Space Partitioning </li>
+> <li> Corridor Generation </li>
+> </ol>
 
 Here is a small demo of the current state of the project:
 
@@ -27,7 +26,7 @@ Here is a small demo of the current state of the project:
 ✒️ Acknowledgements ✒️ 
 </summary>
 
----
+## 1. Acknowledgements
 
 The following projects have contributed in large to the development of the prototype:
 
@@ -50,9 +49,10 @@ The following projects have contributed in large to the development of the proto
 
 <summary align="center">📥 Project Installation 📥</summary>
 
----
+## 2. Project Installation
 
-#### Project Dependencies
+
+#### :warning: Project Dependencies
 - [Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)
 - [Unity Hub 3.8.0](https://docs.unity3d.com/hub/manual/InstallHub.html) (if Unity 2022.3.28f1 downloaded separatley)
 
@@ -61,13 +61,15 @@ To run the project please install the above version of Unity. Then proceed to cl
 #### HTTPS 
 ```   
 git clone https://gitlab.doc.gold.ac.uk/miliy001/PDG_Funhouse.git 
-```   
+```  
 
 #### SSH
 ```   
 git clone git@gitlab.doc.gold.ac.uk:miliy001/PDG_Funhouse.git
 ```
-After cloning the repo, open the file via Unity Hub, first navigate to the _Projects_ tab on the left hand menu. Then select the _Add_ dropdown on the right and _add project from disk_. 
+After cloning the repo, open the file via Unity Hub: 
+1. Navigate to the _Projects_ tab on the left hand menu. 
+2. Select the _Add_ dropdown on the right and _add project from disk_. 
 
 <div align="center">
 ![hubNavigation](markdownAssets/hubNavigation.png)
@@ -75,7 +77,7 @@ After cloning the repo, open the file via Unity Hub, first navigate to the _Proj
 
 :warning: make sure to select the correct Unity version ([Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)) in the editor version dropdown.
 
-Then double click the file in the projects menu to open.
+3. Then double click the file in the projects menu to open.
 
 ---
 
@@ -87,12 +89,10 @@ Then double click the file in the projects menu to open.
 <details open>
 <summary align="center">⚙️ Setting Up Generator ⚙️</summary>
 
----
+## 3. Setting Up Generator
 
 
-Opening up the Unity file you will be greeted with an untitled scene. 
-
-To setup the dungeon generator scene, navigate to 
+Opening up the Unity file you will be greeted with an untitled scene. To setup the dungeon generator scene, navigate to:
 ```  
 ./Assets/Scenes
 ```  
@@ -111,8 +111,7 @@ double click the _Dungeon_ file to open the scene.
 <details>
 <summary align="center"> 🧱 Using the Generator 🧱 </summary>
 
-
----
+## 4. Using Generator
 
 #### DungeonGen GameObject
 The generator will be found on the left-hand side in the hierarchy labeled DungeonGen:
