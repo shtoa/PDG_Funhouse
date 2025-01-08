@@ -1,20 +1,31 @@
-## 🧱 PDG_Funhouse 🧱 ◅(•-•)▻/*
+### <div align="center"> 🧱 PDG_Funhouse 🧱 ◅(•-•)▻/* </div>
 ---
 
 **Final Funhouse**, is a procedural dungeon generator implementation based on the binary space partitioning algorithm. At the core of the generation are these three steps:
-1. Space Partitioning
-2. Room Connection
-3. Corridor Generation  
+
+
+<ol>
+<li> Room Connection </li>
+<li> Space Partitioning </li>
+<li> Corridor Generation </li>
+</ol>
+
 
 Here is a small demo of the current state of the project:
 
+<div align="center">
+
 [![PDG Funhouse Demo](https://img.youtube.com/vi/709TQdN045I/0.jpg)](https://www.youtube.com/watch?v=709TQdN045I&ab_channel=SHTOA)
+
+</div>
 
 ---
 --- 
-<details open>
 
-<summary>✒️ Acknowledgements ✒️</summary>
+<details open>
+<summary align="center"> 
+✒️ Acknowledgements ✒️ 
+</summary>
 
 ---
 
@@ -37,7 +48,7 @@ The following projects have contributed in large to the development of the proto
 
 <details open>
 
-<summary>📥 Project Installation 📥</summary>
+<summary align="center">📥 Project Installation 📥</summary>
 
 ---
 
@@ -72,7 +83,7 @@ Then double click the file in the projects menu to open.
 ---
 
 <details open>
-<summary>⚙️ Setting Up Generator ⚙️</summary>
+<summary align="center">⚙️ Setting Up Generator ⚙️</summary>
 
 ---
 
@@ -96,7 +107,7 @@ double click the _Dungeon_ file to open the scene.
 ---
 
 <details>
-<summary> 🧱 Using the Generator 🧱 </summary>
+<summary align="center"> 🧱 Using the Generator 🧱 </summary>
 
 
 ---
