@@ -69,7 +69,9 @@ git clone git@gitlab.doc.gold.ac.uk:miliy001/PDG_Funhouse.git
 ```
 After cloning the repo, open the file via Unity Hub, first navigate to the _Projects_ tab on the left hand menu. Then select the _Add_ dropdown on the right and _add project from disk_. 
 
+<div align="center">
 ![hubNavigation](markdownAssets/hubNavigation.png)
+</div>
 
 :warning: make sure to select the correct Unity version ([Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)) in the editor version dropdown.
 
