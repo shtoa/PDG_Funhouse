@@ -115,7 +115,7 @@ double click the _Dungeon_ file to open the scene.
 ---
 ---
 
-<details>
+<details open>
 <summary align="center"> 🧱 Using the Generator 🧱 </summary>
 
 ## 4. Using the Generator
