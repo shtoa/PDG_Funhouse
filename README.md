@@ -82,7 +82,8 @@ double click the _Dungeon_ file to open the scene.
 #### DungeonGen GameObject
 The generator will be found on the left-hand side in the hierarchy labeled DungeonGen:
 
-![dungeongen](https://github.com/user-attachments/assets/c8f6d21d-ce5c-4ec9-a280-d04dfbefe89a)
+![dungeongen](https://github-production-user-asset-6210df.s3.amazonaws.com/28716230/390922536-c8f6d21d-ce5c-4ec9-a280-d04dfbefe89a.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250108%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250108T191753Z&X-Amz-Expires=300&X-Amz-Signature=2e04d20a997771a41c1f9a39dab49aff7691ddda1441e91e1c30395ff9238cc4&X-Amz-SignedHeaders=host)
+
 
 It is possible to manipulate various fields by clicking on the DungeonGen game object such as the ones outlined below:
 
