@@ -10,10 +10,13 @@ Here is a small demo of the current state of the project:
 
 [![PDG Funhouse Demo](https://img.youtube.com/vi/709TQdN045I/0.jpg)](https://www.youtube.com/watch?v=709TQdN045I&ab_channel=SHTOA)
 
+---
 --- 
 <details open>
 
 <summary>✒️ Acknowledgements ✒️</summary>
+
+---
 
 The following projects have contributed in large to the development of the prototype:
 
@@ -28,11 +31,15 @@ The following projects have contributed in large to the development of the proto
 
 </details>
 
+---
+
 --- 
 
 <details open>
 
 <summary>📥 Project Installation 📥</summary>
+
+---
 
 #### Project Dependencies
 - [Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)
@@ -51,16 +58,24 @@ git clone git@gitlab.doc.gold.ac.uk:miliy001/PDG_Funhouse.git
 ```
 After cloning the repo, open the file via Unity Hub, first navigate to the _Projects_ tab on the left hand menu. Then select the _Add_ dropdown on the right and _add project from disk_. 
 
+![hubNavigation](markdownAssets/hubNavigation.png)
+
 :warning: make sure to select the correct Unity version ([Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)) in the editor version dropdown.
 
 Then double click the file in the projects menu to open.
 
+---
+
 </details>
 
+---
 ---
 
 <details open>
 <summary>⚙️ Setting Up Generator ⚙️</summary>
+
+---
+
 
 Opening up the Unity file you will be greeted with an untitled scene. 
 
@@ -71,23 +86,34 @@ To setup the dungeon generator scene, navigate to
 
 double click the _Dungeon_ file to open the scene.
 
+
+---
+
 </details>
 
+
+---
 ---
 
 <details>
 <summary> 🧱 Using the Generator 🧱 </summary>
 
 
+---
+
 #### DungeonGen GameObject
 The generator will be found on the left-hand side in the hierarchy labeled DungeonGen:
 
-![dungeongen](https://github-production-user-asset-6210df.s3.amazonaws.com/28716230/390922536-c8f6d21d-ce5c-4ec9-a280-d04dfbefe89a.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250108%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250108T191753Z&X-Amz-Expires=300&X-Amz-Signature=2e04d20a997771a41c1f9a39dab49aff7691ddda1441e91e1c30395ff9238cc4&X-Amz-SignedHeaders=host)
-
+![hierarchyLocation](markdownAssets/DungeonGenLoc.png)
 
 It is possible to manipulate various fields by clicking on the DungeonGen game object such as the ones outlined below:
 
 ![dgvalues](https://github.com/user-attachments/assets/d2f7d59a-b05c-438d-ac46-11b9b799b7aa)
+
+
+---
+
 </details>
 
+---
 ---
