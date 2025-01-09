@@ -19,10 +19,10 @@ Here is a small demo of the current state of the project:
 </div>
 
 ## Contents
-1. [Acknowledgements](##1-acknowledgements)
-2. [Project Installation](##2-project-installation)
-3. [Setting Up Generator](##3-setting-up-project)
-4. [Using the Generator](##4-using-the-generator)
+1. [Acknowledgements](#1-acknowledgements)
+2. [Project Installation](#2-project-installation)
+3. [Setting Up Generator](#3-setting-up-project)
+4. [Using the Generator](#4-using-the-generator)
 5. [Play Mode](#5-play-mode)
 
 ---
