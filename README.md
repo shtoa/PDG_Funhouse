@@ -18,6 +18,13 @@ Here is a small demo of the current state of the project:
 
 </div>
 
+## Contents
+1. [Acknowledgements](##1-acknowledgements)
+2. [Project Installation](##2-project-installation)
+3. [Setting Up Generator](##3-setting-up-project)
+4. [Using the Generator](##4-using-the-generator)
+5. [Play Mode](#5-play-mode)
+
 ---
 --- 
 
@@ -104,7 +111,7 @@ To setup the dungeon generator scene, navigate to:
 ./Assets/Scenes
 ```  
 
-double click the _Dungeon_ file to open the scene.
+double click the <code>Dungeon</code> file to open the scene.
 
 
 ---
@@ -121,11 +128,11 @@ double click the _Dungeon_ file to open the scene.
 ## 4. Using the Generator
 
 #### DungeonGen GameObject
-The generator will be found on the left-hand side in the hierarchy labeled DungeonGen:
+The generator will be found on the left-hand side in the hierarchy labeled <code>DungeonGen</code>:
 
 ![hierarchyLocation](markdownAssets/DungeonGenLoc.png)
 
-It is possible to manipulate various properties of the dungeon such as the _Dungeon Properties_ and _Room Properties_ by clicking on the DungeonGen game object:
+It is possible to manipulate various properties of the dungeon such as the **Dungeon Properties** and **Room Properties** by clicking on the <code>DungeonGen</code> game object:
 
 1. For the DungeonCalculator:
 
@@ -152,4 +159,22 @@ The gizmo on the dungeon generator can be moved and edited within the editor or 
 </details>
 
 ---
+
+<details open>
+<summary align="center"> 🕹️ Play Mode 🕹️ </summary>
+
+## 5. Play Mode
+
+
+You can demo the generated dungeon using a simple third person character controller in playmode. To enter play mode in the editor press <code>ctrl-p</code> 
+
+Use the following controlls to navigate around the dungeon:
+<div align="center">
+![hierarchyLocation](markdownAssets/keyboardControls.png)
+</div>
+
+---
+
+</details>
+
 ---
