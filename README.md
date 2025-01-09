@@ -1,4 +1,4 @@
-# <div align="center"> ◅(•-•)▻/* 🧱 PDG_Funhouse 🧱 ◅(•-•)▻/* </div>
+# <div align="center"> \*\ ◅(•-•)▻ 🧱 PDG_Funhouse 🧱 ◅(•-•)▻/* </div>
 ---
 
 **Final Funhouse**, is a procedural dungeon generator implementation based on the binary space partitioning algorithm. At the core of the generation are these three steps:
