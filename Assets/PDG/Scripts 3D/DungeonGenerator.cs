@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.AI;
@@ -20,7 +22,7 @@ namespace dungeonGenerator
 
         public int maxIterations;
 
-        [Header("Split Properties")] 
+        [Header("Split Properties")]
         public Vector2 splitCenterDeviation;
 
 
@@ -36,10 +38,10 @@ namespace dungeonGenerator
 
         [Header("Wall Properties")]
         public int wallThickness;
-  
+
         [Header("Door")]
         public float doorThickness;
- 
+
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
@@ -47,6 +49,8 @@ namespace dungeonGenerator
 
         public List<Node> roomList { get; private set; }
         public GameObject startRoom { get; private set; }
+
+        private static Dictionary<CollectableType, int> total = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
 
         public void RegenerateDungeon()
         {
@@ -93,10 +97,55 @@ namespace dungeonGenerator
                     deadEnd.RoomType = RoomType.DeadEnd;
                 }
             }
+
             // TODO: Refactor this to an event 
-            GameManager.Instance.total[CollectableType.cylinder] = 1;
-            GameManager.Instance.total[CollectableType.sphere] = deadEnds.Count - 1;
-            GameManager.Instance.total[CollectableType.cube] = roomSpaces.Count - 2 - GameManager.Instance.total[CollectableType.sphere];
+            total[CollectableType.cylinder] = 1;
+            total[CollectableType.sphere] = deadEnds.Count - 1;
+            total[CollectableType.cube] = roomSpaces.Count - 2 - total[CollectableType.sphere];
+
+            saveDungeonConfig();
+            GameManager.Instance.total = total;
+            GameManager.Instance.numCollected = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
+        }
+
+        void saveDungeonConfig()
+        {
+            //Debug.Log("Save Config");
+            string savePath = Application.dataPath + "/Save/DungeonConfig.txt";
+            File.WriteAllText(savePath, 
+                "cylinder"+","+ total[CollectableType.cylinder]+"\n"+
+                "sphere" + "," + total[CollectableType.sphere] + "\n"+
+                "cube" + "," + total[CollectableType.cube] + "\n"
+            );
+            
+        }
+
+        void loadDungeonConfig()
+        {
+            string savePath = Application.dataPath + "/Save/DungeonConfig.txt";
+            List<string> configValues = File.ReadLines(savePath).ToList();
+
+
+            foreach (var line in configValues)
+            {
+                //Debug.Log(line.Split(",")[1]);
+                if (line.Contains("cylinder"))
+                {
+                    total[CollectableType.cylinder] = int.Parse(line.Split(",")[1]);
+                } else if (line.Contains("sphere"))
+                {
+                    total[CollectableType.sphere] = int.Parse(line.Split(",")[1]);
+                } else if (line.Contains("cube"))
+                {
+                    total[CollectableType.cube] = int.Parse(line.Split(",")[1]);
+                }
+            }
+        }
+
+        private void Awake()
+        {
+            loadDungeonConfig();
+            GameManager.Instance.total = total;
         }
 
         /// <summary>

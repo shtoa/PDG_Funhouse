@@ -1,0 +1,3 @@
+cylinder,1
+sphere,1
+cube,5

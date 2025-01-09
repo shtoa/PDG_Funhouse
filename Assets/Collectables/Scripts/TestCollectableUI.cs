@@ -43,6 +43,7 @@ public class TestCollectableUI : MonoBehaviour
         else if (GameManager.Instance.gameState == GameManager.GameState.Ended)
 
         {
+            UpdateCounters();
             SetGameEndText();
         }
 

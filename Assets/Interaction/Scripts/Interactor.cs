@@ -21,7 +21,10 @@ public class Interactor : MonoBehaviour
                     interactable = interactableObj;
                 }
 
-                interactableObj.OnHover();
+                if (interactable != null)
+                {
+                    interactableObj.OnHover();
+                }
                 //Debug.Log("Hovered");
 
 

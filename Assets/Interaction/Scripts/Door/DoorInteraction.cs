@@ -17,7 +17,7 @@ public class DoorInteraction : MonoBehaviour, IInteractable
 
     private AnimationCurve ezEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
     GameObject helperTextObj;
-    bool isHovering = false;
+    //bool isHovering = false;
 
     public enum DoorState
     {
@@ -53,7 +53,7 @@ public class DoorInteraction : MonoBehaviour, IInteractable
     // Update is called once per frame
     void Update()
     {
-        isHovering = false;
+        //isHovering = false;
 
         if (doorState == DoorState.closing)
         {
@@ -117,7 +117,7 @@ public class DoorInteraction : MonoBehaviour, IInteractable
     public void OnEnter()
     {
         GetComponent<MeshRenderer>().material.SetInt("_isSelected", 1);
-        isHovering = true;
+        //isHovering = true;
 
     }
 
@@ -155,7 +155,7 @@ public class DoorInteraction : MonoBehaviour, IInteractable
     public void OnExit()
     {
         GetComponent<MeshRenderer>().material.SetInt("_isSelected", 0);
-        isHovering = true;
+        //isHovering = true;
 
         //Destroy(helperTextObj);
 

@@ -17,7 +17,7 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
 {
 
     #region Class Variables
-    [SerializeField] private bool holdToSprint = true;
+    //[SerializeField] private bool holdToSprint = true;
 
     public bool SprintToggledOn { get; private set; }
     public bool JumpPressed { get; private set; }
