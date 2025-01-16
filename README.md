@@ -61,7 +61,8 @@ The following projects have contributed in large to the development of the proto
 
 #### :warning: Project Dependencies
 - [Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)
-- [Unity Hub 3.8.0](https://docs.unity3d.com/hub/manual/InstallHub.html) (if Unity 2022.3.28f1 downloaded separatley)
+- [Unity Hub 3.8.0](https://docs.unity3d.com/hub/manual/InstallHub.html) | (if Unity 2022.3.28f1 downloaded separatley)
+- [Git-LFS](https://git-lfs.com/) |  For accessing textures and models 
 
 To run the project please install the above version of Unity. Then proceed to clone the project to create a local repository using the following commands:
 
@@ -74,7 +75,15 @@ git clone https://gitlab.doc.gold.ac.uk/miliy001/PDG_Funhouse.git
 ```   
 git clone git@gitlab.doc.gold.ac.uk:miliy001/PDG_Funhouse.git
 ```
-After cloning the repo, open the file via Unity Hub: 
+
+#### :warning: Loading LFS Files
+As larger assets such as the models and textures are stored using Git Larger File Storage the following command need to be run with [Git-LFS](#warning-project-dependencies) installed:
+```   
+git lfs install
+```
+
+
+After cloning the repo and loading lfs files, open the folder via Unity Hub: 
 1. Navigate to the _Projects_ tab on the left hand menu. 
 2. Select the _Add_ dropdown on the right and _add project from disk_. 
 
