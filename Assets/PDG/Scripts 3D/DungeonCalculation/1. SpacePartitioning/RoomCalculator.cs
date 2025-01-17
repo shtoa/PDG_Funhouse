@@ -50,6 +50,7 @@ namespace dungeonGenerator
                         roomSpace.Bounds.size - new Vector3Int(this.totalRoomOffset.x, 0, this.totalRoomOffset.y)
                     );
                 roomSpace.Bounds = bounds;
+                roomSpace.RoomType = RoomType.Room;
 
                 // TODO: extend to be able to place anywhere within the given space
                 #region add rooms randomly inside space

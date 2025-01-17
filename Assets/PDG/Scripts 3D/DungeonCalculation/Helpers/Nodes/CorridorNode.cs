@@ -210,6 +210,20 @@ namespace dungeonGenerator
             leftSpace.ConnectionsList.Add(rightSpace);
             rightSpace.ConnectionsList.Add(leftSpace);
 
+
+            // --- calculate the bounds of the door to be used in mesh generation ---
+            
+
+            // calculate the bounds of the door for the left space and the right spaces
+            leftSpace.calculateDoorPlacement(this.Bounds, SplitPosition.Left, wallThickness);
+            rightSpace.calculateDoorPlacement(this.Bounds, SplitPosition.Right, wallThickness);
+            
+            // add the doorbounds found for the left and right space to the corridor
+            this.addDoorPlacement(leftSpace.DoorPlacements.Last());
+            this.addDoorPlacement(rightSpace.DoorPlacements.Last());
+
+            this.CorridorType = CorridorType.Horizontal;
+
         }
 
         /// <summary>
@@ -404,6 +418,19 @@ namespace dungeonGenerator
 
             topSpace.ConnectionsList.Add(bottomSpace);
             bottomSpace.ConnectionsList.Add(topSpace);
+
+            // --- calculate the bounds of the door to be used in mesh generation ---
+
+
+            // calculate the bounds of the door for the left space and the right spaces
+            topSpace.calculateDoorPlacement(this.Bounds, SplitPosition.Top, wallThickness);
+            bottomSpace.calculateDoorPlacement(this.Bounds, SplitPosition.Bottom, wallThickness);
+
+            // add the doorbounds found for the left and right space to the corridor
+            this.addDoorPlacement(topSpace.DoorPlacements.Last());
+            this.addDoorPlacement(bottomSpace.DoorPlacements.Last());
+
+            this.CorridorType = CorridorType.Vertical;
 
         }
         private int GetCorridorPositionTopBottomX(Node topSpace, Node bottomSpace)

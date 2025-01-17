@@ -1,24 +1,62 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
+using static dungeonGenerator.RoomGenerator;
+using Random = UnityEngine.Random;
 
 namespace dungeonGenerator
 {
+
+    // FIX ME: Move into separate class
+    public class WallBounds
+    {
+        public List<BoundsInt> left;
+        public List<BoundsInt> right;
+        public List<BoundsInt> top;
+        public List<BoundsInt> bottom;
+
+        public WallBounds()
+        {
+            left = new List<BoundsInt>();
+            right = new List<BoundsInt>();
+            top = new List<BoundsInt>();
+            bottom = new List<BoundsInt>();
+        }
+
+        public List<BoundsInt> getWalls()
+        {
+            List<BoundsInt> walls = new List<BoundsInt>();
+            walls.AddRange(left);
+            walls.AddRange(right);
+            walls.AddRange(top);
+            walls.AddRange(bottom);
+
+            return walls;
+        }
+
+    }
     public class RoomGenerator
     {
         private int wallThickness;
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
+       
         private Material wallMaterial;
         private Material floorMaterial;
         private int wallHeight;
         private Material ceilingMaterial;
         private int corridorWidth;
+
         private DungeonGenerator dungeonGenerator;
         private DungeonDecorator dungeonDecorator;
 
         public Material DoorMat { get; private set; }
         public Material StartRoomMat { get; private set; }
         public Material EndRoomMat { get; private set; }
+
+        List<WallBounds> allWallBounds = new List<WallBounds>();
 
         public RoomGenerator(List<Node> RoomSpaces, GameObject dungeonObject)
         {
@@ -32,9 +70,6 @@ namespace dungeonGenerator
             this.ceilingMaterial = dungeonDecorator.ceilingMaterial;
             this.DoorMat = dungeonDecorator.DoorMat;
 
-            
-            
-            
             DungeonGenerator dungeonGenerator = dungeonObject.GetComponent<DungeonGenerator>();
 
             this.dungeonGenerator = dungeonGenerator;
@@ -50,34 +85,55 @@ namespace dungeonGenerator
         public void GenerateRooms(List<Node> roomList)
         {
 
-            WallCalculator wallCalculator = new WallCalculator(dungeonGenerator);
-            wallCalculator.CalculateWalls(roomList, wallThickness);
+            // Room roomStyle = dungeonDecorator.rooms[Random.Range(0, dungeonDecorator.rooms.Count)];
 
+            // create gameObjects for organization
+            foreach (RoomType roomType in Enum.GetValues(typeof(RoomType)))
+            {
+                if (roomType != RoomType.None)
+                {
+                    var roomHolder = new GameObject(roomType.ToString());
+                    roomHolder.transform.SetParent(dungeonGenerator.transform);
+                    roomHolder.transform.position = dungeonGenerator.transform.position;
+                }
+            }
 
             // create floors
             foreach (var room in roomList)
             {
-                DrawFloor(room);
+
+                RoomStyle roomStyle = dungeonDecorator.roomStyles[Random.Range(0, dungeonDecorator.roomStyles.Count)];
+                GameObject roomObj = new GameObject(roomStyle.name);
+
+                
+               
+                roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false);
+
+                DrawFloor(room, roomStyle, roomObj);
+                DrawWalls(room, roomStyle, roomObj);
+
+
+                //DrawWallsTest(room, roomStyle);
                 //DrawCeiling(room);
             }
 
-            foreach (var wallBound in wallCalculator.WallBounds)
-            {
-                DrawWalls(wallBound);
-            }
+            //foreach (var wallBound in wallCalculator.WallBounds)
+            //{
+            //    //DrawWalls(wallBound, roomStyle);
+            //}
 
-            foreach (var doorBound in wallCalculator.DoorBounds)
-            {
-                DrawDoors(doorBound);
-            }
+            //foreach (var doorBound in wallCalculator.DoorBounds)
+            //{
+            //    //DrawDoors(doorBound, roomStyle);
+            //}
 
 
         }
 
-        public void DrawDoors(BoundsInt doorBound)
+        public void DrawDoors(BoundsInt doorBound, RoomStyle roomStyle, GameObject roomObj)
         {
             GameObject door = MeshHelper.CreateCuboid(doorBound.size, 1); // TODO: Make door thickness possible to manipulate
-            door.transform.SetParent(dungeonGenerator.transform, false);
+            door.transform.SetParent(roomObj.transform, false);
 
             door.transform.localPosition = doorBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
 
@@ -91,23 +147,40 @@ namespace dungeonGenerator
             //door.layer = LayerMask.NameToLayer("Dungeon");
         }
 
-        public void DrawWalls(BoundsInt wallBound)
+        public void DrawWalls(Node room, RoomStyle roomStyle, GameObject roomObj)
         {
-            GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
-            wall.transform.SetParent(dungeonGenerator.transform, false);
 
-            wall.transform.localPosition = wallBound.center+new Vector3(1,0,1)*wallThickness; // CHECK ME: May be wrong
-            wall.GetComponent<MeshRenderer>().material = wallMaterial;
+            WallCalculator wallCalculator = new WallCalculator(dungeonGenerator);
+            WallBounds wallBounds = wallCalculator.CalculateWalls(room, wallThickness);
+            GameObject wallHolder = new GameObject("wallHolder");
+            wallHolder.transform.SetParent(roomObj.transform, false);
+
+            foreach (var wallBound in wallBounds.getWalls())
+            {
+
+                GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
+                wall.name = "Wall";
+                wall.transform.SetParent(wallHolder.transform, false);
+
+                wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+                wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+
+
+            }
+
+
+            #region Minimapped Walls
             //wall.layer = LayerMask.NameToLayer("Dungeon");
 
             // draw wall minimap object
             //GameObject miniMapObject = GameObject.Instantiate(wall, wall.transform.position, wall.transform.rotation);
             //miniMapObject.layer = LayerMask.NameToLayer("MiniMap");
             //miniMapObject.transform.parent = wall.transform;
+            #endregion 
         }
 
 
-        public void DrawFloor(Node room)
+        public void DrawFloor(Node room, RoomStyle roomStyle, GameObject roomObj)
         {
             // maybe convert rooms to gameobjects? to allow to give them individual effect!!!
 
@@ -116,10 +189,10 @@ namespace dungeonGenerator
             floor.transform.tag = "Floor";
             //floor.layer = LayerMask.NameToLayer("Dungeon");
 
-            floor.transform.SetParent(dungeonGenerator.transform, false);
-
+            floor.transform.SetParent(roomObj.transform, false);
             floor.transform.localPosition = room.Bounds.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
-            floor.GetComponent<MeshRenderer>().material = floorMaterial;
+            floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+            
 
             GameObject collectable = null;
 
@@ -184,12 +257,12 @@ namespace dungeonGenerator
         }
 
 
-        public void DrawCeiling(Node room)
+        public void DrawCeiling(Node room, RoomStyle roomStyle,GameObject roomObj)
         {
             GameObject ceiling = MeshHelper.CreatePlane(room.Bounds.size, 1, true);
             GameObject ceiling2 = MeshHelper.CreatePlane(room.Bounds.size, 1);
 
-            ceiling.transform.SetParent(dungeonGenerator.transform, false);
+            ceiling.transform.SetParent(roomObj.transform, false);
             ceiling2.transform.SetParent(ceiling.transform, false);
 
             ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight + new Vector3(1, 0, 1) * wallThickness; // should be 0.25f

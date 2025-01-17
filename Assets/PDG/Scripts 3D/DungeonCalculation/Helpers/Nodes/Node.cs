@@ -10,14 +10,36 @@ namespace dungeonGenerator
     {
         Root,Top, Bottom, Left, Right
     }
-
     public enum RoomType
     {
         None,
+        Room,
         Start,
         End,
         Corridor,
         DeadEnd
+    }
+
+    public enum CorridorType
+    {
+        None,
+        Horizontal,
+        Vertical,
+        Perpendicular
+    }
+
+    public struct DoorPlacement
+    {
+
+        public BoundsInt DoorBounds;
+        public SplitPosition PositionType;
+        public DoorPlacement(BoundsInt _doorBounds, SplitPosition _positionType)
+        {
+            DoorBounds = _doorBounds;
+            PositionType = _positionType;
+        }
+       
+
     }
     public class Node
     {
@@ -36,8 +58,13 @@ namespace dungeonGenerator
         public List<Node> ConnectionsList { get => connectionsList; set => connectionsList = value; }
         public int ConnectionDepthIndex { get => connectionDepthIndex; set => connectionDepthIndex = value; }
 
+        List<DoorPlacement> doorPlacements = new List<DoorPlacement>();
+        public List<DoorPlacement> DoorPlacements { get => doorPlacements; set => doorPlacements = value; }
+        public CorridorType CorridorType { get => corridorType; set => corridorType = value; }
+
         public SplitPosition SplitPosition;
         public RoomType RoomType;
+        private CorridorType corridorType;
 
         private List<Node> connectionsList;
         private int connectionDepthIndex = -1;
@@ -72,5 +99,69 @@ namespace dungeonGenerator
         public void removeChild(Node node) { 
             childrenNodeList.Remove(node);
         }
+
+        public void calculateDoorPlacement(BoundsInt corridorBounds, SplitPosition splitPosition, int wallThickness)
+        {
+            // Using the corridor boundaries calculated the bounds of the doors in the room
+            DoorPlacement doorPlacement = new DoorPlacement(new BoundsInt(), SplitPosition.Root);
+
+            switch (splitPosition)
+            {
+                case SplitPosition.Left:
+
+                    doorPlacement = new DoorPlacement(new BoundsInt(
+                          
+                            new Vector3Int(corridorBounds.min.x, 0, corridorBounds.min.z + wallThickness),
+                            new Vector3Int(0, 0, corridorBounds.size.z - 2*wallThickness)
+                        ),
+                        SplitPosition.Right
+                    );
+
+                    break;
+
+                case SplitPosition.Right:
+                    doorPlacement = new DoorPlacement(new BoundsInt(
+                            new Vector3Int(corridorBounds.max.x, 0, corridorBounds.min.z + wallThickness),
+                            new Vector3Int(0, 0, corridorBounds.size.z - 2*wallThickness)
+                        ),
+                        SplitPosition.Left
+                    );
+
+                    break;
+
+                case SplitPosition.Top:
+
+                    doorPlacement = new DoorPlacement(new BoundsInt(
+                            new Vector3Int(corridorBounds.min.x + wallThickness, 0, corridorBounds.max.z),
+                            new Vector3Int(corridorBounds.size.x - 2 * wallThickness, 0, 0)
+                            
+                        ),
+                        SplitPosition.Bottom
+                    );
+
+                    break;
+
+                case SplitPosition.Bottom:
+
+                    doorPlacement = new DoorPlacement(new BoundsInt(
+                            new Vector3Int(corridorBounds.min.x+wallThickness, 0, corridorBounds.min.z),
+                            new Vector3Int(corridorBounds.size.x- 2 * wallThickness, 0, 0)
+                      ),
+                      SplitPosition.Top
+                  );
+
+                    break;
+
+            }
+
+            doorPlacements.Add(doorPlacement);  
+
+        }
+
+        public void addDoorPlacement(DoorPlacement doorPlacement)
+        {
+            doorPlacements.Add(doorPlacement);
+        }
+   
     }
 }

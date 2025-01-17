@@ -95,7 +95,7 @@ namespace dungeonGenerator
                 if (deadEnd != startAndEnd[1])
                 {
                     deadEnd.RoomType = RoomType.DeadEnd;
-                }
+                } 
             }
 
             // TODO: Refactor this to an event 
@@ -110,6 +110,7 @@ namespace dungeonGenerator
 
         void saveDungeonConfig()
         {
+            
             //Debug.Log("Save Config");
             string savePath = Application.dataPath + "/Save/DungeonConfig.txt";
             File.WriteAllText(savePath, 

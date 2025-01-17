@@ -23,4 +23,14 @@ public class DungeonDecorator : MonoBehaviour
     public Material ceilingMaterial;
 
 
+    [Header("Room Styles")]
+    [SerializeField]
+    public List<RoomStyle> roomStyles;
+
+
+    [Header("Corridor Styles")]
+    [SerializeField]
+    public List<RoomStyle> corridorStyles;
+
+
 }
