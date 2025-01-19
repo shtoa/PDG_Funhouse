@@ -10,6 +10,7 @@ namespace dungeonGenerator {
         // Dungeon Properties 
         private int dungeonWidth;
         private int dungeonLength;
+        private int dungeonHeight;
         public List<Node> RoomSpaces { get => roomSpaces;}
 
         private List<Node> roomSpaces;
@@ -18,7 +19,10 @@ namespace dungeonGenerator {
 
             // TODO: Further Refactor this
             this.dungeonWidth = dungeonDimensions.size.x;
+            this.dungeonHeight = dungeonDimensions.size.y;
             this.dungeonLength = dungeonDimensions.size.z;
+
+            Debug.Log($"Dungeon Height: {dungeonHeight}");
         }
 
 
@@ -28,25 +32,28 @@ namespace dungeonGenerator {
         
         </summary>*/
 
-        public List<Node> CalculateDungeon(int maxIterations, BoundsInt roomBoundsMin, Vector2 splitCenterDeviationPercent, int corridorWidth, int wallThickness, Vector2Int roomOffset)
+        public List<Node> CalculateDungeon(int maxIterations, BoundsInt roomBoundsMin, Vector3 splitCenterDeviationPercent, int corridorWidth, int wallThickness, Vector3Int roomOffset)
         {
             // Calculate the Dungeon Floor Bounds:
 
             // FIX ME:
             var roomWidthMin = roomBoundsMin.size.x;
             var roomLengthMin = roomBoundsMin.size.z;
-            
+            var roomHeightMin = roomBoundsMin.size.y;
+
             #region 1. Space Partitioning
 
-                // 1.1 Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
-                BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength); // initialize BSP class
+            // 1.1 Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
+                BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength, dungeonHeight); // initialize BSP class
 
                 // Vector of Minimum Space need to accomodate given Room Size
                  
                 // TODO: Add check if this value is impossible
-                var minSpaceDim = new Vector2Int(
+                var minSpaceDim = new Vector3Int(
                     roomWidthMin + roomOffset.x + wallThickness*2,
-                    roomLengthMin + roomOffset.y + wallThickness*2
+                    roomLengthMin + roomOffset.y + wallThickness*2,
+                    roomHeightMin + roomOffset.z
+          
                 );
 
                 var allNodeSpaces = bsp.PartitionSpace(maxIterations, minSpaceDim, splitCenterDeviationPercent);  // include roomOffset and wallThickness to have correct placement
@@ -61,13 +68,14 @@ namespace dungeonGenerator {
             #region 2. Room Placement
 
                 // TODO: Make this be passed into the generator
-                var minRoomDim = new Vector2Int(
+                var minRoomDim = new Vector3Int(
                     roomWidthMin,
-                    roomLengthMin
+                    roomLengthMin,
+                    roomHeightMin
                 );
 
                 // FIXME: Check if this value is correct
-                var totalRoomOffset = roomOffset + Vector2Int.one * wallThickness * 2;
+                var totalRoomOffset = roomOffset + new Vector3Int(1,1,0) * wallThickness * 2;
             
                 // 2.1 Place rooms within the possible room bounds taking into account room offset
                 RoomCalculator roomGenerator = new RoomCalculator(minRoomDim, totalRoomOffset, corridorWidth); // FIXME: Make more general remove corriodr width dependency
@@ -78,8 +86,8 @@ namespace dungeonGenerator {
             #region 3. Generate Corridors
 
             CorridorGenerator corridorGenerator = new CorridorGenerator();
-                var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim);
-            
+            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim);
+
             #endregion
 
             // return a list of bounds on which the floor will be (Rooms and Corridors) 

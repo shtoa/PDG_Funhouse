@@ -16,11 +16,11 @@ public class BinarySpacePartitionerTest
     [TestCase(10,10)]
     [TestCase(5, 15)]
     [TestCase(21, 3)]
-    public void BinarySpacePartitionerInitializationTest(int dungeonWidth, int dungeonLength)
+    public void BinarySpacePartitionerInitializationTest(int dungeonWidth, int dungeonHeight, int dungeonLength)
     {
         // Check if initialzied correctly
 
-        BinarySpacePartitioner testPartitioner = new BinarySpacePartitioner(dungeonWidth,dungeonLength);
+        BinarySpacePartitioner testPartitioner = new BinarySpacePartitioner(dungeonWidth, dungeonHeight, dungeonLength);
         
         Assert.IsTrue(testPartitioner.RootNode.Bounds.position.Equals(Vector3Int.zero), "RootNode Position");
         Assert.IsTrue(testPartitioner.RootNode.Bounds.size.Equals(new Vector3Int(dungeonWidth,0,dungeonLength)), "RootNode Size");
@@ -71,17 +71,17 @@ public class BinarySpacePartitionerTest
             new BoundsInt(
                 new Vector3Int(0, 0, 0),
                 new Vector3Int(10, 0, 10)
-                ), null, 0), 2);
+                ), null, 0, 0), 2);
         yield return (new SpaceNode(
            new BoundsInt(
                new Vector3Int(-10, 0, 5),
                new Vector3Int(20, 0, 10)
-               ), null, 0), 5);
+               ), null, 0, 0), 5);
         yield return (new SpaceNode(
            new BoundsInt(
                new Vector3Int(30, 0, -5),
                new Vector3Int(3, 0, 20)
-               ), null, 0), 14);
+               ), null, 0, 0), 14);
     }
 
     #endregion
@@ -132,17 +132,17 @@ public class BinarySpacePartitionerTest
             new BoundsInt(
                 new Vector3Int(0, 0, 0),
                 new Vector3Int(10, 0, 10)
-                ), null, 0), 2);
+                ), null, 0, 0), 2);
         yield return (new SpaceNode(
            new BoundsInt(
                new Vector3Int(-10, 0, 5),
                new Vector3Int(20, 0, 10)
-               ), null, 0), 5);
+               ), null, 0, 0), 5);
         yield return (new SpaceNode(
            new BoundsInt(
                new Vector3Int(30, 0, -5),
                new Vector3Int(20, 0, 4)
-               ), null, 0), 14);
+               ), null, 0, 0), 14);
     }
 
     #endregion
@@ -195,7 +195,7 @@ public class BinarySpacePartitionerTest
 
     [Test]
     [TestCaseSource(nameof(SplitSpaceCases))]
-    public void SplitSpaceTest((SpaceNode spaceToSplit, Vector2Int minSpaceDim, Vector2 splitCenterDeviation) testData)
+    public void SplitSpaceTest((SpaceNode spaceToSplit, Vector3Int minSpaceDim, Vector3 splitCenterDeviation) testData)
     {
         /// This function will test if the behaviour of the SplitSpace function
         /// The core aspect of the function is to produce the correct orrientation based on the inputs
@@ -208,8 +208,8 @@ public class BinarySpacePartitionerTest
 
         SpaceNode testNode = testData.spaceToSplit;
 
-        Vector2Int minSpaceDim = testData.minSpaceDim;
-        Vector2 splitCenterDeviation = testData.splitCenterDeviation;
+        Vector3Int minSpaceDim = testData.minSpaceDim;
+        Vector3 splitCenterDeviation = testData.splitCenterDeviation;
 
         int sizeX = testNode.Bounds.size.x;
         int sizeZ = testNode.Bounds.size.z;
@@ -246,7 +246,7 @@ public class BinarySpacePartitionerTest
     }
 
     // Test Case
-    public static IEnumerable<(SpaceNode spaceToSplit, Vector2Int minSpaceDim, Vector2 splitCenterDeviation)> SplitSpaceCases()
+    public static IEnumerable<(SpaceNode spaceToSplit, Vector3Int minSpaceDim, Vector3 splitCenterDeviation)> SplitSpaceCases()
     {
 
         yield return (new SpaceNode(
@@ -255,10 +255,11 @@ public class BinarySpacePartitionerTest
                                 new Vector3Int(20, 0, 20)
                             ),
                             null,
+                            0,
                             0
                         ),
-                        new Vector2Int(4,6),
-                        new Vector2(1f,1f));
+                        new Vector3Int(4,6,4),
+                        new Vector3(1f,1f,1f));
 
         yield return (new SpaceNode(
                             new BoundsInt(
@@ -266,10 +267,11 @@ public class BinarySpacePartitionerTest
                                 new Vector3Int(10, 0, 14)
                             ),
                             null,
+                            0,
                             0
                         ),
-                        new Vector2Int(2, 14),
-                        new Vector2(0.5f, 1f));
+                        new Vector3Int(2, 14, 2),
+                        new Vector3(0.5f, 1f, 0.5f));
 
         yield return (new SpaceNode(
                     new BoundsInt(
@@ -277,10 +279,11 @@ public class BinarySpacePartitionerTest
                         new Vector3Int(13, 0, 25)
                     ),
                     null,
+                    0,
                     0
                 ),
-                new Vector2Int(13, 2),
-                new Vector2(1f, 0.5f));
+                new Vector3Int(13, 2, 2),
+                new Vector3(1f, 0.5f, 0.5f));
 
         yield return (new SpaceNode(
                    new BoundsInt(
@@ -288,10 +291,11 @@ public class BinarySpacePartitionerTest
                        new Vector3Int(13, 0, 13)
                    ),
                    null,
+                   0,
                    0
                ),
-               new Vector2Int(13, 13),
-               new Vector2(1f, 1f));
+               new Vector3Int(13, 13, 13),
+               new Vector3(1f, 1f, 0.5f));
     }
 
     #endregion
@@ -301,11 +305,11 @@ public class BinarySpacePartitionerTest
     // Test
     [Test]
     [TestCaseSource(nameof(GetSplitableAxisCases))]
-    public void GetSplitableAxisTest((SpaceNode spaceToSplit, Vector2Int minSpaceDim) testData)
+    public void GetSplitableAxisTest((SpaceNode spaceToSplit, Vector3Int minSpaceDim) testData)
     {
         SpaceNode testNode = testData.spaceToSplit;
 
-        Vector2Int minSpaceDim = testData.minSpaceDim;
+        Vector3Int minSpaceDim = testData.minSpaceDim;
 
         bool3 testAxis = BinarySpacePartitioner.GetSplitableAxis(testNode.Bounds, minSpaceDim);
 
@@ -341,6 +345,7 @@ public class BinarySpacePartitionerTest
                                 new Vector3Int(10, 0, 10)
                             ),
                             null,
+                            0,
                             0
                         ),
                         new Vector2Int(2, 2));
@@ -350,6 +355,7 @@ public class BinarySpacePartitionerTest
                                     new Vector3Int(5, 0, 1)
                                 ),
                                 null,
+                                0,
                                 0
                             ),
                             new Vector2Int(2, 1));
@@ -359,6 +365,7 @@ public class BinarySpacePartitionerTest
                                 new Vector3Int(2, 0, 6)
                             ),
                             null,
+                            0,
                             0
                         ),
                         new Vector2Int(2, 3));
@@ -369,11 +376,11 @@ public class BinarySpacePartitionerTest
     [Test]
     public void AddSplitSpacesTest()
     {
-        BinarySpacePartitioner testPartitioner = new BinarySpacePartitioner(10, 10);
+        BinarySpacePartitioner testPartitioner = new BinarySpacePartitioner(10, 10, 10);
 
         // Create empty ndoes
-        var testNode1 = new SpaceNode(new BoundsInt(), null, 0);
-        var testNode2 = new SpaceNode(new BoundsInt(), null, 0);
+        var testNode1 = new SpaceNode(new BoundsInt(), null, 0, 0);
+        var testNode2 = new SpaceNode(new BoundsInt(), null, 0, 0);
 
         // try adding to queue and list
         testPartitioner.AddSplitSpaces(testPartitioner.spacesToSplit, testPartitioner.allSpaces, (testNode1, testNode2));

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Codice.CM.SEIDInfo;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +16,9 @@ namespace dungeonGenerator
         private Node node2;
         private int corridorWidth;
         private int wallThickness;
-        private Vector2Int minRoomDim;
+        private Vector3Int minRoomDim;
 
-        public CorridorNode(Node node1, Node node2, int corridorWidth, int wallThickness, Vector2Int minRoomDim) : base(null) // null since it doesnt have any parents
+        public CorridorNode(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim) : base(null) // null since it doesnt have any parents
         {
             this.node1 = node1;
             this.node2 = node2;
@@ -46,6 +47,17 @@ namespace dungeonGenerator
                     break;
                 case SplitPosition.Left:
                     GenerateCorridorRightLeft(this.node2, this.node1);
+                    break;
+                case SplitPosition.Up:
+                    GenerateCorridorUpDown(this.node1, this.node2);
+                    break;
+                //case SplitPosition.Down:
+                //    GenerateCorridorUpDown(this.node1, this.node2);
+                //    break;
+
+                default:
+                    Debug.Log("UNKOWN TYPE");
+                    Bounds = new BoundsInt(new Vector3Int(0,0,0), new Vector3Int(1,1,1));
                     break;
             }
         }
@@ -107,7 +119,8 @@ namespace dungeonGenerator
         private List<Node> ReturnPossibleNeighborsRightSpace(Node leftSpace, List<Node> rightSpaceNeighborCandidates)
         {
             return rightSpaceNeighborCandidates.Where(rightSpace =>
-                GetCorridorPositionLeftRightZ(leftSpace, rightSpace) != -1
+                GetCorridorPositionLeftRightZ(leftSpace, rightSpace) != -1 &&
+               (leftSpace.FloorIndex == rightSpace.FloorIndex)
             ).OrderBy(rightSpace => rightSpace.Bounds.min.x).ToList(); // order by ascending (smallest) x
 
         }
@@ -167,11 +180,11 @@ namespace dungeonGenerator
             // --- Generate Bounds for the Corridors --- 
 
             var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
-            var pos = new Vector3Int(leftSpace.Bounds.max.x, 0, corridorZ-Mathf.FloorToInt(this.corridorWidth/2f)); 
+            var pos = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, corridorZ-Mathf.FloorToInt(this.corridorWidth/2f)); 
 
             Bounds = new BoundsInt(
                 pos,
-                new Vector3Int(sizeX, 0, this.corridorWidth)
+                new Vector3Int(sizeX, leftSpace.Bounds.size.y, this.corridorWidth) // assumption that both spaces are the same height
             );
         }
 
@@ -325,7 +338,8 @@ namespace dungeonGenerator
         private List<Node> ReturnPossibleNeighborsBottomSpace(Node topSpace, List<Node> bottomSpaceNeighborCandidates)
         {
             return bottomSpaceNeighborCandidates.Where(bottomSpace =>
-                GetCorridorPositionTopBottomX(topSpace, bottomSpace) != -1
+                GetCorridorPositionTopBottomX(topSpace, bottomSpace) != -1 &&
+               (bottomSpace.FloorIndex == topSpace.FloorIndex)
             ).OrderByDescending(bottomSpace => bottomSpace.Bounds.max.z).ToList(); // order by descenmding (max) z
 
         }
@@ -383,11 +397,11 @@ namespace dungeonGenerator
 
             // --- Generate Bounds for the Corridors --- 
             var sizeZ = topSpace.Bounds.min.z - bottomSpace.Bounds.max.z;
-            var pos = new Vector3Int(corridorX - Mathf.FloorToInt(this.corridorWidth / 2f), 0, bottomSpace.Bounds.max.z);
+            var pos = new Vector3Int(corridorX - Mathf.FloorToInt(this.corridorWidth / 2f), topSpace.Bounds.min.y, bottomSpace.Bounds.max.z);
 
             Bounds = new BoundsInt(
                 pos,
-                new Vector3Int(this.corridorWidth, 0, sizeZ)
+                new Vector3Int(this.corridorWidth, topSpace.Bounds.size.y, sizeZ) // assumption that both spaces are the same height
             );
         }
         #endregion
@@ -480,6 +494,246 @@ namespace dungeonGenerator
             }
 
             return -1;
+        }
+        #endregion
+
+
+
+
+        #region Up-Down Generation
+
+        #region Up-Down Helpers
+        private List<Node> ReturnDownMostSpaces(List<Node> UpSpaces)
+        {
+
+            var sortedUpspaces = UpSpaces.OrderBy(space => space.Bounds.min.y).ToList(); // get bottom most children of top space
+
+            if (sortedUpspaces.Count == 1)
+            {
+                return sortedUpspaces; // if only one topSpace available select it (usually will just join the two deepest children)
+            }
+            else // select one of the bottom most topSpace if there are multiple
+            {
+                int minY = sortedUpspaces[0].Bounds.min.y; // get the coordinates of the bottom most bound
+                sortedUpspaces = sortedUpspaces.Where(space => Math.Abs(minY - space.Bounds.min.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
+                return sortedUpspaces;
+            }
+
+        }
+        private List<Node> ReturnUpMostSpaces(List<Node> DownSpaces)
+        {
+
+            var sortedDownSpaces = DownSpaces.OrderByDescending(space => space.Bounds.max.y).ToList(); // get Top most children of Bottom space
+
+            if (sortedDownSpaces.Count == 1)
+            {
+                return sortedDownSpaces; // if only one bottomSpace available select it (usually will just join the two deepest children)
+            }
+            else // select one of the top most BottomSpaces if there are multiple
+            {
+                int maxY = sortedDownSpaces[0].Bounds.max.y; // get the coordinates of the top most bound
+                sortedDownSpaces = sortedDownSpaces.Where(space => Math.Abs(maxY - space.Bounds.max.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
+                return sortedDownSpaces;
+            }
+
+        }
+        private List<Node> ReturnPossibleNeighborsDownSpace(Node upSpace, List<Node> downSpaceNeighborCandidates)
+        {
+            return downSpaceNeighborCandidates.Where(downSpace =>
+                GetCorridorPositionUpDownXZ(upSpace, downSpace).x != -1 &&
+                GetCorridorPositionUpDownXZ(upSpace, downSpace).z != -1 &&
+               (upSpace.FloorIndex-1 == downSpace.FloorIndex)
+            ).OrderByDescending(downSpace => downSpace.Bounds.max.y).ToList(); // order by descenmding (max) y
+
+        }
+        private (Node upSpace, Node downSpace) FindNeighborsUpDown(List<Node> sortedUpSpace, List<Node> sortedDownSpace)
+        {
+            // intialize output nodes
+            Node downSpace = null;
+            Node upSpace = null;
+
+            upSpace = sortedUpSpace[Random.Range(0, sortedUpSpace.Count)]; // pick a left space from candidates
+            var neighborsInDownSpaceList = ReturnPossibleNeighborsDownSpace(upSpace, sortedDownSpace); // get possible neighbors in rightSpace
+
+            if (neighborsInDownSpaceList.Count() > 0)
+            {
+                downSpace = neighborsInDownSpaceList[Random.Range(0, neighborsInDownSpaceList.Count)]; // if neighbors exist choose one at random 
+            }
+            else
+            {
+                // --- Added Check if no neighbors are found to reselect leftSpace
+
+                sortedUpSpace.Remove(upSpace);
+
+                foreach (var newUpSpace in sortedUpSpace)
+                {
+                    neighborsInDownSpaceList = ReturnPossibleNeighborsDownSpace(newUpSpace, sortedDownSpace); // select new LeftSpace and check if it has any neighbors
+
+                    if (neighborsInDownSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
+                    {
+                        upSpace = newUpSpace;
+                        downSpace = neighborsInDownSpaceList[Random.Range(0, neighborsInDownSpaceList.Count)];
+                        break;
+                    }
+                }
+            }
+
+            return (upSpace, downSpace);
+        }
+        public void GenerateCorridorBoundsUpDown(Node upSpace, Node downSpace)
+        {
+            Vector3Int corridorXZ = GetCorridorPositionUpDownXZ(upSpace, downSpace);
+
+            #region Debug Corridor
+            if (corridorXZ.x == -1  || corridorXZ.z == -1)
+            {
+                // Incase no Neighbours are Found 
+                // TODO: Move this to Unit Testing
+                Debug.Log("Wrong Size");
+            }
+
+            if (upSpace == null || downSpace == null)
+            {
+                Debug.Log("Spaces not Found");
+            }
+            #endregion
+
+            // --- Generate Bounds for the Corridors --- 
+            var sizeY = upSpace.Bounds.min.y - downSpace.Bounds.max.y;
+            var pos = new Vector3Int(corridorXZ.x, downSpace.Bounds.max.y, corridorXZ.z);
+
+            Bounds = new BoundsInt(
+                pos,
+                new Vector3Int(this.corridorWidth, (upSpace.Bounds.min.y-downSpace.Bounds.max.y)/2, this.corridorWidth)
+            );
+        }
+        #endregion
+        private void GenerateCorridorUpDown(Node upNode, Node downNode)
+        {
+            // --- Initialize Leaves Arrays and Spaces to Connect ---
+
+            Node upSpace = null; // left space to connect
+            List<Node> upSpaceLeaves = GraphHelper.GetLeaves(upNode); // get all the leaves in the left space
+
+            Node downSpace = null; // right space to connect
+            List<Node> downSpaceLeaves = GraphHelper.GetLeaves(downNode); // get all the leaves in the right space
+
+            // --- select (right most) LeftSpace and (left most) RightSpace to Connect ---
+
+            var sortedUpSpaces = ReturnDownMostSpaces(upSpaceLeaves);
+            var sortedDownSpaces = ReturnUpMostSpaces(downSpaceLeaves);
+
+            // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
+
+            (upSpace, downSpace) = FindNeighborsUpDown(sortedUpSpaces, sortedDownSpaces);
+
+            // --- Generate Corridor Between LeftSpace and RightSpace --- 
+
+            GenerateCorridorBoundsUpDown(upSpace, downSpace);
+
+            // --- Add Neighbours to the Connection List of Respective Nodes --- 
+
+            upSpace.ConnectionsList.Add(downSpace);
+            downSpace.ConnectionsList.Add(upSpace);
+
+            // --- calculate the bounds of the door to be used in mesh generation ---
+
+
+            // calculate the bounds of the door for the left space and the right spaces
+            upSpace.calculateHolePlacement(this.Bounds, SplitPosition.Up, wallThickness);
+            downSpace.calculateHolePlacement(this.Bounds, SplitPosition.Down, wallThickness);
+
+            // add the doorbounds found for the left and right space to the corridor
+            this.addHolePlacement(upSpace.HolePlacements.Last());
+            this.addHolePlacement(downSpace.HolePlacements.Last());
+
+            this.CorridorType = CorridorType.Perpendicular;
+
+        }
+        private Vector3Int GetCorridorPositionUpDownXZ(Node upSpace, Node downSpace)
+
+        {
+
+            // FIX ME: CASE WHERE NO POINTS ARE CONTAINED
+
+            // Check if the intersection of the upSpace and downSpace planes has an intersection equal to corridorWidth x corridorWidth returning the XZ location
+
+            var upSpacePlane = new BoundsInt(
+                 new Vector3Int(upSpace.Bounds.position.x, 0, upSpace.Bounds.position.z),
+                 new Vector3Int(upSpace.Bounds.size.x,0, upSpace.Bounds.size.z)
+
+                 );
+            var downSpacePlane = new BoundsInt(
+                 new Vector3Int(downSpace.Bounds.position.x, 0, downSpace.Bounds.position.z),
+                 new Vector3Int(downSpace.Bounds.size.x, 0, downSpace.Bounds.size.z)
+
+                ); 
+
+            // Bottom Points
+            if (upSpacePlane.Contains(downSpacePlane.position)) // contains bottomLeftCorner
+            {
+                // set new bottomLeftCorner
+                upSpacePlane = new BoundsInt(
+                    downSpacePlane.position,
+                    upSpacePlane.position + upSpacePlane.size - downSpacePlane.position
+                );
+            }
+
+            if(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0,0))) // contains bottomRightCorner
+            {
+                var newPos = new Vector3Int(upSpacePlane.x, 0, downSpacePlane.z);
+                // set new bottomRightCorner
+                upSpacePlane = new BoundsInt(
+                    newPos,
+                    new Vector3Int(downSpacePlane.position.x + downSpacePlane.size.x, 0,upSpacePlane.zMax) - newPos
+                );
+
+            }
+
+            // Top Right
+            if (upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0, downSpacePlane.size.z))) // contains topRightCorner
+            {
+
+                // set new topRightCorner
+                upSpacePlane = new BoundsInt(
+                   upSpacePlane.position,
+                   upSpacePlane.position + (downSpacePlane.max - upSpacePlane.position)
+                );
+            }
+
+            if (upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(0, 0, downSpacePlane.size.z))) // contains topLeftCorner
+            {
+                var newPos = new Vector3Int(downSpacePlane.x, 0, upSpacePlane.z);
+
+                // set new topLeftCorner
+                upSpacePlane = new BoundsInt(
+                    upSpacePlane.position,
+                    new Vector3Int(upSpacePlane.max.x, 0, downSpacePlane.max.z) - newPos
+                );
+
+            }
+
+            // return the resulting position if its large enough to have a perpendicular corridor geenerated
+            if (upSpacePlane.size.x > corridorWidth && upSpacePlane.size.z > corridorWidth)
+            {
+                // return random point inside the possible upSpace plane 
+
+
+                // FIX ME: DOUBLE CHECK
+
+                return new Vector3Int(
+                        Random.Range(upSpacePlane.position.x, upSpacePlane.position.x + upSpacePlane.size.x - corridorWidth),
+                        0,
+                        Random.Range(upSpacePlane.position.z, upSpacePlane.position.z + upSpacePlane.size.z - corridorWidth)
+                    );
+            }
+            else
+            {
+                Debug.Log("FAILED TO FIND CONNECTION UP DOWN!!");
+                return Vector3Int.one * -1;
+            }
+
+
         }
         #endregion 
     }

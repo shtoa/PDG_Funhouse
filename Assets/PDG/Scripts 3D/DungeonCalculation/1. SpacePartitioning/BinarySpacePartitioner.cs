@@ -25,24 +25,27 @@ namespace dungeonGenerator
         // Getter - Setters
         public SpaceNode RootNode { get => rootNode; set => rootNode = value; }
 
+
+        private int maxFloors = 3;
+
         /* <summary>
             Instantiate BSP with root node equal to the size of the Dungeon
         </summary> */
 
-        public BinarySpacePartitioner(int dungeonWidth, int dungeonHeight)
+        public BinarySpacePartitioner(int dungeonWidth, int dungeonLength, int dungeonHeight)
         {
             // Create the root of the BSP tree equal to the starting space to split ie. dungeonWidth, dungeonHeight
             this.RootNode = new SpaceNode(new BoundsInt(
                 Vector3Int.zero,
-                new Vector3Int(dungeonWidth, 0, dungeonHeight)),
-                null, 0);
+                new Vector3Int(dungeonWidth, dungeonHeight, dungeonLength)),
+                null, 0, 0);
         }
 
         /* <summary>
             Partitions the rootNode till the maxIterations have been exceeded or no more partitions are possible.
         </summary> */
 
-        public List<SpaceNode> PartitionSpace(int maxIterations, Vector2Int minSpaceDim, Vector2 splitCenterDeviationPercent)
+        public List<SpaceNode> PartitionSpace(int maxIterations, Vector3Int minSpaceDim, Vector3 splitCenterDeviationPercent)
         {
       
             spacesToSplit = new Queue<SpaceNode>(); // initialize queue of spaces to split
@@ -62,7 +65,7 @@ namespace dungeonGenerator
 
                 var splitableAxis = GetSplitableAxis(spaceToSplit.Bounds, minSpaceDim);
             
-                if (splitableAxis.x || splitableAxis.z) // only split space if possible to split
+                if (splitableAxis.x || splitableAxis.z || splitableAxis.y) // only split space if possible to split
                 {
                     var splitSpaces = SplitSpace(spaceToSplit, minSpaceDim, splitCenterDeviationPercent); // split the space
                     AddSplitSpaces(spacesToSplit, allSpaces, splitSpaces);
@@ -92,7 +95,7 @@ namespace dungeonGenerator
 
         #region Splitting Helper Methods
 
-        internal static bool3 GetSplitableAxis(BoundsInt spaceToSplit, Vector2Int minSpaceDim)
+        internal static bool3 GetSplitableAxis(BoundsInt spaceToSplit, Vector3Int minSpaceDim)
         {
             bool3 splitableAxis = new bool3(false, false, false);
 
@@ -108,10 +111,10 @@ namespace dungeonGenerator
 
             // TODO: For 3D BSP Implementation
 
-            //if(spaceToSplit.size.y > 2 * minSpaceDim.z)
-            //{
-            //    splitableAxis.y = true;
-            //}
+            if (spaceToSplit.size.y > 2 * minSpaceDim.z)
+            {
+                splitableAxis.y = true;
+            }
 
             return splitableAxis;
         }
@@ -120,26 +123,41 @@ namespace dungeonGenerator
             Split the space based on their current width and height
         </summary> */
 
-        internal static (SpaceNode, SpaceNode) SplitSpace(SpaceNode spaceToSplit, Vector2Int minSpaceDim, Vector2 splitCenterDeviationPercent)
+        internal static (SpaceNode, SpaceNode) SplitSpace(SpaceNode spaceToSplit, Vector3Int minSpaceDim, Vector3 splitCenterDeviationPercent)
         {
             // get the width and height of the spaceToSplit 
+            Debug.Log(minSpaceDim);
+
             var splitableAxis = GetSplitableAxis(spaceToSplit.Bounds, minSpaceDim);
             
             // width and height of space 
             var spaceWidth = spaceToSplit.Bounds.size.x;
-            var spaceHeight = spaceToSplit.Bounds.size.z;
+            var spaceLength = spaceToSplit.Bounds.size.z;
+            var spaceHeight = spaceToSplit.Bounds.size.y;
 
             // check if both width and height are large enough to split
-            if (splitableAxis.x && splitableAxis.z)
+            if (splitableAxis.x && splitableAxis.z && splitableAxis.y)
             {
                 // TODO: Add random splitting / more control
-                if (spaceToSplit.SplitPosition.Equals(SplitPosition.Left) || spaceToSplit.SplitPosition.Equals(SplitPosition.Right))
+                // spaceToSplit.SplitPosition.Equals(SplitPosition.Left) || spaceToSplit.SplitPosition.Equals(SplitPosition.Right)
+
+                var splitVal = Random.value;
+
+                if (splitVal < 0.3)
                 {
-                    return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceHeight, minSpaceDim.y, splitCenterDeviationPercent.y));
+                    return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.y, splitCenterDeviationPercent.y));
                 }
-                else
+
+                if (splitVal >= 0.3 && splitVal < 0.6)
                 {
+               
                     return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x));
+                }
+
+                else 
+                {
+                    Debug.Log("SPLIT ALONG UPDOWN");
+                    return SplitPerpendicular(spaceToSplit, 5);
                 }
 
             }
@@ -149,7 +167,13 @@ namespace dungeonGenerator
             }
             else if (splitableAxis.z)  // if only height is large enough to split, split horizontally
             {
-                return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceHeight, minSpaceDim.y, splitCenterDeviationPercent.y));
+                return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.y, splitCenterDeviationPercent.y));
+
+            }
+            else if (splitableAxis.y)
+            {
+                Debug.Log("SPLIT ALONG UPDOWN");
+                return SplitPerpendicular(spaceToSplit, 5);
             }
             else
             {
@@ -190,7 +214,8 @@ namespace dungeonGenerator
                 new BoundsInt(spaceToSplit.Bounds.min,
                 new Vector3Int(vSplitPosition, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z)),
                 spaceToSplit,
-                spaceToSplit.TreeLayerIndex + 1
+                spaceToSplit.TreeLayerIndex + 1,
+                spaceToSplit.FloorIndex
             );
 
             leftNode.SplitPosition = SplitPosition.Left;
@@ -200,7 +225,8 @@ namespace dungeonGenerator
                 new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(vSplitPosition,0,0),
                 new Vector3Int(spaceToSplit.Bounds.size.x - vSplitPosition, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z)),
                 spaceToSplit,
-                spaceToSplit.TreeLayerIndex + 1
+                spaceToSplit.TreeLayerIndex + 1,
+                spaceToSplit.FloorIndex
 
             );
 
@@ -210,6 +236,10 @@ namespace dungeonGenerator
             return( leftNode, rightNode );
 
         }
+
+        /* <summary>
+            Split the space Horizontally
+        </summary> */
 
         internal static (SpaceNode bottomNode, SpaceNode topNode) SplitHorizontally(SpaceNode spaceToSplit, int hSplitPosition)
         {
@@ -221,7 +251,8 @@ namespace dungeonGenerator
                 new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(0, 0, hSplitPosition),
                 new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z - hSplitPosition)),
                 spaceToSplit,
-                spaceToSplit.TreeLayerIndex + 1
+                spaceToSplit.TreeLayerIndex + 1,
+                spaceToSplit.FloorIndex
             );
 
             topNode.SplitPosition = SplitPosition.Top;
@@ -231,7 +262,8 @@ namespace dungeonGenerator
                 new BoundsInt(spaceToSplit.Bounds.min,
                 new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, hSplitPosition)),
                 spaceToSplit,
-                spaceToSplit.TreeLayerIndex + 1
+                spaceToSplit.TreeLayerIndex + 1,
+                spaceToSplit.FloorIndex
             );
 
             bottomNode.SplitPosition = SplitPosition.Bottom; // TODO: Decouple this for a more general solution
@@ -241,6 +273,45 @@ namespace dungeonGenerator
             return (bottomNode, topNode);
 
         }
+
+        /* <summary>
+            Split the space Perpendicular
+        </summary> */
+
+        internal static (SpaceNode downNode, SpaceNode upNode) SplitPerpendicular(SpaceNode spaceToSplit, int zSplitPosition)
+        {
+            // intialize top and bottom nodes
+            SpaceNode upNode, downNode;
+
+            // set bottom node
+            upNode = new SpaceNode(
+                new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(0, zSplitPosition, 0),
+                new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y - zSplitPosition, spaceToSplit.Bounds.size.z)),
+                spaceToSplit,
+                spaceToSplit.TreeLayerIndex + 1,
+                spaceToSplit.FloorIndex + 1
+            );
+
+            upNode.SplitPosition = SplitPosition.Up;
+
+            // set bottom node
+            downNode = new SpaceNode(
+                new BoundsInt(spaceToSplit.Bounds.min,
+                new Vector3Int(spaceToSplit.Bounds.size.x, zSplitPosition, spaceToSplit.Bounds.size.z)),
+                spaceToSplit,
+                spaceToSplit.TreeLayerIndex + 1,
+                spaceToSplit.FloorIndex
+            );
+
+            downNode.SplitPosition = SplitPosition.Down; // TODO: Decouple this for a more general solution
+
+
+            // return the results of the split
+            return (downNode, upNode);
+
+        }
+
+
         #endregion
     }
 }

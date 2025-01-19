@@ -11,12 +11,12 @@ public class RoomPlacementTest
     # region RoomPlacementInitialize
     [Test]
     [TestCaseSource(nameof(RoomPlacementInitializeCases))]
-    public void RoomPlacementInitializeTest((Vector2Int minRoomBounds, Vector2Int totalRoomOffset, float corridorWidth) testData)
+    public void RoomPlacementInitializeTest((Vector3Int minRoomBounds, Vector3Int totalRoomOffset, float corridorWidth) testData)
     {
         // check if initialize correctly
 
-        Vector2Int minRoomBound = testData.minRoomBounds;
-        Vector2Int totalRoomOffset = testData.totalRoomOffset;
+        Vector3Int minRoomBound = testData.minRoomBounds;
+        Vector3Int totalRoomOffset = testData.totalRoomOffset;
         float corridorWidth = testData.corridorWidth;
 
         RoomCalculator roomCalculator = new RoomCalculator(minRoomBound, totalRoomOffset, corridorWidth);
@@ -55,22 +55,22 @@ public class RoomPlacementTest
     {
         yield return ( GenerateRoomList(), 
             new RoomCalculator(
-                new Vector2Int(10,10), 
-                new Vector2Int(1,1), 
+                new Vector3Int(10,10,10), 
+                new Vector3Int(1,1,1), 
                 1
             ));
 
         yield return (GenerateRoomList(),
          new RoomCalculator(
-             new Vector2Int(3, 10),
-             new Vector2Int(1, 1),
+             new Vector3Int(3, 10, 4),
+             new Vector3Int(1, 1, 4),
              1
          ));
 
         yield return (GenerateRoomList(),
          new RoomCalculator(
-             new Vector2Int(10, 3),
-             new Vector2Int(3, 1),
+             new Vector3Int(10, 3, 4),
+             new Vector3Int(3, 1, 4),
              1
          ));
     }
@@ -83,7 +83,7 @@ public class RoomPlacementTest
                 new BoundsInt(
                     Vector3Int.zero,
                     new Vector3Int(40, 0, 40)
-                ), null, 0)));
+                ), null, 0, 0)));
 
         return roomList;
 

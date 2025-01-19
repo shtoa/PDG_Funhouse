@@ -5,13 +5,14 @@ using UnityEngine;
 using dungeonGenerator;
 using System;
 using Random = UnityEngine.Random;
+using log4net.Util;
 
 namespace dungeonGenerator
 {
     public class RoomCalculator
     {
-        internal Vector2Int minRoomBounds;
-        internal Vector2Int totalRoomOffset;
+        internal Vector3Int minRoomBounds;
+        internal Vector3Int totalRoomOffset;
         internal float corridorWidth;
 
 
@@ -22,18 +23,19 @@ namespace dungeonGenerator
         /// <param name="totalRoomOffest"></param>
         /// <param name="corridorWidth"></param>
 
-        public RoomCalculator(Vector2Int minRoomBounds, Vector2Int totalRoomOffest, float corridorWidth)
+        public RoomCalculator(Vector3Int minRoomBounds, Vector3Int totalRoomOffest, float corridorWidth)
         {
             this.minRoomBounds = minRoomBounds;
             this.totalRoomOffset = totalRoomOffest;
             this.corridorWidth = corridorWidth;
         }
-        
+
         /// <summary>
         /// Place Rooms inside the available Space based on the offset.
         /// </summary>
         /// <param name="roomSpaces"></param>
         /// <returns>rooms</returns>
+        /// 
 
         public List<SpaceNode> PlaceRoomsInSpaces(List<Node> roomSpaces)
 
@@ -44,10 +46,14 @@ namespace dungeonGenerator
             // loop over spaces placing rooms in each
             foreach(var roomSpace in roomSpaces)
             {
+
+                
+
+
                 // TODO: Add check if totalRoomOffset Greater than room Size
                 BoundsInt bounds = new BoundsInt(
                         roomSpace.Bounds.position,
-                        roomSpace.Bounds.size - new Vector3Int(this.totalRoomOffset.x, 0, this.totalRoomOffset.y)
+                        roomSpace.Bounds.size - new Vector3Int(this.totalRoomOffset.x, this.totalRoomOffset.z, this.totalRoomOffset.y)
                     );
                 roomSpace.Bounds = bounds;
                 roomSpace.RoomType = RoomType.Room;
@@ -55,28 +61,36 @@ namespace dungeonGenerator
                 // TODO: extend to be able to place anywhere within the given space
                 #region add rooms randomly inside space
 
-               // var maxSize = roomSpace.Bounds.size; // - new Vector3Int(this.totalRoomOffset.x, 0, this.totalRoomOffset.y); be carefull with previous line
-               // var minSize = new Vector3Int(minRoomBounds.x, 0, minRoomBounds.y);
+                // var maxSize = roomSpace.Bounds.size; // - new Vector3Int(this.totalRoomOffset.x, 0, this.totalRoomOffset.y); be carefull with previous line
+                // var minSize = new Vector3Int(minRoomBounds.x, 0, minRoomBounds.y);
 
-               // // randomize Size 
-               // var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), 0, Random.Range(minSize.z, maxSize.z));
+                // // randomize Size 
+                // var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), 0, Random.Range(minSize.z, maxSize.z));
 
-               // // randomize Position
-               //var deltaSize = size - minSize;
-               //Debug.Log(deltaSize);
+                // // randomize Position
+                //var deltaSize = size - minSize;
+                //Debug.Log(deltaSize);
 
 
-               // var position = roomSpace.Bounds.position; // + new Vector3Int(Random.Range(-deltaSize.x / 4, deltaSize.x / 4), 0, Random.Range(-deltaSize.z / 4, deltaSize.z / 4));
+                // var position = roomSpace.Bounds.position; // + new Vector3Int(Random.Range(-deltaSize.x / 4, deltaSize.x / 4), 0, Random.Range(-deltaSize.z / 4, deltaSize.z / 4));
 
-               // BoundsInt testBounds = new BoundsInt(
-               //     Vector3Int.CeilToInt(roomSpace.Bounds.center - new Vector3(size.x/2f, size.y/2f,size.z/2f)),
-               //     size
-               // );
+                // BoundsInt testBounds = new BoundsInt(
+                //     Vector3Int.CeilToInt(roomSpace.Bounds.center - new Vector3(size.x/2f, size.y/2f,size.z/2f)),
+                //     size
+                // );
 
-               // roomSpace.Bounds = testBounds;
+                // roomSpace.Bounds = testBounds;
 
 
                 #endregion
+
+
+                #region 3D Debug Rooms
+                //GameObject g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                //g.transform.SetParent(GameObject.Find("DungeonGen").transform, false);
+                //g.transform.position = roomSpace.Bounds.center + GameObject.Find("DungeonGen").transform.position;
+                //g.transform.localScale = roomSpace.Bounds.size;
+                #endregion  
 
                 rooms.Add((SpaceNode)roomSpace);
 

@@ -9,11 +9,13 @@ namespace dungeonGenerator
     public class SpaceNode : Node
     {
 
-        public SpaceNode(BoundsInt Bounds, Node parentNode, int index) : base(parentNode)
+        public SpaceNode(BoundsInt Bounds, Node parentNode, int index, int floorIndex) : base(parentNode)
         {
             this.Bounds = Bounds;
             this.Parent = parentNode;
             this.TreeLayerIndex = index;
+            this.FloorIndex = floorIndex;
+           
             
         }
 

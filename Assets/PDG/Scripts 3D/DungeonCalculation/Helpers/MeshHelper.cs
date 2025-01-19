@@ -70,6 +70,110 @@ namespace dungeonGenerator
 
         }
 
+        public static Vector3 normalizeLocation(Vector3 location, Vector3 min)
+        {
+
+            var alignedLoc = location - min;
+            return alignedLoc;
+
+        }
+
+        public static Vector3 normalizeScale(Vector3 location, Vector3 max)
+        {
+
+            var scaledLoc = new Vector3(location.x / max.x, location.y / max.y, location.z / max.z);
+            return scaledLoc;
+        }
+
+        public static Vector3 normalizeVector(Vector3 location, Vector3 min, Vector3 max)
+        {
+
+            var alignedLoc = normalizeLocation(location, min);
+            var scaledLoc = normalizeScale(location, max);
+
+            return scaledLoc;
+        }
+
+        public static GameObject CreatePlaneWithHole(BoundsInt _plane, BoundsInt _hole, Vector3Int size, bool isInverted = false)
+        {
+
+            // FIXME: CONVERT TO 1/1 RELATIVE UNITS
+
+            // NORMALIZE COORDINATES RELATIVE TO THE PLANE
+
+
+            var min = new Vector3(_plane.min.x, 0, _plane.min.z); // generalize more by not setting to 0
+            var max = new Vector3(_plane.max.x, 1, _plane.max.z);
+
+
+            // plane XY
+
+            Vector3 bottomLeftPlane = normalizeLocation(new Vector3(_plane.min.x, 0, _plane.min.z), min) - new Vector3(_plane.size.x/2f, 0, _plane.size.z/2f);
+            Vector3 bottomRightPlane = normalizeLocation(new Vector3(_plane.max.x, 0, _plane.min.z), min) - new Vector3(_plane.size.x / 2f, 0, _plane.size.z / 2f);
+            Vector3 topLeftPlane = normalizeLocation(new Vector3(_plane.min.x, 0, _plane.max.z), min) - new Vector3(_plane.size.x / 2f, 0, _plane.size.z / 2f);
+            Vector3 topRightPlane = normalizeLocation(new Vector3(_plane.max.x, 0, _plane.max.z), min) - new Vector3(_plane.size.x / 2f, 0, _plane.size.z / 2f);
+
+            // hole XY
+
+            Vector3 bottomLeftHole = normalizeLocation(new Vector3(_hole.min.x, 0, _hole.min.z), min) - new Vector3(_plane.size.x / 2f, 0, _plane.size.z / 2f);
+            Vector3 bottomRightHole = normalizeLocation(new Vector3(_hole.max.x, 0, _hole.min.z), min) - new Vector3(_plane.size.x / 2f, 0, _plane.size.z / 2f);
+            Vector3 topLeftHole = normalizeLocation(new Vector3(_hole.min.x, 0, _hole.max.z), min) - new Vector3(_plane.size.x / 2f, 0, _plane.size.z / 2f);
+            Vector3 topRightHole = normalizeLocation(new Vector3(_hole.max.x, 0, _hole.max.z), min) - new Vector3(_plane.size.x / 2f, 0, _plane.size.z / 2f);
+
+            Vector3[] vertices = new Vector3[]
+            {
+            
+                topLeftPlane,
+                topRightPlane,
+                bottomRightPlane,
+                bottomLeftPlane,
+
+                bottomLeftHole,
+                topLeftHole,
+                topRightHole,
+                bottomRightHole
+
+            };
+
+            // likely wrong double check
+            Vector2[] uvs = new Vector2[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                uvs[i] = new Vector2(vertices[i].x, vertices[i].z) * 0.5f;
+            }
+
+            int[] triangles;
+
+            triangles = new int[]
+            {
+                3,0,5,
+                3,5,4,
+                3,4,2,
+                2,4,7,
+                2,7,1,
+                1,7,6,
+                1,6,5,
+                1,5,0
+            };
+
+            Mesh plane = new Mesh();
+            plane.vertices = vertices;
+            plane.triangles = triangles;
+            plane.uv = uvs;
+            plane.RecalculateNormals();
+            plane.RecalculateBounds();
+
+            GameObject planeObject = new GameObject("HoledFloor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
+            planeObject.GetComponent<MeshFilter>().mesh = plane;
+            planeObject.GetComponent<MeshCollider>().sharedMesh = plane;
+
+            return planeObject;
+
+
+
+
+        }
+
         public static GameObject CreateCuboid(Vector3Int size, int uvUnit)
         {
 

@@ -23,14 +23,14 @@ namespace dungeonGenerator
         public int maxIterations;
 
         [Header("Split Properties")]
-        public Vector2 splitCenterDeviation;
+        public Vector3 splitCenterDeviation;
 
 
         [Header("Room Properties")]
         public BoundsInt roomBoundsMin;
-        public Vector2Int roomOffsetMin;
+        public Vector3Int roomOffsetMin;
 
-        public Vector2Int roomPlacementRandomness;
+        public Vector3Int roomPlacementRandomness;
 
         private int corridorWidthAndWall;
         [Header("Corridor Properties")]
@@ -79,7 +79,6 @@ namespace dungeonGenerator
             RoomGenerator roomGenerator = new RoomGenerator(roomList, this.gameObject);
             roomGenerator.GenerateRooms(roomList);
         }
-
 
         private void InitializeStartAndEnd(List<Node> roomSpaces)
         {
@@ -180,6 +179,7 @@ namespace dungeonGenerator
             // --- Clamp between 0-1
             splitCenterDeviation.x = Mathf.Clamp01(splitCenterDeviation.x);
             splitCenterDeviation.y = Mathf.Clamp01(splitCenterDeviation.y);
+            splitCenterDeviation.z = Mathf.Clamp01(splitCenterDeviation.y);
 
 
             // Room Bounds 
@@ -195,7 +195,7 @@ namespace dungeonGenerator
 
             // TODO: Change to allow Dungeons without Offset
             // --- Dont Allow Rooms larger than the dungeon
-            roomOffsetMin = new Vector2Int(Mathf.Max(1,roomOffsetMin.x),Mathf.Max(1,roomOffsetMin.y));
+            roomOffsetMin = new Vector3Int(Mathf.Max(1,roomOffsetMin.x),Mathf.Max(1,roomOffsetMin.y), Mathf.Max(1, roomOffsetMin.z));
 
             // Corridor Width
             // --- Dont Allow Corridors larger than the minimum size dimension (width / length)

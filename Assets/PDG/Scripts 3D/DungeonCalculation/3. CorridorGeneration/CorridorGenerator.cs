@@ -19,7 +19,7 @@ namespace dungeonGenerator
         /// <param name="minRoomDim"></param>
         /// <returns>corridorList</returns>
 
-        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth, int wallThickness, Vector2Int minRoomDim)
+        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth, int wallThickness, Vector3Int minRoomDim)
         {
             List<Node> corridorList = new List<Node>(); // Create list of Corridors to return
             

@@ -130,7 +130,7 @@ namespace dungeonGenerator
         {
             List<Node> startEndRooms = new List<Node>();
 
-            var startRoom = roomSpaces.OrderBy(room => room.Bounds.xMin + room.Bounds.zMin).ToList()[0];
+            var startRoom = roomSpaces.OrderBy(room => room.Bounds.xMin + room.Bounds.zMin + room.Bounds.yMin).ToList()[0];
             startRoom.RoomType = RoomType.Start;
 
             startEndRooms.Add(startRoom);

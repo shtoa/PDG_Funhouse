@@ -150,7 +150,7 @@ public class PlayerController : MonoBehaviour
         }
 
 
-        if (_playerLocomotionInput.JumpPressed && isGrounded)
+        if (_playerLocomotionInput.JumpPressed) //  && isGrounded allow to jump multiple times
         {
             _verticalVelocity += Mathf.Sqrt(jumpHeight * 3f * gravity);
             _jumpedLastFrame = true;

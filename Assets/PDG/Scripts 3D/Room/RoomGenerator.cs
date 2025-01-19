@@ -4,6 +4,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using static dungeonGenerator.RoomGenerator;
+using static UnityEngine.UI.CanvasScaler;
 using Random = UnityEngine.Random;
 
 namespace dungeonGenerator
@@ -110,11 +111,15 @@ namespace dungeonGenerator
                 roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false);
 
                 DrawFloor(room, roomStyle, roomObj);
-                DrawWalls(room, roomStyle, roomObj);
+                DrawCeiling(room, roomStyle, roomObj);
 
+                if (!room.CorridorType.Equals(CorridorType.Perpendicular))
+                {
+                    DrawWalls(room, roomStyle, roomObj);
+                }
 
                 //DrawWallsTest(room, roomStyle);
-                //DrawCeiling(room);
+            
             }
 
             //foreach (var wallBound in wallCalculator.WallBounds)
@@ -179,22 +184,79 @@ namespace dungeonGenerator
             #endregion 
         }
 
+        
+        public GameObject getFloorMesh(Node room)
+        {
+            //return MeshHelper.CreatePlane(room.Bounds.size, 1);
+
+            if (room.HolePlacements.Count > 0)
+            {
+                foreach (var hole in room.HolePlacements)
+                {
+                    if (hole.PositionType == SplitPosition.Down)
+                    {
+                        // logic for drawing room with a hole in the floor for movement between floors
+
+                        Debug.Log($"hole bounds: {hole.HoleBounds}");
+                        Debug.Log($"room bounds: {room.Bounds}");
+
+                        return MeshHelper.CreatePlaneWithHole(room.Bounds, hole.HoleBounds, room.Bounds.size, false);
+
+                    }
+                }
+            }
+        
+            int uvUnit = 1;
+            return MeshHelper.CreatePlane(room.Bounds.size, uvUnit);
+            
+
+        }
+
+        public GameObject getCeilingMesh(Node room)
+        {
+
+            if (room.HolePlacements.Count > 0)
+            {
+                foreach (var hole in room.HolePlacements)
+                {
+                    if (hole.PositionType == SplitPosition.Up)
+                    {
+                        // logic for drawing room with a hole in the floor for movement between floors
+
+                        Debug.Log($"hole bounds: {hole.HoleBounds}");
+                        Debug.Log($"room bounds: {room.Bounds}");
+
+                        GameObject ceilingHole = MeshHelper.CreatePlaneWithHole(room.Bounds, hole.HoleBounds, room.Bounds.size, false);
+                        ceilingHole.name = "ceilingHole";
+                        return ceilingHole;
+
+                    }
+                }
+            }
+
+            int uvUnit = 1;
+            return MeshHelper.CreatePlane(room.Bounds.size, uvUnit);
+
+
+        }
 
         public void DrawFloor(Node room, RoomStyle roomStyle, GameObject roomObj)
         {
-            // maybe convert rooms to gameobjects? to allow to give them individual effect!!!
 
-            int uvUnit = 1;
-            GameObject floor = MeshHelper.CreatePlane(room.Bounds.size, uvUnit);
+            GameObject floor = getFloorMesh(room);
+
             floor.transform.tag = "Floor";
-            //floor.layer = LayerMask.NameToLayer("Dungeon");
-
             floor.transform.SetParent(roomObj.transform, false);
-            floor.transform.localPosition = room.Bounds.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+
+            // FIX ME: CHECK THIS TRANSFORMATION
+            floor.transform.localPosition = (room.Bounds.center - new Vector3(0,room.Bounds.size.y / 2f,0)) + new Vector3(1, 0, 1) * wallThickness ; // CHECK ME: May be wrong
             floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
-            
+
+        
 
             GameObject collectable = null;
+
+  
 
             switch (room.RoomType)
             {
@@ -257,20 +319,17 @@ namespace dungeonGenerator
         }
 
 
-        public void DrawCeiling(Node room, RoomStyle roomStyle,GameObject roomObj)
+        public void DrawCeiling(Node room, RoomStyle roomStyle, GameObject roomObj)
         {
-            GameObject ceiling = MeshHelper.CreatePlane(room.Bounds.size, 1, true);
-            GameObject ceiling2 = MeshHelper.CreatePlane(room.Bounds.size, 1);
+            GameObject ceiling = getCeilingMesh(room);
 
             ceiling.transform.SetParent(roomObj.transform, false);
-            ceiling2.transform.SetParent(ceiling.transform, false);
 
-            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * wallHeight + new Vector3(1, 0, 1) * wallThickness; // should be 0.25f
-            ceiling2.transform.localPosition = 0.1f * Vector3.up;
-            ceiling2.transform.localScale = Vector3.one * 1.1f;
+            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * room.Bounds.size.y/2 + new Vector3(1, 0, 1) * wallThickness; // should be 0.25f
 
             ceiling.GetComponent<MeshRenderer>().material = ceilingMaterial;
-            ceiling2.GetComponent<MeshRenderer>().material = ceilingMaterial;
+
+     
         }
     }
 
