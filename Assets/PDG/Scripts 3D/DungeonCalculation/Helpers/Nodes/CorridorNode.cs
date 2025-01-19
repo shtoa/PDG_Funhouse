@@ -604,7 +604,7 @@ namespace dungeonGenerator
 
             Bounds = new BoundsInt(
                 pos,
-                new Vector3Int(this.corridorWidth, (upSpace.Bounds.min.y-downSpace.Bounds.max.y)/2, this.corridorWidth)
+                new Vector3Int(this.corridorWidth, (upSpace.Bounds.min.y-downSpace.Bounds.max.y), this.corridorWidth)
             );
         }
         #endregion
@@ -647,6 +647,13 @@ namespace dungeonGenerator
             this.addHolePlacement(upSpace.HolePlacements.Last());
             this.addHolePlacement(downSpace.HolePlacements.Last());
 
+
+            this.Bounds = new BoundsInt(
+                this.Bounds.position + new Vector3Int(this.wallThickness, 0, this.wallThickness),
+                this.Bounds.size - new Vector3Int(this.wallThickness, 0, this.wallThickness)*2
+             ); // make walls flush 
+
+
             this.CorridorType = CorridorType.Perpendicular;
 
         }
@@ -667,7 +674,10 @@ namespace dungeonGenerator
                  new Vector3Int(downSpace.Bounds.position.x, 0, downSpace.Bounds.position.z),
                  new Vector3Int(downSpace.Bounds.size.x, 0, downSpace.Bounds.size.z)
 
-                ); 
+            ); 
+
+
+            MeshHelper.planeIntersectBounds( upSpacePlane, downSpacePlane );    
 
             // Bottom Points
             if (upSpacePlane.Contains(downSpacePlane.position)) // contains bottomLeftCorner
@@ -712,6 +722,22 @@ namespace dungeonGenerator
                 );
 
             }
+
+            if(
+                !(upSpacePlane.Contains(downSpacePlane.position)) &&
+                !(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0, 0))) &&
+                !(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0, downSpacePlane.size.z))) &&
+                !(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(0, 0, downSpacePlane.size.z)))
+            )
+            {
+            
+                if(!(upSpacePlane.size.x == downSpacePlane.size.x && upSpacePlane.size.z == downSpacePlane.size.z))
+                {
+                    return new Vector3Int(-1, 0, -1);
+                }
+            
+            }
+
 
             // return the resulting position if its large enough to have a perpendicular corridor geenerated
             if (upSpacePlane.size.x > corridorWidth && upSpacePlane.size.z > corridorWidth)

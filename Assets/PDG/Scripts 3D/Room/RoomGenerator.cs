@@ -110,13 +110,18 @@ namespace dungeonGenerator
                
                 roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false);
 
-                DrawFloor(room, roomStyle, roomObj);
-                DrawCeiling(room, roomStyle, roomObj);
+           
 
                 if (!room.CorridorType.Equals(CorridorType.Perpendicular))
                 {
-                    DrawWalls(room, roomStyle, roomObj);
+                    DrawCeiling(room, roomStyle, roomObj);
+                    DrawFloor(room, roomStyle, roomObj);
                 }
+
+                //if (!room.CorridorType.Equals(CorridorType.Perpendicular))
+                //{
+                DrawWalls(room, roomStyle, roomObj);
+                //}
 
                 //DrawWallsTest(room, roomStyle);
             
@@ -167,6 +172,11 @@ namespace dungeonGenerator
                 wall.name = "Wall";
                 wall.transform.SetParent(wallHolder.transform, false);
 
+                if (room.CorridorType.Equals(CorridorType.Perpendicular))
+                {
+                    wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+                }
+
                 wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
                 wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
 
@@ -197,8 +207,8 @@ namespace dungeonGenerator
                     {
                         // logic for drawing room with a hole in the floor for movement between floors
 
-                        Debug.Log($"hole bounds: {hole.HoleBounds}");
-                        Debug.Log($"room bounds: {room.Bounds}");
+                        //Debug.Log($"hole bounds: {hole.HoleBounds}");
+                        //Debug.Log($"room bounds: {room.Bounds}");
 
                         return MeshHelper.CreatePlaneWithHole(room.Bounds, hole.HoleBounds, room.Bounds.size, false);
 
@@ -223,10 +233,10 @@ namespace dungeonGenerator
                     {
                         // logic for drawing room with a hole in the floor for movement between floors
 
-                        Debug.Log($"hole bounds: {hole.HoleBounds}");
-                        Debug.Log($"room bounds: {room.Bounds}");
+                        //Debug.Log($"hole bounds: {hole.HoleBounds}");
+                        //Debug.Log($"room bounds: {room.Bounds}");
 
-                        GameObject ceilingHole = MeshHelper.CreatePlaneWithHole(room.Bounds, hole.HoleBounds, room.Bounds.size, false);
+                        GameObject ceilingHole = MeshHelper.CreatePlaneWithHole(room.Bounds, hole.HoleBounds, room.Bounds.size, true);
                         ceilingHole.name = "ceilingHole";
                         return ceilingHole;
 
@@ -235,7 +245,7 @@ namespace dungeonGenerator
             }
 
             int uvUnit = 1;
-            return MeshHelper.CreatePlane(room.Bounds.size, uvUnit);
+            return MeshHelper.CreatePlane(room.Bounds.size, uvUnit, true);
 
 
         }
@@ -292,7 +302,7 @@ namespace dungeonGenerator
                     collectable = MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.sphere, floor.transform);
                     break;
 
-                case RoomType.None:
+                case RoomType.Room:
 
                     // when is just a normal room
                     collectable = MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.cube, floor.transform);

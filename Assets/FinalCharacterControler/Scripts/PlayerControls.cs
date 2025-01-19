@@ -243,7 +243,7 @@ public class PlayerController : MonoBehaviour
 
         _playerTargetRotation.x += transform.eulerAngles.x + LookSense.x * _playerLocomotionInput.LookInput.x;
 
-        float rotationTolerance = 90f;
+        float rotationTolerance = 0f; // 90f
 
         bool isIdling = _playerState.CurrentPlayerMovementState == PlayerMovementState.Idle;
         IsRotatingToTarget = _rotateToTargetTimer > 0f;
@@ -265,11 +265,19 @@ public class PlayerController : MonoBehaviour
 
 
 
-        _cameraFollower.transform.rotation = Quaternion.Euler(_camRotation.y, _camRotation.x, 0f);
+        //_cameraFollower.transform.rotation = Quaternion.Euler(_camRotation.y, _camRotation.x, 0f);
+
+
+        _playerCamera.transform.rotation = Quaternion.Euler(_camRotation.y, _camRotation.x, 0f);
 
         Vector3 camForward = new Vector3(_cameraFollower.transform.forward.x, 0f, _cameraFollower.transform.forward.z).normalized;
+
+
+        //Vector3 camForward = new Vector3(_playerCamera.transform.forward.x, 0f, _playerCamera.transform.forward.z).normalized;
         Vector3 crossP = Vector3.Cross(transform.forward, camForward);
         float sign = Mathf.Sign(Vector3.Dot(crossP, transform.up));
+
+
         RotationMismatch = sign * Vector3.Angle(transform.forward, camForward);
     }
 

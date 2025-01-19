@@ -144,24 +144,44 @@ namespace dungeonGenerator
 
             int[] triangles;
 
-            triangles = new int[]
+            if (!isInverted) { 
+                triangles = new int[]
+                {
+                    3,0,5,
+                    3,5,4,
+                    3,4,2,
+                    2,4,7,
+                    2,7,1,
+                    1,7,6,
+                    1,6,5,
+                    1,5,0,
+                };
+            } else
             {
-                3,0,5,
-                3,5,4,
-                3,4,2,
-                2,4,7,
-                2,7,1,
-                1,7,6,
-                1,6,5,
-                1,5,0
-            };
+                triangles = new int[]
+                  {
+                    5,0,3,
+                    4,5,3,
+                    2,4,3,
+                    7,4,2,
+                    1,7,2,
+                    6,7,1,
+                    5,6,1,
+                    0,5,1,
+                  };
+            }
+
 
             Mesh plane = new Mesh();
             plane.vertices = vertices;
             plane.triangles = triangles;
             plane.uv = uvs;
+
             plane.RecalculateNormals();
             plane.RecalculateBounds();
+
+
+
 
             GameObject planeObject = new GameObject("HoledFloor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
             planeObject.GetComponent<MeshFilter>().mesh = plane;
@@ -299,5 +319,96 @@ namespace dungeonGenerator
 
             return cuboidObject;
         }
+        public static BoundsInt planeIntersectBounds(BoundsInt plane1, BoundsInt plane2)
+        {
+            var org = new BoundsInt(
+                    plane1.position,
+                    plane1.size
+                );
+
+            BoundsInt outPlane = new BoundsInt(
+                    plane1.position,
+                    plane1.size
+
+                );
+
+            // Bottom Points
+            if (plane1.Contains(plane2.position)) // contains bottomLeftCorner
+            {
+                // set new bottomLeftCorner
+                outPlane = new BoundsInt(
+                    plane2.position,
+                    outPlane.position + outPlane.size - plane2.position
+                );
+            }
+
+            if (plane1.Contains(plane2.position + new Vector3Int(plane2.size.x, 0, 0))) // contains bottomRightCorner
+            {
+                var newPos = new Vector3Int(outPlane.x, 0, plane2.z);
+                // set new bottomRightCorner
+                outPlane = new BoundsInt(
+                    newPos,
+                    new Vector3Int(plane2.position.x + plane2.size.x, 0, outPlane.zMax) - newPos
+                );
+
+            }
+
+            // Top Right
+            if (plane1.Contains(plane2.position + new Vector3Int(plane2.size.x, 0, plane2.size.z))) // contains topRightCorner
+            {
+
+                // set new topRightCorner
+                outPlane = new BoundsInt(
+                   outPlane.position,
+                   outPlane.position + (plane2.max - outPlane.position)
+                );
+            }
+
+            if (plane1.Contains(plane2.position + new Vector3Int(0, 0, plane2.size.z))) // contains topLeftCorner
+            {
+                var newPos = new Vector3Int(plane2.x, 0, outPlane.z);
+
+                // set new topLeftCorner
+                outPlane = new BoundsInt(
+                    outPlane.position,
+                    new Vector3Int(outPlane.max.x, 0, plane2.max.z) - newPos
+                );
+
+       
+            }
+
+
+            if (
+              !(plane1.Contains(plane2.position)) &&
+              !(plane1.Contains(plane2.position + new Vector3Int(plane2.size.x, 0, 0))) &&
+              !(plane1.Contains(plane2.position + new Vector3Int(plane2.size.x, 0, plane2.size.z))) &&
+              !(plane1.Contains(plane2.position + new Vector3Int(0, 0, plane2.size.z)))
+          )
+            {
+
+                if (!(plane1.size.x == plane2.size.x && plane1.size.z == plane2.size.z))
+                {
+                    Debug.Log("DOES NOT CONTAIN DOES NOT CONTAIN");
+                }
+
+            }
+
+
+            if (org.Equals(outPlane) && org.Equals(plane2))
+            {
+                Debug.Log("NO CHANGES TO PLANE");
+            } else
+            {
+                Debug.Log("!!! CHANGED PLANE !!!");
+            }
+
+            return outPlane;
+
+
+        }
+
     }
+
+
+
 }

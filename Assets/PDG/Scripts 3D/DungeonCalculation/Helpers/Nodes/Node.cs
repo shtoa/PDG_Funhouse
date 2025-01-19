@@ -202,7 +202,7 @@ namespace dungeonGenerator
             {
                 holePlacement = new HolePlacement(new BoundsInt(
                             new Vector3Int(holeBounds.min.x + wallThickness, holeBounds.max.y, holeBounds.min.z + wallThickness),
-                            new Vector3Int(holeBounds.size.x - 2 * wallThickness, 0, holeBounds.size.x - 2 * wallThickness)
+                            new Vector3Int(holeBounds.size.x - 2 * wallThickness, 0, holeBounds.size.z - 2 * wallThickness)
                       ),
                       SplitPosition.Down
                   );
@@ -211,7 +211,7 @@ namespace dungeonGenerator
             {
                 holePlacement = new HolePlacement(new BoundsInt(
                         new Vector3Int(holeBounds.min.x + wallThickness, holeBounds.max.y, holeBounds.min.z + wallThickness),
-                        new Vector3Int(holeBounds.size.x - 2 * wallThickness, 0, holeBounds.size.x - 2 * wallThickness)
+                        new Vector3Int(holeBounds.size.x - 2 * wallThickness, 0, holeBounds.size.z - 2 * wallThickness)
                   ),
                   SplitPosition.Up
               );
