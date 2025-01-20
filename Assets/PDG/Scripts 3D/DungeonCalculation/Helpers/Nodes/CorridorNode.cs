@@ -506,17 +506,17 @@ namespace dungeonGenerator
         private List<Node> ReturnDownMostSpaces(List<Node> UpSpaces)
         {
 
-            var sortedUpspaces = UpSpaces.OrderBy(space => space.Bounds.min.y).ToList(); // get bottom most children of top space
+            var sortedUpSpaces = UpSpaces.OrderBy(space => space.Bounds.min.y).ToList(); // get bottom most children of top space
 
-            if (sortedUpspaces.Count == 1)
+            if (sortedUpSpaces.Count == 1)
             {
-                return sortedUpspaces; // if only one topSpace available select it (usually will just join the two deepest children)
+                return sortedUpSpaces; // if only one topSpace available select it (usually will just join the two deepest children)
             }
             else // select one of the bottom most topSpace if there are multiple
             {
-                int minY = sortedUpspaces[0].Bounds.min.y; // get the coordinates of the bottom most bound
-                sortedUpspaces = sortedUpspaces.Where(space => Math.Abs(minY - space.Bounds.min.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
-                return sortedUpspaces;
+                int minY = sortedUpSpaces[0].Bounds.min.y; // get the coordinates of the bottom most bound
+                //sortedUpSpaces = sortedUpSpaces.Where(space => Math.Abs(minY - space.Bounds.min.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
+                return sortedUpSpaces;
             }
 
         }
@@ -532,7 +532,7 @@ namespace dungeonGenerator
             else // select one of the top most BottomSpaces if there are multiple
             {
                 int maxY = sortedDownSpaces[0].Bounds.max.y; // get the coordinates of the top most bound
-                sortedDownSpaces = sortedDownSpaces.Where(space => Math.Abs(maxY - space.Bounds.max.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
+               // sortedDownSpaces = sortedDownSpaces.Where(space => Math.Abs(maxY - space.Bounds.max.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
                 return sortedDownSpaces;
             }
 
@@ -543,7 +543,7 @@ namespace dungeonGenerator
                 GetCorridorPositionUpDownXZ(upSpace, downSpace).x != -1 &&
                 GetCorridorPositionUpDownXZ(upSpace, downSpace).z != -1 &&
                (upSpace.FloorIndex-1 == downSpace.FloorIndex)
-            ).OrderByDescending(downSpace => downSpace.Bounds.max.y).ToList(); // order by descenmding (max) y
+            ).OrderByDescending(downSpace => downSpace.Bounds.max.y).ToList(); // order by descending (max) y
 
         }
         private (Node upSpace, Node downSpace) FindNeighborsUpDown(List<Node> sortedUpSpace, List<Node> sortedDownSpace)
@@ -567,6 +567,8 @@ namespace dungeonGenerator
 
                 foreach (var newUpSpace in sortedUpSpace)
                 {
+                    Debug.Log($"<color=#FF0000> NEW UP SPACE </color>");
+
                     neighborsInDownSpaceList = ReturnPossibleNeighborsDownSpace(newUpSpace, sortedDownSpace); // select new LeftSpace and check if it has any neighbors
 
                     if (neighborsInDownSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
@@ -667,17 +669,16 @@ namespace dungeonGenerator
 
             var upSpacePlane = new BoundsInt(
                  new Vector3Int(upSpace.Bounds.position.x, 0, upSpace.Bounds.position.z),
-                 new Vector3Int(upSpace.Bounds.size.x,0, upSpace.Bounds.size.z)
+                 new Vector3Int(upSpace.Bounds.size.x,1, upSpace.Bounds.size.z)
 
                  );
             var downSpacePlane = new BoundsInt(
                  new Vector3Int(downSpace.Bounds.position.x, 0, downSpace.Bounds.position.z),
-                 new Vector3Int(downSpace.Bounds.size.x, 0, downSpace.Bounds.size.z)
+                 new Vector3Int(downSpace.Bounds.size.x, 1, downSpace.Bounds.size.z)
 
-            ); 
+            );
 
-
-            MeshHelper.planeIntersectBounds( upSpacePlane, downSpacePlane );    
+            var nIntersections = 0;
 
             // Bottom Points
             if (upSpacePlane.Contains(downSpacePlane.position)) // contains bottomLeftCorner
@@ -687,16 +688,20 @@ namespace dungeonGenerator
                     downSpacePlane.position,
                     upSpacePlane.position + upSpacePlane.size - downSpacePlane.position
                 );
+
+                nIntersections++;
             }
 
             if(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0,0))) // contains bottomRightCorner
             {
-                var newPos = new Vector3Int(upSpacePlane.x, 0, downSpacePlane.z);
+                var newPos = new Vector3Int(upSpacePlane.x, 0, downSpacePlane.z); 
                 // set new bottomRightCorner
                 upSpacePlane = new BoundsInt(
                     newPos,
-                    new Vector3Int(downSpacePlane.position.x + downSpacePlane.size.x, 0,upSpacePlane.zMax) - newPos
+                    new Vector3Int(downSpacePlane.position.x + downSpacePlane.size.x, 1, upSpacePlane.zMax) - newPos
                 );
+
+                nIntersections++;
 
             }
 
@@ -709,6 +714,7 @@ namespace dungeonGenerator
                    upSpacePlane.position,
                    upSpacePlane.position + (downSpacePlane.max - upSpacePlane.position)
                 );
+                nIntersections++;
             }
 
             if (upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(0, 0, downSpacePlane.size.z))) // contains topLeftCorner
@@ -718,22 +724,23 @@ namespace dungeonGenerator
                 // set new topLeftCorner
                 upSpacePlane = new BoundsInt(
                     upSpacePlane.position,
-                    new Vector3Int(upSpacePlane.max.x, 0, downSpacePlane.max.z) - newPos
+                    new Vector3Int(upSpacePlane.max.x, 1, downSpacePlane.max.z) - newPos
                 );
+                nIntersections++;
 
             }
 
-            if(
-                !(upSpacePlane.Contains(downSpacePlane.position)) &&
-                !(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0, 0))) &&
-                !(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0, downSpacePlane.size.z))) &&
-                !(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(0, 0, downSpacePlane.size.z)))
-            )
+            Debug.Log($"<color=#00FF00>number of intersections {nIntersections}</color>");
+
+
+            if(nIntersections == 0)
             {
             
                 if(!(upSpacePlane.size.x == downSpacePlane.size.x && upSpacePlane.size.z == downSpacePlane.size.z))
                 {
-                    return new Vector3Int(-1, 0, -1);
+
+                    Debug.Log($"<color=#00FF14> FAILED TO FIND </color>");
+                    upSpacePlane = MeshHelper.planeIntersectBounds(downSpacePlane, upSpacePlane);
                 }
             
             }
@@ -756,6 +763,9 @@ namespace dungeonGenerator
             else
             {
                 Debug.Log("FAILED TO FIND CONNECTION UP DOWN!!");
+                Debug.Log(upSpacePlane);
+                Debug.Log(downSpacePlane);
+                Debug.Log("-----------------------------------");
                 return Vector3Int.one * -1;
             }
 

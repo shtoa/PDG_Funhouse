@@ -321,35 +321,40 @@ namespace dungeonGenerator
         }
         public static BoundsInt planeIntersectBounds(BoundsInt plane1, BoundsInt plane2)
         {
+
+
+            Debug.Log(plane1);
+            Debug.Log(plane2);
+
             var org = new BoundsInt(
                     plane1.position,
                     plane1.size
                 );
 
-            BoundsInt outPlane = new BoundsInt(
-                    plane1.position,
-                    plane1.size
-
-                );
+            var nIntersections = 0;
 
             // Bottom Points
             if (plane1.Contains(plane2.position)) // contains bottomLeftCorner
             {
                 // set new bottomLeftCorner
-                outPlane = new BoundsInt(
+                plane1 = new BoundsInt(
                     plane2.position,
-                    outPlane.position + outPlane.size - plane2.position
+                    plane1.position + plane1.size - plane2.position
                 );
+
+                nIntersections++;
             }
 
             if (plane1.Contains(plane2.position + new Vector3Int(plane2.size.x, 0, 0))) // contains bottomRightCorner
             {
-                var newPos = new Vector3Int(outPlane.x, 0, plane2.z);
+                var newPos = new Vector3Int(plane1.x, 0, plane2.z);
                 // set new bottomRightCorner
-                outPlane = new BoundsInt(
+                plane1 = new BoundsInt(
                     newPos,
-                    new Vector3Int(plane2.position.x + plane2.size.x, 0, outPlane.zMax) - newPos
+                    new Vector3Int(plane2.position.x + plane2.size.x, 1, plane1.zMax) - newPos
                 );
+
+                nIntersections++;
 
             }
 
@@ -358,43 +363,51 @@ namespace dungeonGenerator
             {
 
                 // set new topRightCorner
-                outPlane = new BoundsInt(
-                   outPlane.position,
-                   outPlane.position + (plane2.max - outPlane.position)
+                plane1 = new BoundsInt(
+                   plane1.position,
+                   plane1.position + (plane2.max - plane1.position)
                 );
+
+                nIntersections++;
             }
 
             if (plane1.Contains(plane2.position + new Vector3Int(0, 0, plane2.size.z))) // contains topLeftCorner
             {
-                var newPos = new Vector3Int(plane2.x, 0, outPlane.z);
+                var newPos = new Vector3Int(plane2.x, 0, plane1.z);
 
                 // set new topLeftCorner
-                outPlane = new BoundsInt(
-                    outPlane.position,
-                    new Vector3Int(outPlane.max.x, 0, plane2.max.z) - newPos
+                plane1 = new BoundsInt(
+                    plane1.position,
+                    new Vector3Int(plane1.max.x, 1, plane2.max.z) - newPos
                 );
 
-       
+                nIntersections++;
+
             }
 
+            Debug.Log($"<color=#FF0000>number of intersections {nIntersections} AFTER SECOND PASS</color>");
 
             if (
-              !(plane1.Contains(plane2.position)) &&
-              !(plane1.Contains(plane2.position + new Vector3Int(plane2.size.x, 0, 0))) &&
-              !(plane1.Contains(plane2.position + new Vector3Int(plane2.size.x, 0, plane2.size.z))) &&
-              !(plane1.Contains(plane2.position + new Vector3Int(0, 0, plane2.size.z)))
+              nIntersections == 0
           )
             {
 
                 if (!(plane1.size.x == plane2.size.x && plane1.size.z == plane2.size.z))
                 {
                     Debug.Log("DOES NOT CONTAIN DOES NOT CONTAIN");
+                    return new BoundsInt
+                        (
+                        new Vector3Int(-1,-1,-1),
+                        new Vector3Int(-1,-1,-1)
+                        );
+
+
                 }
 
             }
 
 
-            if (org.Equals(outPlane) && org.Equals(plane2))
+            if (org.Equals(plane1) && org.Equals(plane2))
             {
                 Debug.Log("NO CHANGES TO PLANE");
             } else
@@ -402,7 +415,7 @@ namespace dungeonGenerator
                 Debug.Log("!!! CHANGED PLANE !!!");
             }
 
-            return outPlane;
+            return plane1;
 
 
         }
