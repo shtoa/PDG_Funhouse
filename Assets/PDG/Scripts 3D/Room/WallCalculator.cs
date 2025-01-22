@@ -132,7 +132,9 @@ namespace dungeonGenerator
         {
             List<BoundsInt> splitWalls = new List<BoundsInt>();
 
-            // horizontal case
+            var doorSize = 2; // FIX ME: move into dungeon generator
+
+            // vertical case
             if (splitDir == SplitPosition.Top || splitDir == SplitPosition.Bottom)
             {
 
@@ -159,9 +161,24 @@ namespace dungeonGenerator
                         dungeonGenerator.wallThickness
                     )
                 ));
+
+                // top segment of the wall 
+                splitWalls.Add(new BoundsInt(
+                    new Vector3Int(
+                        door.min.x,
+                        wall.min.y+doorSize,
+                        wall.min.z
+                    ),
+                    new Vector3Int(
+                        door.size.x,
+                        wall.size.y-doorSize,
+                        dungeonGenerator.wallThickness
+                    )
+                ));
+
             }
 
-            // vertical case
+            // horizontal case
             else if (splitDir >= SplitPosition.Left || splitDir >= SplitPosition.Right)
             {
 
@@ -188,6 +205,21 @@ namespace dungeonGenerator
 
                    )
                    ));
+
+                // top segmenet of the wall 
+                splitWalls.Add(new BoundsInt(
+                    new Vector3Int(
+                        wall.min.x,
+                        wall.min.y + doorSize,
+                        door.min.z
+                    ),
+                    new Vector3Int(
+                        dungeonGenerator.wallThickness,
+                        wall.size.y - doorSize,
+                        door.size.z
+                        
+                    )
+                ));
 
             }
 
@@ -263,25 +295,24 @@ namespace dungeonGenerator
             if (room.RoomType == RoomType.Start)
             {
 
-                //BoundsInt wall1 = new BoundsInt(
-                //       new Vector3Int((int)bounds.min.x, 0, (int)bounds.min.z - dungeonGenerator.wallThickness),
-                //       horizontalWallSize
-                //    );
-
-                //BoundsInt door1 = new BoundsInt(
-                //       new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f - dungeonGenerator.corridorWidth / 2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f) - dungeonGenerator.wallThickness),
-                //       new Vector3Int(dungeonGenerator.corridorWidth, dungeonGenerator.dungeonBounds.size.y, dungeonGenerator.wallThickness) //  - dungeonGenerator.wallThickness*2
-                //    );
-
-                //var splitWalls = splitWall(door1, wall1);
-                //doorBounds.Add(door1);
-                //wallBounds.AddRange(splitWalls);
-
-                wallBounds.bottom.Add(
-                    new BoundsInt(
+                BoundsInt wall1 = new BoundsInt(
                         new Vector3Int((int)bounds.min.x, (int)bounds.min.y, (int)bounds.min.z - dungeonGenerator.wallThickness),
-                        horizontalWallSize)
+                        horizontalWallSize);
+
+                BoundsInt door1 = new BoundsInt(
+                       new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f - dungeonGenerator.corridorWidth / 2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f) - dungeonGenerator.wallThickness),
+                       new Vector3Int(dungeonGenerator.corridorWidth, (int)bounds.size.y, dungeonGenerator.wallThickness) //  - dungeonGenerator.wallThickness*2
                     );
+
+                var splitWalls = splitWall(door1, wall1, SplitPosition.Top);
+                doorBounds.Add(door1);
+                wallBounds.bottom.AddRange(splitWalls);
+
+                //wallBounds.bottom.Add(
+                //    new BoundsInt(
+                //        new Vector3Int((int)bounds.min.x, (int)bounds.min.y, (int)bounds.min.z - dungeonGenerator.wallThickness),
+                //        horizontalWallSize)
+                //    );
 
 
             }

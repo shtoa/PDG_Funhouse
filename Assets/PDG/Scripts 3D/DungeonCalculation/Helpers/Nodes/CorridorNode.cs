@@ -3,12 +3,21 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 namespace dungeonGenerator
 {
+
+    public enum LateralCorridorType
+    {
+        Corridor,
+        Stairs,
+        Ladder
+    }
     public class CorridorNode : Node
 
     {
@@ -119,10 +128,15 @@ namespace dungeonGenerator
         private List<Node> ReturnPossibleNeighborsRightSpace(Node leftSpace, List<Node> rightSpaceNeighborCandidates)
         {
             return rightSpaceNeighborCandidates.Where(rightSpace =>
-                GetCorridorPositionLeftRightZ(leftSpace, rightSpace) != -1 &&
-               (leftSpace.FloorIndex == rightSpace.FloorIndex)
-            ).OrderBy(rightSpace => rightSpace.Bounds.min.x).ToList(); // order by ascending (smallest) x
+                GetCorridorPositionLeftRightZ(leftSpace, rightSpace) != -1 
+                // && (leftSpace.FloorIndex == rightSpace.FloorIndex)
+            ).OrderBy(rightSpace => rightSpace.Bounds.min.x).Where(rightSpace => Mathf.Abs(rightSpace.Bounds.min.y - leftSpace.Bounds.min.y) == 0).ToList(); // order by ascending (smallest) x
 
+            /* FOR NOW NO LADDERS / STAIR CASES
+            * 
+            * No Ladder Condition: .Where(rightSpace => Mathf.Abs(rightSpace.Bounds.min.y - leftSpace.Bounds.min.y) == 0).ToList()
+            * .Where(rightSpace => Mathf.Abs(rightSpace.Bounds.min.y - leftSpace.Bounds.min.y) == 0)
+           */
         }
 
         private (Node leftSpace, Node rightSpace) FindNeighborsLeftRight(List<Node> sortedLeftSpaces, List<Node> sortedRightSpaces)
@@ -136,7 +150,7 @@ namespace dungeonGenerator
 
             if (neighborsInRightSpaceList.Count() > 0)
             {
-                rightSpace = neighborsInRightSpaceList[Random.Range(0, neighborsInRightSpaceList.Count)]; // if neighbors exist choose one at random 
+                rightSpace = neighborsInRightSpaceList[Random.Range(0, neighborsInRightSpaceList.Count)]; //[Random.Range(0, neighborsInRightSpaceList.Count)]; // if neighbors exist choose one at random 
             }
             else
             {
@@ -151,7 +165,7 @@ namespace dungeonGenerator
                     if (neighborsInRightSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
                     {
                         leftSpace = newLeftSpace;
-                        rightSpace = neighborsInRightSpaceList[Random.Range(0, neighborsInRightSpaceList.Count)];
+                        rightSpace = neighborsInRightSpaceList[Random.Range(0, neighborsInRightSpaceList.Count)]; // select closest one //[Random.Range(0, neighborsInRightSpaceList.Count)];
                         break;
                     }
                 }
@@ -177,15 +191,124 @@ namespace dungeonGenerator
             }
             #endregion
 
+
+            // --- Get Lateral Corridor Type --- 
+            LateralCorridorType t = GetLateralCorridorType(leftSpace, rightSpace, SplitPosition.Left);
+
+            Debug.Log($"type of corridor {t}");
+
+            // --- Generate Bounds for Corridor Type --- 
+
             // --- Generate Bounds for the Corridors --- 
 
-            var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
-            var pos = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, corridorZ-Mathf.FloorToInt(this.corridorWidth/2f)); 
+            if (t == LateralCorridorType.Corridor) { 
 
-            Bounds = new BoundsInt(
-                pos,
-                new Vector3Int(sizeX, leftSpace.Bounds.size.y, this.corridorWidth) // assumption that both spaces are the same height
-            );
+                var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
+                var pos = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, corridorZ-Mathf.FloorToInt(this.corridorWidth/2f)); 
+
+                Bounds = new BoundsInt(
+                    pos,
+                    new Vector3Int(sizeX, leftSpace.Bounds.size.y, this.corridorWidth) // assumption that both spaces are the same height
+                );
+            } else // FIX ME: Make More Concise
+            {
+
+                var doorHeight = 2;
+
+                if (leftSpace.Bounds.min.y < rightSpace.Bounds.min.y)
+                {
+                    var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
+                    var pos = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, corridorZ - Mathf.FloorToInt(this.corridorWidth / 2f));
+
+                    Bounds = new BoundsInt(
+                        pos,
+                        new Vector3Int(sizeX, rightSpace.Bounds.min.y - leftSpace.Bounds.min.y + doorHeight, this.corridorWidth) // assumption that both spaces are the same height
+                    );
+                }
+                else
+                {
+                    var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
+                    var pos = new Vector3Int(leftSpace.Bounds.max.x, rightSpace.Bounds.min.y, corridorZ - Mathf.FloorToInt(this.corridorWidth / 2f));
+
+                    Bounds = new BoundsInt(
+                        pos,
+                        new Vector3Int(sizeX, leftSpace.Bounds.min.y - rightSpace.Bounds.min.y + doorHeight, this.corridorWidth) // assumption that both spaces are the same height
+                    );
+                }
+            }
+        }
+
+        // FIX ME: Write Function to Infer Relative Position <<<<< Cant use Split position
+        // FIX ME: Rewrite in less verbos way
+        public LateralCorridorType GetLateralCorridorType(Node node1, Node node2, SplitPosition node1Spit)
+        {
+            Vector3 pos1 = new Vector3(0, 0, 0);
+            Vector3 pos2 = new Vector3(0, 0, 0);
+
+            if (node1.Bounds.min.y == node2.Bounds.min.y) {
+                // if node1 and node2 have same min y position return corridor as type of room
+                return LateralCorridorType.Corridor;
+            
+            } else {
+
+                // get what directions nodes are split in 
+                if (node1Spit == SplitPosition.Left || node1Spit == SplitPosition.Right)
+                {
+                    Debug.Log("SPLIT POSITION LEFT FOR CORRIDOR TYPE CHECK");
+                    if (node1Spit == SplitPosition.Left)
+                    {
+                        // Left - Right 
+                     
+                        pos1 = new Vector3(node1.Bounds.max.x, node1.Bounds.min.y, 0); // Left
+                        pos2 = new Vector3(node2.Bounds.min.x, node2.Bounds.min.y, 0); // Right
+                    } else
+                    {
+                        // Right - Left 
+                        pos1 = new Vector3(node1.Bounds.min.x, node1.Bounds.min.y, 0); // Right
+                        pos2 = new Vector3(node2.Bounds.max.x, node2.Bounds.min.y, 0); // Left
+                    }
+                         
+                } else
+                {
+      
+                    if (node1Spit == SplitPosition.Top)
+                    {
+                        // Top - Bottom
+                        pos1 = new Vector3(0, node1.Bounds.min.y, node1.Bounds.min.z); // Top
+                        pos2 = new Vector3(0, node2.Bounds.min.y, node2.Bounds.max.z); // Bottom
+                    }
+                    else
+                    {
+                        // Bottom - Top
+                        pos1 = new Vector3(0, node1.Bounds.min.y, node1.Bounds.max.z); // Bottom
+                        pos2 = new Vector3(0, node2.Bounds.min.y, node2.Bounds.min.z); // Top
+                    }
+
+                }
+
+            }
+
+            Debug.Log($"Angle {Vector3.Angle(new Vector3(1,0,0), (pos2-pos1).normalized)}");
+
+            Debug.Log($"Pos1 {pos1}");
+            Debug.Log($"Pos2 {pos2}");
+            Debug.Log($"SplitPosition {node1.SplitPosition}");
+
+            // Return Stairs and Ladders based on angle 
+            if (Mathf.Abs(Vector3.Angle(new Vector3(1, 0, 0), (pos2 - pos1).normalized)) <= 30)
+            {
+
+                // if angle between node1 and node2 minimum position is less or equal to 45 create stairs
+                return LateralCorridorType.Stairs;
+
+            }
+            else
+            {
+                // if angle between node1 and node 2 minimum y position is more than 45 create a ladder connection
+                return LateralCorridorType.Ladder;
+            }
+
+
         }
 
         #endregion
@@ -338,10 +461,14 @@ namespace dungeonGenerator
         private List<Node> ReturnPossibleNeighborsBottomSpace(Node topSpace, List<Node> bottomSpaceNeighborCandidates)
         {
             return bottomSpaceNeighborCandidates.Where(bottomSpace =>
-                GetCorridorPositionTopBottomX(topSpace, bottomSpace) != -1 &&
-               (bottomSpace.FloorIndex == topSpace.FloorIndex)
-            ).OrderByDescending(bottomSpace => bottomSpace.Bounds.max.z).ToList(); // order by descenmding (max) z
+                GetCorridorPositionTopBottomX(topSpace, bottomSpace) != -1 
+                // && (bottomSpace.FloorIndex == topSpace.FloorIndex)
+            ).OrderByDescending(bottomSpace => bottomSpace.Bounds.max.z).Where(bottomSpace => Mathf.Abs(topSpace.Bounds.min.y - bottomSpace.Bounds.min.y) == 0).ToList(); // order by descenmding (max) z
 
+            /* FOR NOW NO LADDERS / STAIR CASES
+             * 
+             * No Ladder Condition: .Where(bottomSpace => Mathf.Abs(topSpace.Bounds.min.y - bottomSpace.Bounds.min.y) == 0)
+            */
         }
         private (Node topSpace, Node bottomSpace) FindNeighborsTopBottom(List<Node> sortedTopSpace, List<Node> sortedBottomSpace)
         {
@@ -354,7 +481,7 @@ namespace dungeonGenerator
 
             if (neighborsInBottomSpaceList.Count() > 0)
             {
-                bottomSpace = neighborsInBottomSpaceList[Random.Range(0, neighborsInBottomSpaceList.Count)]; // if neighbors exist choose one at random 
+                bottomSpace = neighborsInBottomSpaceList[0]; // [Random.Range(0, neighborsInBottomSpaceList.Count)]; // if neighbors exist choose one at random 
             }
             else
             {
@@ -369,7 +496,7 @@ namespace dungeonGenerator
                     if (neighborsInBottomSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
                     {
                         topSpace = newTopSpace;
-                        bottomSpace = neighborsInBottomSpaceList[Random.Range(0, neighborsInBottomSpaceList.Count)];
+                        bottomSpace = neighborsInBottomSpaceList[0]; //[Random.Range(0, neighborsInBottomSpaceList.Count)];
                         break;
                     }
                 }
@@ -515,7 +642,7 @@ namespace dungeonGenerator
             else // select one of the bottom most topSpace if there are multiple
             {
                 int minY = sortedUpSpaces[0].Bounds.min.y; // get the coordinates of the bottom most bound
-                //sortedUpSpaces = sortedUpSpaces.Where(space => Math.Abs(minY - space.Bounds.min.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
+                sortedUpSpaces = sortedUpSpaces.Where(space => Math.Abs(minY - space.Bounds.min.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
                 return sortedUpSpaces;
             }
 
@@ -532,7 +659,7 @@ namespace dungeonGenerator
             else // select one of the top most BottomSpaces if there are multiple
             {
                 int maxY = sortedDownSpaces[0].Bounds.max.y; // get the coordinates of the top most bound
-               // sortedDownSpaces = sortedDownSpaces.Where(space => Math.Abs(maxY - space.Bounds.max.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
+                sortedDownSpaces = sortedDownSpaces.Where(space => Math.Abs(maxY - space.Bounds.max.y) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
                 return sortedDownSpaces;
             }
 
@@ -542,7 +669,13 @@ namespace dungeonGenerator
             return downSpaceNeighborCandidates.Where(downSpace =>
                 GetCorridorPositionUpDownXZ(upSpace, downSpace).x != -1 &&
                 GetCorridorPositionUpDownXZ(upSpace, downSpace).z != -1 &&
-               (upSpace.FloorIndex-1 == downSpace.FloorIndex)
+                Mathf.Abs(downSpace.Bounds.max.y - upSpace.Bounds.min.y) < minRoomDim.z // FIX ME: Rewrite minRoomDim with correct yz switch
+                
+                // otherwise there is a room inbetween // stops from generating updown corridors through rooms
+
+
+
+                // && (upSpace.FloorIndex-1 == downSpace.FloorIndex)
             ).OrderByDescending(downSpace => downSpace.Bounds.max.y).ToList(); // order by descending (max) y
 
         }
@@ -637,6 +770,10 @@ namespace dungeonGenerator
 
             upSpace.ConnectionsList.Add(downSpace);
             downSpace.ConnectionsList.Add(upSpace);
+
+            // -- Add upSpace and downSpace to corridor connection list for ladder generation ---#
+            ConnectionsList.Add(upSpace);
+            ConnectionsList.Add(downSpace);
 
             // --- calculate the bounds of the door to be used in mesh generation ---
 

@@ -36,6 +36,34 @@ namespace dungeonGenerator
 
             return walls;
         }
+        // FIX ME: Make method clearer
+        public void removeWall(BoundsInt wall)
+        {
+
+            if (left.Contains(wall))
+            {
+                left.Remove(wall);
+            }
+
+
+            if (right.Contains(wall))
+            {
+                right.Remove(wall);
+            }
+
+
+            if (top.Contains(wall))
+            {
+                top.Remove(wall);
+            }
+
+
+            if (bottom.Contains(wall))
+            {
+                bottom.Remove(wall);
+            }
+
+        }
 
     }
     public class RoomGenerator
@@ -118,9 +146,15 @@ namespace dungeonGenerator
                     DrawFloor(room, roomStyle, roomObj);
                 }
 
+                if (room.RoomType.Equals(RoomType.Corridor))
+                {
+                }
+                    DrawWalls(room, roomStyle, roomObj);
+               
+                //DrawWalls(room, roomStyle, roomObj);
+
                 //if (!room.CorridorType.Equals(CorridorType.Perpendicular))
                 //{
-                DrawWalls(room, roomStyle, roomObj);
                 //}
 
                 //DrawWallsTest(room, roomStyle);
@@ -157,6 +191,36 @@ namespace dungeonGenerator
             //door.layer = LayerMask.NameToLayer("Dungeon");
         }
 
+        public void HandlePerpendicularWalls(WallBounds wallBounds, Node room, RoomStyle roomStyle, GameObject roomObj)
+        {
+            // generate aladder
+            BoundsInt ladderBounds = wallBounds.getWalls()[Random.Range(0, wallBounds.getWalls().Count)];
+            wallBounds.removeWall(ladderBounds);
+
+
+            var connectedRoomsOrderedByY = room.ConnectionsList.OrderBy(connectedRoom => connectedRoom.Bounds.min.y).ToArray();
+
+            ladderBounds = new BoundsInt(
+                    new Vector3Int(ladderBounds.x, connectedRoomsOrderedByY[0].Bounds.y, ladderBounds.z), // Bottom Room min Bounds y
+                    new Vector3Int(ladderBounds.size.x, connectedRoomsOrderedByY[0].Bounds.size.y + ladderBounds.size.y, ladderBounds.size.z)
+            );
+
+
+
+            GameObject ladder = MeshHelper.CreateCuboid(ladderBounds.size, 1);
+            ladder.name = "ladder";
+            BoxCollider boxCollider = ladder.AddComponent<BoxCollider>();
+            boxCollider.isTrigger = true;
+            boxCollider.size = boxCollider.size + new Vector3(0.1f, 0, 0.1f);
+
+            ladder.AddComponent<Ladder>();
+            ladder.transform.SetParent(roomObj.transform, false);
+            ladder.transform.localPosition = ladderBounds.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+            ladder.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.ladder;
+
+            ladder.transform.transform.position = ladder.transform.transform.position - new Vector3(0, 0.001f, 0); // prevent z fighting
+        }
+
         public void DrawWalls(Node room, RoomStyle roomStyle, GameObject roomObj)
         {
 
@@ -164,6 +228,11 @@ namespace dungeonGenerator
             WallBounds wallBounds = wallCalculator.CalculateWalls(room, wallThickness);
             GameObject wallHolder = new GameObject("wallHolder");
             wallHolder.transform.SetParent(roomObj.transform, false);
+
+            if (room.CorridorType.Equals(CorridorType.Perpendicular))
+            {
+                HandlePerpendicularWalls(wallBounds, room, roomStyle, roomObj);
+            }
 
             foreach (var wallBound in wallBounds.getWalls())
             {
@@ -177,22 +246,26 @@ namespace dungeonGenerator
                     wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
                 }
 
+
+
                 wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
                 wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
 
 
             }
 
+            
 
-            #region Minimapped Walls
-            //wall.layer = LayerMask.NameToLayer("Dungeon");
 
-            // draw wall minimap object
-            //GameObject miniMapObject = GameObject.Instantiate(wall, wall.transform.position, wall.transform.rotation);
-            //miniMapObject.layer = LayerMask.NameToLayer("MiniMap");
-            //miniMapObject.transform.parent = wall.transform;
-            #endregion 
-        }
+                #region Minimapped Walls
+                //wall.layer = LayerMask.NameToLayer("Dungeon");
+
+                // draw wall minimap object
+                //GameObject miniMapObject = GameObject.Instantiate(wall, wall.transform.position, wall.transform.rotation);
+                //miniMapObject.layer = LayerMask.NameToLayer("MiniMap");
+                //miniMapObject.transform.parent = wall.transform;
+                #endregion
+            }
 
         
         public GameObject getFloorMesh(Node room)

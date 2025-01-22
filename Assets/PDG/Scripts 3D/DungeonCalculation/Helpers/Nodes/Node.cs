@@ -88,6 +88,7 @@ namespace dungeonGenerator
         private List<Node> connectionsList;
         private int connectionDepthIndex = -1;
 
+
         // Pass in parent node to constructor
         public Node(Node parentNode)
         {

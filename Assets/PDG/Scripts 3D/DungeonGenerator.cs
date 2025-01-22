@@ -179,7 +179,7 @@ namespace dungeonGenerator
             // --- Clamp between 0-1
             splitCenterDeviation.x = Mathf.Clamp01(splitCenterDeviation.x);
             splitCenterDeviation.y = Mathf.Clamp01(splitCenterDeviation.y);
-            splitCenterDeviation.z = Mathf.Clamp01(splitCenterDeviation.y);
+            splitCenterDeviation.z = Mathf.Clamp01(splitCenterDeviation.z);
 
 
             // Room Bounds 

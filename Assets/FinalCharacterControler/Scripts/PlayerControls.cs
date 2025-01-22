@@ -65,6 +65,8 @@ public class PlayerController : MonoBehaviour
 
     private GameObject colliderSphere;
 
+    public bool isClimbing = false; // FIX ME: REFACTOR
+
     #endregion
 
     #region Startup
@@ -120,9 +122,16 @@ public class PlayerController : MonoBehaviour
             _jumpedLastFrame = false;
             _characterController.stepOffset = 0;
 
-        } else
+        } 
+        else
         {
             _characterController.stepOffset = _stepOffset;
+        }
+
+
+        if (isClimbing)
+        {
+            _playerState.SetPlayerMovementState(PlayerMovementState.Climb);
         }
 
 
@@ -139,33 +148,49 @@ public class PlayerController : MonoBehaviour
 
     public void HandleVerticalMovement()
     {
-        bool isGrounded = _playerState.InGroundedState();
-
-        _verticalVelocity -= gravity * Time.deltaTime;
-
-        if (isGrounded && _verticalVelocity < 0)
+        // FIX ME: REFACTOR INTO SEPARATE PART 
+        if (isClimbing && _playerLocomotionInput.MovementInput.y > 0)
         {
-            _verticalVelocity = -_antiBump;
+            _verticalVelocity = 5;
+        } else if (isClimbing && _playerLocomotionInput.MovementInput.y < 0)
+        {
+            _verticalVelocity = -5;
+        } else if (isClimbing)
+        {
+            _verticalVelocity = 0;
+        }
+        else
+        {
+            bool isGrounded = _playerState.InGroundedState();
 
+            _verticalVelocity -= gravity * Time.deltaTime;
+
+            if (isGrounded && _verticalVelocity < 0)
+            {
+                _verticalVelocity = -_antiBump;
+
+            }
+
+
+            if (_playerLocomotionInput.JumpPressed && isGrounded) //  && isGrounded allow to jump multiple times
+            {
+                _verticalVelocity += Mathf.Sqrt(jumpHeight * 3f * gravity);
+                _jumpedLastFrame = true;
+            }
+
+            // switch from grounded to not grounded (jump/fall)
+            if (_playerState.IsStateGroundedState(_lastMovementState) && isGrounded)
+            {
+                _verticalVelocity += _antiBump;
+            }
+
+            if (_verticalVelocity > _terminalVelocity)
+            {
+                _verticalVelocity = _terminalVelocity;
+            }
         }
 
-
-        if (_playerLocomotionInput.JumpPressed) //  && isGrounded allow to jump multiple times
-        {
-            _verticalVelocity += Mathf.Sqrt(jumpHeight * 3f * gravity);
-            _jumpedLastFrame = true;
-        }
-
-        // switch from grounded to not grounded (jump/fall)
-        if (_playerState.IsStateGroundedState(_lastMovementState) && isGrounded)
-        {
-            _verticalVelocity += _antiBump;
-        }
-
-        if(_verticalVelocity > _terminalVelocity)
-        {
-            _verticalVelocity = _terminalVelocity;
-        }
+        
     }
 
     public void HandleLateralMovement()
@@ -209,10 +234,11 @@ public class PlayerController : MonoBehaviour
         newVelocity = Vector3.ClampMagnitude(new Vector3(newVelocity.x,0,newVelocity.z), clampLateralMagnitude);
         newVelocity.y += _verticalVelocity;
 
-        newVelocity = !isGrounded ? HandleSteepWalls(newVelocity) : newVelocity;
+        newVelocity = (!isGrounded && !isClimbing) ? HandleSteepWalls(newVelocity) : newVelocity;
 
 
         _characterController.Move(newVelocity * Time.deltaTime);
+
     }
 
     private Vector3 HandleSteepWalls(Vector3 velocity)

@@ -64,7 +64,7 @@ namespace dungeonGenerator
                 SpaceNode spaceToSplit = spacesToSplit.Dequeue(); // dequeue space to split
 
                 var splitableAxis = GetSplitableAxis(spaceToSplit.Bounds, minSpaceDim);
-            
+
                 if (splitableAxis.x || splitableAxis.z || splitableAxis.y) // only split space if possible to split
                 {
                     var splitSpaces = SplitSpace(spaceToSplit, minSpaceDim, splitCenterDeviationPercent); // split the space
@@ -141,25 +141,50 @@ namespace dungeonGenerator
                 // TODO: Add random splitting / more control
                 // spaceToSplit.SplitPosition.Equals(SplitPosition.Left) || spaceToSplit.SplitPosition.Equals(SplitPosition.Right)
 
+                var splitValHeight = Random.value;
+
+                Debug.Log($"<color=#00FF14> SPLIT PROBABILITY B4 {(spaceWidth * spaceLength)} </color>");
+
+                // BIAS SPLITTING VERTICALLY FOR LARGER SPACES
+
+                // BIAS FOR SPLITTING VERTICALLY EARLY TO AVOID GENERATION OF TOWERS
+                if (splitValHeight < 0.5){
+
+                    //Debug.Log($"<color=#00FF14> SPLIT WITH PROBABILITY {(1 - (minSpaceDim.x * minSpaceDim.y) / (spaceWidth * spaceLength))} </color>");
+                    Debug.Log("SPLIT ALONG UP...DOWN");
+                    return SplitPerpendicular(spaceToSplit, GetSplitPosition(spaceHeight, minSpaceDim.z, splitCenterDeviationPercent.z)); // TO DO: Develop with Random Positioning
+                
+                } else {
+
+                    var splitVal = Random.value;
+
+                    if (splitVal < 0.5)
+                    {
+                        return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.y, splitCenterDeviationPercent.y));
+                    }
+
+                    else
+                    {
+
+                        return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x));
+                    }
+                }
+
+
+            } else if (splitableAxis.x && splitableAxis.z)
+            {
                 var splitVal = Random.value;
 
-                if (splitVal < 0.3)
+                if (splitVal < 0.5)
                 {
                     return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.y, splitCenterDeviationPercent.y));
                 }
 
-                if (splitVal >= 0.3 && splitVal < 0.6)
+                else
                 {
-               
+
                     return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x));
                 }
-
-                else 
-                {
-                    Debug.Log("SPLIT ALONG UPDOWN");
-                    return SplitPerpendicular(spaceToSplit, 5);
-                }
-
             }
             else if (splitableAxis.x) // if only width is large enough to split, split vertically
             {
@@ -173,7 +198,7 @@ namespace dungeonGenerator
             else if (splitableAxis.y)
             {
                 Debug.Log("SPLIT ALONG UPDOWN");
-                return SplitPerpendicular(spaceToSplit, 5);
+                return SplitPerpendicular(spaceToSplit, GetSplitPosition(spaceHeight, minSpaceDim.z, splitCenterDeviationPercent.z));
             }
             else
             {
@@ -191,6 +216,9 @@ namespace dungeonGenerator
 
             if (centerDeviation < 0)
             {
+                Debug.Log(size);
+                Debug.Log(minSize);
+                Debug.Log(centerDeviation);
                 throw new System.Exception("getSplitPostion(): Space Cannot be Split Further");
             }
 

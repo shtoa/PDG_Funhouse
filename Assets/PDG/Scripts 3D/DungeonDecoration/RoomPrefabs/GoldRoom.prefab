@@ -48,3 +48,4 @@ MonoBehaviour:
     ceiling: {fileID: 2100000, guid: 1efffa6d0fa88d84eae2e37de1ddc1ab, type: 2}
     floor: {fileID: 2100000, guid: 161dccd2efb354345ac617cfa5cd5edb, type: 2}
     wall: {fileID: 2100000, guid: e26c759fcffc57e4bab5d3bed04e4f40, type: 2}
+    ladder: {fileID: 2100000, guid: 4d1e49ebafa29b140825bf16d7800882, type: 2}

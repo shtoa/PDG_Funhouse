@@ -13,6 +13,7 @@ public class RoomStyle : MonoBehaviour
         [SerializeField] public Material ceiling;
         [SerializeField] public Material floor;
         [SerializeField] public Material wall;
+        [SerializeField] public Material ladder;
 
     }
 

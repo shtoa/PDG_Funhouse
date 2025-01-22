@@ -11,6 +11,7 @@ public enum PlayerMovementState
     Jump = 4,
     Fall = 5,
     Strafe = 6,
+    Climb = 7,
 }
 
 public class PlayerState : MonoBehaviour
