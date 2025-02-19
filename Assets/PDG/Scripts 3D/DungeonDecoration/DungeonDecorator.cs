@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Animations.Rigging;
 using UnityEngine;
 
 public class DungeonDecorator : MonoBehaviour
@@ -31,6 +32,12 @@ public class DungeonDecorator : MonoBehaviour
     [Header("Corridor Styles")]
     [SerializeField]
     public List<RoomStyle> corridorStyles;
+
+    [Header("Roof")]
+    public GameObject roofObject;
+
+    [Header("CornerBlock")]
+    public GameObject cornerObject;
 
 
 }

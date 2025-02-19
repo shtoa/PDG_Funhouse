@@ -6,6 +6,7 @@ using dungeonGenerator;
 using System;
 using Random = UnityEngine.Random;
 using log4net.Util;
+using System.Runtime.Versioning;
 
 namespace dungeonGenerator
 {
@@ -47,9 +48,6 @@ namespace dungeonGenerator
             foreach(var roomSpace in roomSpaces)
             {
 
-                
-
-
                 // TODO: Add check if totalRoomOffset Greater than room Size
                 BoundsInt bounds = new BoundsInt(
                         roomSpace.Bounds.position,
@@ -61,25 +59,34 @@ namespace dungeonGenerator
                 // TODO: extend to be able to place anywhere within the given space
                 #region add rooms randomly inside space
 
-                // var maxSize = roomSpace.Bounds.size; // - new Vector3Int(this.totalRoomOffset.x, 0, this.totalRoomOffset.y); be carefull with previous line
-                // var minSize = new Vector3Int(minRoomBounds.x, 0, minRoomBounds.y);
+                var maxSize = roomSpace.Bounds.size; // - new Vector3Int(this.totalRoomOffset.x, 0, this.totalRoomOffset.y); be carefull with previous line
+                var minSize = new Vector3Int(minRoomBounds.x, minRoomBounds.z, minRoomBounds.y);
 
-                // // randomize Size 
-                // var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), 0, Random.Range(minSize.z, maxSize.z));
+                // randomize Size 
+                var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), Random.Range(minSize.y, maxSize.y), Random.Range(minSize.z, maxSize.z));
 
-                // // randomize Position
-                //var deltaSize = size - minSize;
-                //Debug.Log(deltaSize);
+                // randomize Position
+                var deltaSize = size - minSize;
+                Debug.Log(deltaSize);
 
 
-                // var position = roomSpace.Bounds.position; // + new Vector3Int(Random.Range(-deltaSize.x / 4, deltaSize.x / 4), 0, Random.Range(-deltaSize.z / 4, deltaSize.z / 4));
+                var position = roomSpace.Bounds.position; // + new Vector3Int(Random.Range(-deltaSize.x / 4, deltaSize.x / 4), 0, Random.Range(-deltaSize.z / 4, deltaSize.z / 4));
 
-                // BoundsInt testBounds = new BoundsInt(
-                //     Vector3Int.CeilToInt(roomSpace.Bounds.center - new Vector3(size.x/2f, size.y/2f,size.z/2f)),
-                //     size
-                // );
+                BoundsInt testBounds = new BoundsInt(
+                    Vector3Int.up*roomSpace.Bounds.position.y + Vector3Int.CeilToInt(
+                    new Vector3(roomSpace.Bounds.center.x, 0, roomSpace.Bounds.center.z) - new Vector3(size.x / 2f, 0, size.z / 2f)),
 
-                // roomSpace.Bounds = testBounds;
+                    size
+                );
+
+                //BoundsInt testBounds = new BoundsInt();
+
+                //testBounds = roomSpace.Bounds;
+                //testBounds.size = size;
+
+               //testBounds.size = new Vector3Int(testBounds.size.x, testBounds.size.y, testBounds.size.z);
+
+               roomSpace.Bounds = testBounds;
 
 
                 #endregion

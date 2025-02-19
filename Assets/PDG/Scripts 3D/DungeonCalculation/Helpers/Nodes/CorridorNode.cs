@@ -7,6 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 using Random = UnityEngine.Random;
 
 namespace dungeonGenerator
@@ -26,14 +27,16 @@ namespace dungeonGenerator
         private int corridorWidth;
         private int wallThickness;
         private Vector3Int minRoomDim;
+        private int corridorHeight;
 
-        public CorridorNode(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim) : base(null) // null since it doesnt have any parents
+        public CorridorNode(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight) : base(null) // null since it doesnt have any parents
         {
             this.node1 = node1;
             this.node2 = node2;
             this.corridorWidth = corridorWidth;
             this.wallThickness = wallThickness;
             this.minRoomDim = minRoomDim;
+            this.corridorHeight = corridorHeight;
 
             GenerateCorridor();
         }
@@ -208,7 +211,7 @@ namespace dungeonGenerator
 
                 Bounds = new BoundsInt(
                     pos,
-                    new Vector3Int(sizeX, leftSpace.Bounds.size.y, this.corridorWidth) // assumption that both spaces are the same height
+                    new Vector3Int(sizeX, this.corridorHeight, this.corridorWidth) // assumption that both spaces are the same height
                 );
             } else // FIX ME: Make More Concise
             {
@@ -339,8 +342,17 @@ namespace dungeonGenerator
 
             // --- Generate Corridor Between LeftSpace and RightSpace --- 
 
-            GenerateCorridorBoundsLeftRight(leftSpace, rightSpace);
+            Debug.Log($"LeftSpace Value {leftSpace is null} children in leftNode {leftNode.ChildrenNodeList.Count} leaves {leftSpaceLeaves.Count}");
+            Debug.Log($"RightSpace Value {rightSpace is null} children in rightNode {rightNode.ChildrenNodeList.Count} leaves {rightSpaceLeaves.Count}");
 
+            if (leftSpace == null || rightSpace == null)
+            {
+                this.CorridorType = CorridorType.None;
+                return;
+            }
+
+            GenerateCorridorBoundsLeftRight(leftSpace, rightSpace);
+        
             // --- Add Neighbours to the Connection List of Respective Nodes --- 
 
             leftSpace.ConnectionsList.Add(rightSpace);
@@ -528,7 +540,7 @@ namespace dungeonGenerator
 
             Bounds = new BoundsInt(
                 pos,
-                new Vector3Int(this.corridorWidth, topSpace.Bounds.size.y, sizeZ) // assumption that both spaces are the same height
+                new Vector3Int(this.corridorWidth, this.corridorHeight, sizeZ) // assumption that both spaces are the same height
             );
         }
         #endregion
@@ -553,6 +565,15 @@ namespace dungeonGenerator
 
             // --- Generate Corridor Between LeftSpace and RightSpace --- 
 
+            Debug.Log($"TopSpace Value {topSpace is null} children in topNode {topNode.ChildrenNodeList.Count}");
+            Debug.Log($"BottomSpace Value {bottomSpace is null} children in bottomNode {bottomNode.ChildrenNodeList.Count}");
+
+            if (topSpace == null || bottomSpace == null)
+            {
+                this.CorridorType = CorridorType.None;
+                return;
+            }
+
             GenerateCorridorBoundsTopBottom(topSpace, bottomSpace);
 
             // --- Add Neighbours to the Connection List of Respective Nodes --- 
@@ -572,6 +593,7 @@ namespace dungeonGenerator
             this.addDoorPlacement(bottomSpace.DoorPlacements.Last());
 
             this.CorridorType = CorridorType.Vertical;
+
 
         }
         private int GetCorridorPositionTopBottomX(Node topSpace, Node bottomSpace)
@@ -668,8 +690,9 @@ namespace dungeonGenerator
         {
             return downSpaceNeighborCandidates.Where(downSpace =>
                 GetCorridorPositionUpDownXZ(upSpace, downSpace).x != -1 &&
-                GetCorridorPositionUpDownXZ(upSpace, downSpace).z != -1 &&
-                Mathf.Abs(downSpace.Bounds.max.y - upSpace.Bounds.min.y) < minRoomDim.z // FIX ME: Rewrite minRoomDim with correct yz switch
+                GetCorridorPositionUpDownXZ(upSpace, downSpace).z != -1 
+                
+                //&& Mathf.Abs(downSpace.Bounds.max.y - upSpace.Bounds.min.y) < minRoomDim.z // FIX ME: Rewrite minRoomDim with correct yz switch
                 
                 // otherwise there is a room inbetween // stops from generating updown corridors through rooms
 
@@ -764,6 +787,19 @@ namespace dungeonGenerator
 
             // --- Generate Corridor Between LeftSpace and RightSpace --- 
 
+            Debug.Log($"Upspace Value {upSpace is null} children in upNode {upNode.ChildrenNodeList.Count}");
+            Debug.Log($"DownSpace Value {downSpace is null} children in downNode {downNode.ChildrenNodeList.Count}");
+
+
+           if(upSpace is null || downSpace is null)
+           {
+
+                this.CorridorType = CorridorType.None;
+                return;
+                
+           }
+
+
             GenerateCorridorBoundsUpDown(upSpace, downSpace);
 
             // --- Add Neighbours to the Connection List of Respective Nodes --- 
@@ -796,8 +832,12 @@ namespace dungeonGenerator
             this.CorridorType = CorridorType.Perpendicular;
 
         }
-        private Vector3Int GetCorridorPositionUpDownXZ(Node upSpace, Node downSpace)
 
+        private bool unboundedContains(BoundsInt bounds, Vector3Int position)
+        {
+            return position.x >= bounds.xMin && position.z >= bounds.zMin && position.x <= bounds.xMax && position.z <= bounds.zMax; // without y component
+        }
+        private Vector3Int GetCorridorPositionUpDownXZ(Node upSpace, Node downSpace)
         {
 
             // FIX ME: CASE WHERE NO POINTS ARE CONTAINED
@@ -805,20 +845,26 @@ namespace dungeonGenerator
             // Check if the intersection of the upSpace and downSpace planes has an intersection equal to corridorWidth x corridorWidth returning the XZ location
 
             var upSpacePlane = new BoundsInt(
-                 new Vector3Int(upSpace.Bounds.position.x, 0, upSpace.Bounds.position.z),
-                 new Vector3Int(upSpace.Bounds.size.x,1, upSpace.Bounds.size.z)
-
-                 );
+                new Vector3Int(upSpace.Bounds.position.x, 0, upSpace.Bounds.position.z),
+                new Vector3Int(upSpace.Bounds.size.x,0, upSpace.Bounds.size.z)
+            );
             var downSpacePlane = new BoundsInt(
                  new Vector3Int(downSpace.Bounds.position.x, 0, downSpace.Bounds.position.z),
-                 new Vector3Int(downSpace.Bounds.size.x, 1, downSpace.Bounds.size.z)
-
+                 new Vector3Int(downSpace.Bounds.size.x, 0, downSpace.Bounds.size.z)
             );
+
+            var intesectionPlane = new BoundsInt(
+                upSpace.Bounds.position,
+                upSpace.Bounds.size 
+            );
+
+
+            
 
             var nIntersections = 0;
 
             // Bottom Points
-            if (upSpacePlane.Contains(downSpacePlane.position)) // contains bottomLeftCorner
+            if (unboundedContains(upSpacePlane, downSpacePlane.position)) // contains bottomLeftCorner
             {
                 // set new bottomLeftCorner
                 upSpacePlane = new BoundsInt(
@@ -829,13 +875,13 @@ namespace dungeonGenerator
                 nIntersections++;
             }
 
-            if(upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0,0))) // contains bottomRightCorner
+            if(unboundedContains(upSpacePlane, downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0,0))) // contains bottomRightCorner
             {
                 var newPos = new Vector3Int(upSpacePlane.x, 0, downSpacePlane.z); 
                 // set new bottomRightCorner
                 upSpacePlane = new BoundsInt(
                     newPos,
-                    new Vector3Int(downSpacePlane.position.x + downSpacePlane.size.x, 1, upSpacePlane.zMax) - newPos
+                    new Vector3Int(downSpacePlane.position.x + downSpacePlane.size.x, 0, upSpacePlane.zMax) - newPos
                 );
 
                 nIntersections++;
@@ -843,25 +889,25 @@ namespace dungeonGenerator
             }
 
             // Top Right
-            if (upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0, downSpacePlane.size.z))) // contains topRightCorner
+            if (unboundedContains(upSpacePlane, downSpacePlane.position + new Vector3Int(downSpacePlane.size.x, 0, downSpacePlane.size.z))) // contains topRightCorner
             {
 
                 // set new topRightCorner
                 upSpacePlane = new BoundsInt(
                    upSpacePlane.position,
-                   upSpacePlane.position + (downSpacePlane.max - upSpacePlane.position)
+                   (downSpacePlane.max - upSpacePlane.position)
                 );
                 nIntersections++;
             }
 
-            if (upSpacePlane.Contains(downSpacePlane.position + new Vector3Int(0, 0, downSpacePlane.size.z))) // contains topLeftCorner
+            if (unboundedContains(upSpacePlane, downSpacePlane.position + new Vector3Int(0, 0, downSpacePlane.size.z))) // contains topLeftCorner
             {
                 var newPos = new Vector3Int(downSpacePlane.x, 0, upSpacePlane.z);
 
                 // set new topLeftCorner
                 upSpacePlane = new BoundsInt(
-                    upSpacePlane.position,
-                    new Vector3Int(upSpacePlane.max.x, 1, downSpacePlane.max.z) - newPos
+                    newPos,
+                    new Vector3Int(upSpacePlane.max.x, 0, downSpacePlane.max.z) - newPos // upspacePlaneMax.x
                 );
                 nIntersections++;
 
@@ -870,39 +916,88 @@ namespace dungeonGenerator
             Debug.Log($"<color=#00FF00>number of intersections {nIntersections}</color>");
 
 
-            if(nIntersections == 0)
-            {
-            
-                if(!(upSpacePlane.size.x == downSpacePlane.size.x && upSpacePlane.size.z == downSpacePlane.size.z))
-                {
+            //if (nIntersections == 0)
+            //{
 
-                    Debug.Log($"<color=#00FF14> FAILED TO FIND </color>");
-                    upSpacePlane = MeshHelper.planeIntersectBounds(downSpacePlane, upSpacePlane);
-                }
-            
-            }
+            //    if (!(upSpacePlane.size.x == downSpacePlane.size.x && upSpacePlane.size.z == downSpacePlane.size.z))
+            //    {
+
+            //        Debug.Log($"<color=#00FF14> FAILED TO FIND </color>");
+            //        upSpacePlane = MeshHelper.planeIntersectBounds(downSpacePlane, upSpacePlane);
+
+            //    }
+
+            //}
 
 
             // return the resulting position if its large enough to have a perpendicular corridor geenerated
-            if (upSpacePlane.size.x > corridorWidth && upSpacePlane.size.z > corridorWidth)
+
+
+
+            bool downSpaceAndupSpaceSame = (upSpacePlane.size.x == downSpacePlane.size.x && upSpacePlane.size.z == downSpacePlane.size.z) &&
+                (downSpacePlane.position.x == upSpacePlane.position.x && downSpacePlane.position.z == upSpacePlane.position.z);
+
+            bool spaceSufficientSize = upSpacePlane.size.x > corridorWidth && upSpacePlane.size.z > corridorWidth;
+
+            if (spaceSufficientSize && nIntersections>0 || (spaceSufficientSize && downSpaceAndupSpaceSame) ||
+               
+                (spaceSufficientSize
+                && unboundedContains(downSpacePlane,upSpacePlane.position)
+                && unboundedContains(downSpacePlane, upSpacePlane.position + new Vector3Int(upSpacePlane.size.x,0,0))
+                && unboundedContains(downSpacePlane, upSpacePlane.position + new Vector3Int(0, 0, upSpacePlane.size.z))
+                && unboundedContains(downSpacePlane, upSpacePlane.position + new Vector3Int(upSpacePlane.size.x, 0, upSpacePlane.size.z)))
+
+                )
             {
+
+
+
+
                 // return random point inside the possible upSpace plane 
 
 
                 // FIX ME: DOUBLE CHECK
 
-                return new Vector3Int(
-                        Random.Range(upSpacePlane.position.x, upSpacePlane.position.x + upSpacePlane.size.x - corridorWidth),
+                Vector3Int holePosition = new Vector3Int(
+                        Random.Range(upSpacePlane.min.x, upSpacePlane.max.x - corridorWidth),
                         0,
-                        Random.Range(upSpacePlane.position.z, upSpacePlane.position.z + upSpacePlane.size.z - corridorWidth)
+                        Random.Range(upSpacePlane.min.z,  upSpacePlane.max.z - corridorWidth)
                     );
+
+                Debug.Log($"holePos Vector {holePosition}");
+                Debug.Log($@"holePos is contained {holePosition}:
+                        contained in upSpace {unboundedContains(upSpacePlane, holePosition)}
+                        contained in downSpace {unboundedContains(downSpacePlane, holePosition)}
+                    ");
+
+
+                if(!(unboundedContains(upSpacePlane, holePosition) && unboundedContains(downSpacePlane, holePosition)))
+                {
+                    Debug.Log($@"
+                        FAILED HOLE:
+                        upSpacePlane {upSpacePlane},
+                        downSpacePlane {downSpacePlane},
+                        Old Upspace Value {intesectionPlane},
+                        holePosition {holePosition}
+                    ");
+                }
+
+                return holePosition;
             }
             else
             {
-                Debug.Log("FAILED TO FIND CONNECTION UP DOWN!!");
-                Debug.Log(upSpacePlane);
-                Debug.Log(downSpacePlane);
-                Debug.Log("-----------------------------------");
+                if (!(upSpacePlane.size.x == downSpacePlane.size.x && upSpacePlane.size.z == downSpacePlane.size.z))
+                {
+                    Debug.Log($@"FAILED TO FIND CONNECTION UP DOWN!!
+                    {upSpacePlane}
+                    {downSpacePlane}
+                    Old Upspace Value {intesectionPlane}
+                    N Intesections {nIntersections}
+                    Corridor Width {corridorWidth}
+                -----------------------------------
+                ");
+                }
+
                 return Vector3Int.one * -1;
             }
 

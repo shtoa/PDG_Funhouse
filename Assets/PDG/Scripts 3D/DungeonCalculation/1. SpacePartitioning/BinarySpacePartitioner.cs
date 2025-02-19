@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using Unity.Mathematics;
 using Random = UnityEngine.Random;
-
+using System;
 
 [assembly: InternalsVisibleTo("EditMode")]
 
@@ -25,8 +25,18 @@ namespace dungeonGenerator
         // Getter - Setters
         public SpaceNode RootNode { get => rootNode; set => rootNode = value; }
 
-
         private int maxFloors = 3;
+
+        /* <summary>
+            Helper Method to perform randomness checks to stop splitting of the space
+        </summary> */
+        internal static bool hasStoppedSplitting(SpaceNode spaceToSplit, int treeLayerIndexThreshold, float stopSpitChance)
+        {
+            //return ((spaceToSplit.TreeLayerIndex > treeLayerIndexThreshold) && (stopSpitChance <= Random.value));
+            return false;
+        }
+
+
 
         /* <summary>
             Instantiate BSP with root node equal to the size of the Dungeon
@@ -56,7 +66,6 @@ namespace dungeonGenerator
 
             int iterations = 0; // initialize n iteration to 0
 
-
             // while the iterations are not exceeded and there are spaces to split, split the spaces
             while (iterations < maxIterations && spacesToSplit.Count > 0)
             {
@@ -65,7 +74,18 @@ namespace dungeonGenerator
 
                 var splitableAxis = GetSplitableAxis(spaceToSplit.Bounds, minSpaceDim);
 
-                if (splitableAxis.x || splitableAxis.z || splitableAxis.y) // only split space if possible to split
+                // Vars to allow the splitting to have chance to stop at a certain depth 
+                // FIX ME: Move to Dungeon Generator 
+
+                float splitStopThreshold = 0.0f;
+                int splitStopDepth = 5;
+                var hasSplitStopped = (splitStopThreshold < Random.value && spaceToSplit.TreeLayerIndex > splitStopDepth);
+
+
+                if (
+                    (splitableAxis.x || splitableAxis.z || splitableAxis.y) 
+                    && !hasStoppedSplitting(spaceToSplit, splitStopDepth, splitStopThreshold)
+                ) // only split space if possible to split
                 {
                     var splitSpaces = SplitSpace(spaceToSplit, minSpaceDim, splitCenterDeviationPercent); // split the space
                     AddSplitSpaces(spacesToSplit, allSpaces, splitSpaces);
@@ -82,14 +102,18 @@ namespace dungeonGenerator
         internal void AddSplitSpaces(Queue<SpaceNode> spacesToSplit, List<SpaceNode> allSpaces, (SpaceNode, SpaceNode) splitSpaces)
         {
             // add split rooms to splitSpaces and spaces to Split
-            if (splitSpaces.Item1 is not null && splitSpaces.Item2 is not null)
+            if (splitSpaces.Item1 is not null)
             {
                 allSpaces.Add(splitSpaces.Item1);
-                allSpaces.Add(splitSpaces.Item2);
-
                 spacesToSplit.Enqueue(splitSpaces.Item1);
-                spacesToSplit.Enqueue(splitSpaces.Item2);
+       
 
+            }
+
+            if(splitSpaces.Item2 is not null)
+            {
+                allSpaces.Add(splitSpaces.Item2);
+                spacesToSplit.Enqueue(splitSpaces.Item2);
             }
         }
 
@@ -237,31 +261,47 @@ namespace dungeonGenerator
         {
             SpaceNode leftNode, rightNode;
 
-            // set left node 
-            leftNode = new SpaceNode(
-                new BoundsInt(spaceToSplit.Bounds.min,
-                new Vector3Int(vSplitPosition, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z)),
-                spaceToSplit,
-                spaceToSplit.TreeLayerIndex + 1,
-                spaceToSplit.FloorIndex
-            );
+            var splitStopThreshold = 0.0f;
+            var splitStopDepth = 3;
 
-            leftNode.SplitPosition = SplitPosition.Left;
+            if (!hasStoppedSplitting(spaceToSplit, splitStopDepth, splitStopThreshold))
+            {
+                // set left node 
+                leftNode = new SpaceNode(
+                    new BoundsInt(spaceToSplit.Bounds.min,
+                    new Vector3Int(vSplitPosition, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z)),
+                    spaceToSplit,
+                    spaceToSplit.TreeLayerIndex + 1,
+                    spaceToSplit.FloorIndex
+                );
 
-            // set right node            
-            rightNode = new SpaceNode(
-                new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(vSplitPosition,0,0),
-                new Vector3Int(spaceToSplit.Bounds.size.x - vSplitPosition, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z)),
-                spaceToSplit,
-                spaceToSplit.TreeLayerIndex + 1,
-                spaceToSplit.FloorIndex
+                leftNode.SplitPosition = SplitPosition.Left;
+            } else
+            {
+                leftNode = null;
+            }
 
-            );
+            if (!hasStoppedSplitting(spaceToSplit, splitStopDepth, splitStopThreshold))
+            {
+                //// set right node            
+                rightNode = new SpaceNode(
+                    new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(vSplitPosition, 0, 0),
+                    new Vector3Int(spaceToSplit.Bounds.size.x - vSplitPosition, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z)),
+                    spaceToSplit,
+                    spaceToSplit.TreeLayerIndex + 1,
+                    spaceToSplit.FloorIndex
 
-            rightNode.SplitPosition = SplitPosition.Right;
-            
-            // return left and right nodes
-            return( leftNode, rightNode );
+                );
+
+                rightNode.SplitPosition = SplitPosition.Right;
+            } else
+            {
+                rightNode = null;
+            }
+
+            //// return left and right nodes
+
+            return ( leftNode, rightNode );
 
         }
 
@@ -273,9 +313,14 @@ namespace dungeonGenerator
         {
             // intialize top and bottom nodes
             SpaceNode topNode, bottomNode;
-        
-            // set bottom node
-            topNode = new SpaceNode(
+
+            var splitStopThreshold = 0.5f;
+            var splitStopDepth = 3;
+
+            if (!hasStoppedSplitting(spaceToSplit, splitStopDepth, splitStopThreshold))
+            {
+                // set bottom node
+                topNode = new SpaceNode(
                 new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(0, 0, hSplitPosition),
                 new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, spaceToSplit.Bounds.size.z - hSplitPosition)),
                 spaceToSplit,
@@ -283,10 +328,16 @@ namespace dungeonGenerator
                 spaceToSplit.FloorIndex
             );
 
-            topNode.SplitPosition = SplitPosition.Top;
+                topNode.SplitPosition = SplitPosition.Top;
+            } else
+            {
+                topNode = null;
+            }
 
-            // set bottom node
-            bottomNode = new SpaceNode(
+            if (!hasStoppedSplitting(spaceToSplit, splitStopDepth, splitStopThreshold)) // dont remove it if the bottom node is the entrance
+            {
+                // set bottom node
+                bottomNode = new SpaceNode(
                 new BoundsInt(spaceToSplit.Bounds.min,
                 new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y, hSplitPosition)),
                 spaceToSplit,
@@ -294,7 +345,11 @@ namespace dungeonGenerator
                 spaceToSplit.FloorIndex
             );
 
-            bottomNode.SplitPosition = SplitPosition.Bottom; // TODO: Decouple this for a more general solution
+                bottomNode.SplitPosition = SplitPosition.Bottom; // TODO: Decouple this for a more general solution
+            } else
+            {
+                bottomNode = null;
+            }
 
 
             // return the results of the split
@@ -311,8 +366,13 @@ namespace dungeonGenerator
             // intialize top and bottom nodes
             SpaceNode upNode, downNode;
 
-            // set bottom node
-            upNode = new SpaceNode(
+            var splitStopThreshold = 0.0f;
+            var splitStopDepth = 3;
+
+            if (!hasStoppedSplitting(spaceToSplit, splitStopDepth, splitStopThreshold))
+            {
+                // set bottom node
+                upNode = new SpaceNode(
                 new BoundsInt(spaceToSplit.Bounds.min + new Vector3Int(0, zSplitPosition, 0),
                 new Vector3Int(spaceToSplit.Bounds.size.x, spaceToSplit.Bounds.size.y - zSplitPosition, spaceToSplit.Bounds.size.z)),
                 spaceToSplit,
@@ -320,10 +380,16 @@ namespace dungeonGenerator
                 spaceToSplit.FloorIndex + 1
             );
 
-            upNode.SplitPosition = SplitPosition.Up;
+                upNode.SplitPosition = SplitPosition.Up;
+            } else
+            {
+                upNode = null;
+            }
 
-            // set bottom node
-            downNode = new SpaceNode(
+            if (!hasStoppedSplitting(spaceToSplit, splitStopDepth, splitStopThreshold))
+            {
+                // set bottom node
+                downNode = new SpaceNode(
                 new BoundsInt(spaceToSplit.Bounds.min,
                 new Vector3Int(spaceToSplit.Bounds.size.x, zSplitPosition, spaceToSplit.Bounds.size.z)),
                 spaceToSplit,
@@ -331,8 +397,11 @@ namespace dungeonGenerator
                 spaceToSplit.FloorIndex
             );
 
-            downNode.SplitPosition = SplitPosition.Down; // TODO: Decouple this for a more general solution
-
+                downNode.SplitPosition = SplitPosition.Down; // TODO: Decouple this for a more general solution
+            } else
+            {
+                downNode = null;
+            }
 
             // return the results of the split
             return (downNode, upNode);

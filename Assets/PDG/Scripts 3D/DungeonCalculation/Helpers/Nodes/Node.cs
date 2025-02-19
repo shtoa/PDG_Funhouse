@@ -134,8 +134,8 @@ namespace dungeonGenerator
 
                     doorPlacement = new DoorPlacement(new BoundsInt(
 
-                            new Vector3Int(corridorBounds.min.x, 0, corridorBounds.min.z + wallThickness),
-                            new Vector3Int(0, 0, corridorBounds.size.z - 2 * wallThickness)
+                            new Vector3Int(corridorBounds.min.x, corridorBounds.min.y, corridorBounds.min.z + wallThickness),
+                            new Vector3Int(1, corridorBounds.size.y, corridorBounds.size.z - 2 * wallThickness)
                         ),
                         SplitPosition.Right
                     );
@@ -144,8 +144,8 @@ namespace dungeonGenerator
 
                 case SplitPosition.Right:
                     doorPlacement = new DoorPlacement(new BoundsInt(
-                            new Vector3Int(corridorBounds.max.x, 0, corridorBounds.min.z + wallThickness),
-                            new Vector3Int(0, 0, corridorBounds.size.z - 2 * wallThickness)
+                            new Vector3Int(corridorBounds.max.x-wallThickness, corridorBounds.min.y, corridorBounds.min.z + wallThickness),
+                            new Vector3Int(1, corridorBounds.size.y, corridorBounds.size.z - 2 * wallThickness)
                         ),
                         SplitPosition.Left
                     );
@@ -155,8 +155,8 @@ namespace dungeonGenerator
                 case SplitPosition.Top:
 
                     doorPlacement = new DoorPlacement(new BoundsInt(
-                            new Vector3Int(corridorBounds.min.x + wallThickness, 0, corridorBounds.max.z),
-                            new Vector3Int(corridorBounds.size.x - 2 * wallThickness, 0, 0)
+                            new Vector3Int(corridorBounds.min.x + wallThickness, corridorBounds.min.y, corridorBounds.max.z-wallThickness),
+                            new Vector3Int(corridorBounds.size.x - 2 * wallThickness, corridorBounds.size.y, 1)
 
                         ),
                         SplitPosition.Bottom
@@ -167,8 +167,8 @@ namespace dungeonGenerator
                 case SplitPosition.Bottom:
 
                     doorPlacement = new DoorPlacement(new BoundsInt(
-                            new Vector3Int(corridorBounds.min.x + wallThickness, 0, corridorBounds.min.z),
-                            new Vector3Int(corridorBounds.size.x - 2 * wallThickness, 0, 0)
+                            new Vector3Int(corridorBounds.min.x + wallThickness, corridorBounds.min.y, corridorBounds.min.z),
+                            new Vector3Int(corridorBounds.size.x - 2 * wallThickness, corridorBounds.size.y, 1)
                       ),
                       SplitPosition.Top
                   );

@@ -11,12 +11,12 @@ using UnityEditorInternal;
 using UnityEngine;
 namespace dungeonGenerator
 {
+
     public class DungeonGenerator : MonoBehaviour
     {
 
         //[HideInInspector]
         public BoundsInt dungeonBounds; // TODO: Find Way to Visualize the bounds inside a mini Window
-
 
         [Header("Dungeon Properties")]
 
@@ -35,6 +35,7 @@ namespace dungeonGenerator
         private int corridorWidthAndWall;
         [Header("Corridor Properties")]
         public int corridorWidth;
+        public int corridorHeight;  
 
         [Header("Wall Properties")]
         public int wallThickness;
@@ -45,7 +46,7 @@ namespace dungeonGenerator
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
-
+        
 
         public List<Node> roomList { get; private set; }
         public GameObject startRoom { get; private set; }
@@ -72,7 +73,14 @@ namespace dungeonGenerator
             DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
             
             // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
-            roomList = calculator.CalculateDungeon(maxIterations, roomBoundsMin, splitCenterDeviation, corridorWidthAndWall, wallThickness, roomOffsetMin);
+            roomList = calculator.CalculateDungeon(maxIterations, roomBoundsMin, splitCenterDeviation, corridorWidthAndWall, wallThickness, roomOffsetMin, corridorHeight);
+
+            if(roomList.Count == 0)
+            {
+                this.RegenerateDungeon();
+                return;
+            }
+
 
             InitializeStartAndEnd(calculator.RoomSpaces);
 

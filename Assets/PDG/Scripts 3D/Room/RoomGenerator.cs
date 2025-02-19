@@ -7,6 +7,7 @@ using static dungeonGenerator.RoomGenerator;
 using static UnityEngine.UI.CanvasScaler;
 using Random = UnityEngine.Random;
 
+
 namespace dungeonGenerator
 {
 
@@ -127,6 +128,9 @@ namespace dungeonGenerator
                 }
             }
 
+
+            int maxFloorIndex = roomList.Max((room) => room.FloorIndex).Yield().First();
+
             // create floors
             foreach (var room in roomList)
             {
@@ -134,11 +138,11 @@ namespace dungeonGenerator
                 RoomStyle roomStyle = dungeonDecorator.roomStyles[Random.Range(0, dungeonDecorator.roomStyles.Count)];
                 GameObject roomObj = new GameObject(roomStyle.name);
 
-                
-               
+
+
                 roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false);
 
-           
+
 
                 if (!room.CorridorType.Equals(CorridorType.Perpendicular))
                 {
@@ -148,17 +152,222 @@ namespace dungeonGenerator
 
                 if (room.RoomType.Equals(RoomType.Corridor))
                 {
+
+                   
                 }
-                    DrawWalls(room, roomStyle, roomObj);
-               
-                //DrawWalls(room, roomStyle, roomObj);
+                DrawWalls(room, roomStyle, roomObj);
 
-                //if (!room.CorridorType.Equals(CorridorType.Perpendicular))
-                //{
-                //}
 
-                //DrawWallsTest(room, roomStyle);
-            
+                //room.HolePlacements.Where(holePlacement => holePlacement.PositionType == SplitPosition.Up).Count() == 0
+
+                //    && room.HolePlacements.Where(holePlacement => holePlacement.PositionType == SplitPosition.Down).Count() > 0 ||
+                //    room.FloorIndex == maxFloorIndex ||
+
+
+                //roomList.All(otherRoom => Mathf.Abs(Vector3.Dot(Vector3.Normalize(otherRoom.Bounds.position-room.Bounds.position), Vector3.up)) < 0.7f))
+
+                if (
+
+
+                     room.RoomType != RoomType.Corridor &&
+                     room.FloorIndex == maxFloorIndex
+
+                    // exepensive check
+
+
+                    )
+
+                {
+                    if (room.Parent.SplitPosition != SplitPosition.Down
+                        && room.HolePlacements.Where(holePlacement => holePlacement.PositionType == SplitPosition.Up).Count() == 0
+
+                    )
+                    {
+                        roomObj.name = roomObj.name + "willHaveRoof";
+
+                        GameObject roofObj = GameObject.Instantiate(dungeonDecorator.roofObject, roomObj.transform, false);
+                        roofObj.transform.localPosition = room.Bounds.center + room.Bounds.size.y * Vector3.up * 0.5f + new Vector3(1, 0, 1);
+
+
+
+                        var roofHeight = (Random.value + 1) * room.Bounds.size.y;
+
+                        roofObj.transform.localScale = new Vector3(room.Bounds.size.x, roofHeight, room.Bounds.size.z) * 0.5f;
+                    }
+                }
+
+                // add corner blocks 
+                if (!room.RoomType.Equals(RoomType.Corridor))
+                {
+
+                    GameObject cornerObj = GameObject.Instantiate(dungeonDecorator.cornerObject, roomObj.transform, false);
+                    //cornerObj.AddComponent<MeshRenderer>();
+                    cornerObj.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+                    cornerObj.transform.localScale = new Vector3(
+                                cornerObj.transform.localScale.x,
+                                cornerObj.transform.localScale.y,
+                                cornerObj.transform.localScale.z * room.Bounds.size.y
+
+                        );
+
+                    // topLeftCorner
+                    GameObject topLeftCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                    topLeftCorner.transform.localEulerAngles = new Vector3(90, 180, 0);
+                    topLeftCorner.transform.localPosition = room.Bounds.size.z * Vector3.forward + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+
+                    // topRightCorner
+                    GameObject topRightCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                    topRightCorner.transform.localEulerAngles = new Vector3(90, -90, 0);
+                    topRightCorner.transform.localPosition = room.Bounds.size.z * Vector3.forward + room.Bounds.size.x * Vector3.right + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+
+                    // bottomLeftCorner
+                    GameObject bottomLeftCornerObj = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                    bottomLeftCornerObj.transform.localEulerAngles = new Vector3(90, 90, 0);
+                    bottomLeftCornerObj.transform.localPosition = room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+                    // bottomRightCorner
+                    GameObject bottomRightCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                    bottomRightCorner.transform.localEulerAngles = new Vector3(90, 0, 0);
+                    bottomRightCorner.transform.localPosition = room.Bounds.size.x * Vector3.right + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+                    GameObject.DestroyImmediate(cornerObj);
+
+
+                    // generate top wall 
+
+
+                    // construct bounds for top wall 
+
+                    BoundsInt topWallBounds = new BoundsInt(
+                        room.Bounds.position + room.Bounds.size.y * Vector3Int.up - new Vector3Int(1, 0, 1),
+                        new Vector3Int(room.Bounds.size.x + 4, 0, room.Bounds.size.z + 4)
+                    );
+
+                    //GameObject topWallPlane = MeshHelper.CreatePlane(topWallBounds.size, 1, false);
+
+                    // handle top part
+
+                    if(topWallBounds.size.x % 2 == 0)
+                    {
+                        // if is even 
+                        var nSegments = topWallBounds.size.x;
+
+                        for (int i = 1; i < (nSegments-1); i++)
+                        {
+
+                            if (i % 2 == 0)
+                            {
+                                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube.transform.localPosition = topWallBounds.position + i * Vector3Int.right + Vector3Int.forward; // CHECK ME: May be wrong
+                                cube.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+                                cube.transform.SetParent(roomObj.transform, false);
+
+                                GameObject cube2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube2.transform.localPosition = topWallBounds.size.z * Vector3Int.forward + topWallBounds.position + i * Vector3Int.right - Vector3Int.forward; // CHECK ME: May be wrong
+                                cube2.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+                                cube2.transform.SetParent(roomObj.transform, false);
+                            }
+                        }
+                        // add corner segments
+
+
+
+                    } else
+                    {
+                        // if is odd
+                        // if is even 
+                        var nSegments = topWallBounds.size.x;
+
+                        for (int i = 1; i < (nSegments - 1); i++)
+                        {
+
+                            if (i % 2 == 0)
+                            {
+                                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube.transform.localPosition = topWallBounds.position + i * Vector3Int.right + Vector3Int.forward; // CHECK ME: May be wrong
+                                //cube.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.ceiling;
+                                cube.transform.SetParent(roomObj.transform, false);
+
+                                GameObject cube2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube2.transform.localPosition = topWallBounds.size.z * Vector3Int.forward + topWallBounds.position + i * Vector3Int.right - Vector3Int.forward; // CHECK ME: May be wrong
+                                //cube2.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.ceiling;
+                                cube2.transform.SetParent(roomObj.transform, false);
+                            }
+                        }
+
+                    }
+
+
+                    // handle side part
+                    if (topWallBounds.size.z % 2 == 0)
+                    {
+                        // if is even 
+                        var nSegments = topWallBounds.size.z;
+
+                        for (int i = 1; i < (nSegments - 1); i++)
+                        {
+
+                            if (i % 2 == 0)
+                            {
+                                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube.transform.localPosition = topWallBounds.position + i * Vector3Int.forward + Vector3Int.right; // CHECK ME: May be wrong
+                                cube.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+                                cube.transform.SetParent(roomObj.transform, false);
+
+                                GameObject cube2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube2.transform.localPosition = topWallBounds.size.x * Vector3Int.right + topWallBounds.position + i * Vector3Int.forward - Vector3Int.right; // CHECK ME: May be wrong
+                                cube2.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+                                cube2.transform.SetParent(roomObj.transform, false);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // if is odd
+                        // if is even 
+                        var nSegments = topWallBounds.size.z;
+
+                        for (int i = 1; i < (nSegments - 1); i++)
+                        {
+
+                            if (i % 2 == 0)
+                            {
+                                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube.transform.localPosition = topWallBounds.position + (i+0.5f) * Vector3.forward + Vector3.right; // CHECK ME: May be wrong
+                                //cube.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.ceiling;
+                                cube.transform.SetParent(roomObj.transform, false);
+
+                                GameObject cube2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube2.transform.localPosition = topWallBounds.size.x * Vector3.right + topWallBounds.position + (i+0.5f) * Vector3.forward - Vector3.right; // CHECK ME: May be wrong
+                                //cube2.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.ceiling;
+                                cube2.transform.SetParent(roomObj.transform, false);
+                            }
+                        }
+                    }
+
+
+
+
+                    #region Debugging TopWall Placement
+                    //topWallPlane.transform.localPosition = topWallBounds.center; // CHECK ME: May be wrong
+                    //topWallPlane.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+                    //topWallPlane.transform.SetParent(roomObj.transform, false);
+                    #endregion
+
+
+
+                }
+
+
+
+
+
+
+
+
+
             }
 
             //foreach (var wallBound in wallCalculator.WallBounds)
@@ -332,7 +541,7 @@ namespace dungeonGenerator
             floor.transform.SetParent(roomObj.transform, false);
 
             // FIX ME: CHECK THIS TRANSFORMATION
-            floor.transform.localPosition = (room.Bounds.center - new Vector3(0,room.Bounds.size.y / 2f,0)) + new Vector3(1, 0, 1) * wallThickness ; // CHECK ME: May be wrong
+            floor.transform.localPosition = (room.Bounds.center - new Vector3(0,room.Bounds.size.y / 2f,0)) + new Vector3(1, 0, 1) * wallThickness + Vector3.up * 0.001f; ; // CHECK ME: May be wrong
             floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
 
         
@@ -408,7 +617,7 @@ namespace dungeonGenerator
 
             ceiling.transform.SetParent(roomObj.transform, false);
 
-            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * room.Bounds.size.y/2 + new Vector3(1, 0, 1) * wallThickness; // should be 0.25f
+            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * room.Bounds.size.y/2 + new Vector3(1, 0, 1) * wallThickness - Vector3.up*0.001f; // added Z offset
 
             ceiling.GetComponent<MeshRenderer>().material = ceilingMaterial;
 

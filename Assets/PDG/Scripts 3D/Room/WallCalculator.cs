@@ -1,8 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
+using UnityEngine.Experimental.AI;
 using UnityEngine.UIElements;
+using static UnityEditor.PlayerSettings;
 
 namespace dungeonGenerator
 {
@@ -22,6 +26,12 @@ namespace dungeonGenerator
             dungeonGenerator = _dungeonGenerator;
         }
 
+        public List<BoundsInt> GetAvailablePositions(HashSet<Vector3Int> curAvailablePositions, HashSet<Vector3Int> removePositions)
+        {
+
+
+            return new List<BoundsInt>();
+        }
 
         public WallBounds CalculateWalls(Node room, int wallThickness)
         {
@@ -29,58 +39,408 @@ namespace dungeonGenerator
             WallBounds curRoomWallBounds = CalculateWallBounds(wallThickness, room);
             bool isIntersected = false;
 
+            #region
 
-            foreach (var placement in room.DoorPlacements)
+            //// voxel based approach
+            List<BoundsInt> blockBounds = new List<BoundsInt>();
+            //HashSet<Vector3Int> availablePositions = new HashSet<Vector3Int>();
+
+            //HashSet<Vector3Int> doorPositions = new HashSet<Vector3Int>();
+
+            //foreach(var doorPlacement in room.DoorPlacements){
+            //    Debug.Log($"nDoor placements {room.DoorPlacements.Count()}");
+            //    foreach (var pos in doorPlacement.DoorBounds.allPositionsWithin)
+            //    {
+            //        doorPositions.Add(pos);
+            //    }
+            //}
+            //Debug.Log($"Door Position Length {doorPositions.Count()}");
+
+
+            //HashSet<Vector3Int> availableTopPositions = new HashSet<Vector3Int>();
+            //HashSet<Vector3Int> availableBottomPositions = new HashSet<Vector3Int>();
+            //HashSet<Vector3Int> availableLeftPositions = new HashSet<Vector3Int>();
+            //HashSet<Vector3Int> availableRightPositions = new HashSet<Vector3Int>();
+
+            //// Top
+
+            //foreach (var wall in curRoomWallBounds.top)
+            //{
+            //    foreach (var pos in wall.allPositionsWithin)
+            //    {
+            //        availableTopPositions.Add(pos);
+            //        Debug.Log($"Avail Position {pos}");
+            //    }
+            //}
+
+            //availableTopPositions.ExceptWith(doorPositions);
+
+            //foreach (var availablePos in availableTopPositions) {
+            //    blockBounds.Add(new BoundsInt(
+            //        availablePos,
+            //        new Vector3Int(1, 1, 1)
+
+            //    ));
+            //}
+
+            //curRoomWallBounds.top = new List<BoundsInt>(blockBounds); // room.DoorPlacements.Select(doorPlacement=> doorPlacement.DoorBounds).ToList();
+            //blockBounds.Clear();
+
+            //// Bottom
+            //foreach (var wall in curRoomWallBounds.bottom)
+            //{
+
+
+            //    foreach (var pos in wall.allPositionsWithin)
+            //    {
+
+
+            //        availableBottomPositions.Add(pos);
+            //        Debug.Log($"Avail Position {pos}");
+
+            //    }
+            //}
+
+            //availableBottomPositions.ExceptWith(doorPositions);
+
+            //foreach (var availablePos in availableBottomPositions)
+            //{
+            //    if (!(availablePos.x % 2 == 0 && availablePos.y > 2 && availablePos.y < 5))
+            //    {
+            //        blockBounds.Add(new BoundsInt(
+            //        availablePos,
+            //        new Vector3Int(1, 1, 1)
+
+            //        ));
+            //    }
+            //}
+
+            //curRoomWallBounds.bottom = new List<BoundsInt>(blockBounds); // room.DoorPlacements.Select(doorPlacement=> doorPlacement.DoorBounds).ToList();
+            //blockBounds.Clear();
+
+            // Left 
+
+            
+            int[,] leftWallBlocks = new int[curRoomWallBounds.left.ElementAt(0).size.z+1, curRoomWallBounds.left.ElementAt(0).size.y+1];
+
+            // intialize block
+            for(int x = 0; x < leftWallBlocks.GetLength(0); x++)
             {
-
-                //Debug.Log(placement.PositionType);
-
-                List<BoundsInt> splitWalls = new List<BoundsInt>();
-
-                switch (placement.PositionType)
+                for(int y = 0; y < leftWallBlocks.GetLength(1); y++)
                 {
-                    case SplitPosition.Left:
 
-                        if (room.RoomType != RoomType.Corridor)
+                    if (room.RoomType != RoomType.Corridor)
+                    {
+                        if (!(x % 2 == 0 && (y==1 || y == (leftWallBlocks.GetLength(1)-2))))
                         {
-                            splitWalls = splitWall(placement.DoorBounds, curRoomWallBounds.left[0], SplitPosition.Left);
+                            leftWallBlocks[x, y] = 1;
                         }
-                        curRoomWallBounds.left = splitWalls;
-
-                        break;
-
-                    case SplitPosition.Right:
-
-                        if (room.RoomType != RoomType.Corridor)
+                        else
                         {
-                            splitWalls = splitWall(placement.DoorBounds, curRoomWallBounds.right[0], SplitPosition.Right);
+                            leftWallBlocks[x, y] = 0;
                         }
-
-                        curRoomWallBounds.right = splitWalls;
-                        break;
-
-                    case SplitPosition.Top:
-
-                        if (room.RoomType != RoomType.Corridor)
-                        {
-                            splitWalls = splitWall(placement.DoorBounds, curRoomWallBounds.top[0], SplitPosition.Top);
-                        }
-                        curRoomWallBounds.top = splitWalls;
-                        break;
-
-                    case SplitPosition.Bottom:
-
-                        if (room.RoomType != RoomType.Corridor)
-                        {
-                            splitWalls = splitWall(placement.DoorBounds, curRoomWallBounds.bottom[0], SplitPosition.Bottom);
-                        }
-                        curRoomWallBounds.bottom = splitWalls;
-                        break;
-
+                    } else
+                    {
+                        leftWallBlocks[x, y] = 1;
+                    }
 
                 }
             }
 
+            if (leftWallBlocks.Length > 0)
+            {
+                for (int x = 0; x < leftWallBlocks.GetLength(0); x++)
+                {
+                    for (int y = 0; y < leftWallBlocks.GetLength(1)-1; y++)
+                    {
+
+                        Debug.Log($@"x: {leftWallBlocks.GetLength(0)}, y: {leftWallBlocks.GetLength(1)},
+                            nBlocks:{leftWallBlocks.Length}
+                        ");
+
+                        if (leftWallBlocks[x, y] == 1)
+                        {
+                            var isChunkFound = false;
+
+                            var width = 0;
+                            var height = 0;
+
+                            var widthMax = int.MaxValue;
+                            var heightMax = 0;
+
+                            Debug.Log($"x: {x}, y: {y}");
+
+                            while (!isChunkFound)
+                            {
+
+                                // Debug.Log($"chunk width: {x + width - 1}, height: {y + height - 1}");
+
+                                if (leftWallBlocks[x + width, y + height] == 1 && width < widthMax)
+                                {
+                                    leftWallBlocks[x + width, y + height] = 0;
+
+
+                                    if ((x + width + 1) < leftWallBlocks.GetLength(0))
+                                    {
+                                        width++;
+                                    } else
+                                    {
+                                        widthMax = width;
+                                    }
+
+                                }
+                                else if (leftWallBlocks[x, y + height + 1] == 1 && y+height+2 < leftWallBlocks.GetLength(1))
+                                {
+
+                                    //leftWallBlocks[x, y + height + 1] = 0;
+                                    widthMax = width;
+
+                                    width = 0;
+
+                                    height++;
+
+                                }
+                                else
+                                {
+                                    Debug.Log($"CHUNK FOUND");
+                                    isChunkFound = true;
+                                    heightMax = height+1;
+
+                                    widthMax = (widthMax == int.MaxValue) ? 1 : widthMax;
+
+                                    var chunk = new BoundsInt(
+                                        curRoomWallBounds.left.ElementAt(0).position + new Vector3Int(0, y, x),
+                                        new Vector3Int(1, heightMax, widthMax));
+                                    blockBounds.Add(chunk);
+
+                                    break;
+
+
+                                }
+
+
+
+                            }
+
+
+                        }
+
+
+
+                    }
+                }
+            }
+
+            
+
+            #region block Test
+            //var nIterations2 = 0;
+
+            //while (availableLeftPositions.Count > 0 && nIterations2 < 200)
+
+
+            //{
+
+            //    int curWidth = 0;
+            //    int widthMax = int.MaxValue;
+            //    int curHeight = 0;
+            //    int heightMax = 0;
+
+            //    var nIterations = 0;
+
+            //    bool isPosFound = false;
+
+            //    if (availableLeftPositions.ToList().Count() > 0)
+            //    {
+
+            //    //var startLinePos = availableLeftPositions.ToList()[0];
+
+            //    int minPosSum = availableLeftPositions.ToList().Min(availablePos => (availablePos.z + availablePos.y));
+            //    var startPos = availableLeftPositions.Where(availablePos => (availablePos.z + availablePos.y) == minPosSum).ElementAt(0);
+            //    var curPos = availableLeftPositions.Where(availablePos => (availablePos.z + availablePos.y) == minPosSum).ElementAt(0);
+            //        //Debug.Log($"nAv positions left {availableLeftPositions.ToList().Count()}");
+
+            //        nIterations2++;
+
+            //        while (nIterations < 100 && !isPosFound)
+            //        {
+            //            if (availableLeftPositions.Contains(curPos + Vector3Int.forward) && curWidth < widthMax)
+            //            {
+            //                curWidth++;
+            //                curPos = curPos + Vector3Int.forward;
+
+            //            }
+            //            else if (availableLeftPositions.Contains(startPos + Vector3Int.up + curHeight * Vector3Int.up) && 0 <= curWidth)
+            //            {
+            //                curHeight++;
+            //                curPos = startPos + Vector3Int.up + curHeight * Vector3Int.up;
+
+            //                widthMax = curWidth;
+            //                curWidth = 0;
+
+            //            }
+            //            else if (widthMax >= 0 && curHeight >= 0)
+            //            {
+            //                heightMax = curHeight;
+            //                Debug.Log($"MaxPos found height{heightMax} width {widthMax}");
+
+            //                var chunk = new BoundsInt(startPos, new Vector3Int(1, heightMax+1, widthMax+1));
+            //                blockBounds.Add(chunk);
+
+            //                foreach (var pos in chunk.allPositionsWithin)
+            //                {
+            //                    if (availableLeftPositions.Contains(pos))
+            //                    {
+            //                        availableLeftPositions.Remove(pos);
+            //                    }
+            //                }
+            //                isPosFound = true;
+
+
+
+            //            }
+
+            //            nIterations++;
+
+            //        }
+
+
+            //    }
+            //}
+            #endregion
+
+
+
+            curRoomWallBounds.left = new List<BoundsInt>(blockBounds); // room.DoorPlacements.Select(doorPlacement=> doorPlacement.DoorBounds).ToList();
+            blockBounds.Clear();
+
+            //// Right 
+            //foreach (var wall in curRoomWallBounds.right)
+            //{
+            //    foreach (var pos in wall.allPositionsWithin)
+            //    {
+            //        availableRightPositions.Add(pos);
+            //        Debug.Log($"Avail Position {pos}");
+            //    }
+            //}
+
+            //availableRightPositions.ExceptWith(doorPositions);
+
+            //foreach (var availablePos in availableRightPositions)
+            //{
+            //    blockBounds.Add(new BoundsInt(
+            //        availablePos,
+            //        new Vector3Int(1, 1, 1)
+
+            //    ));
+            //}
+
+            //curRoomWallBounds.right = blockBounds; // room.DoorPlacements.Select(doorPlacement=> doorPlacement.DoorBounds).ToList();
+
+            ////curRoomWallBounds.left = room.DoorPlacements.Select(doorPlacement => doorPlacement.DoorBounds).ToList();
+
+
+            #endregion
+
+
+            #region Block Debugging
+            //HashSet<Vector3Int> preAvailablePositions = new HashSet<Vector3Int>(availablePositions);
+            //Debug.Log(@$"Are av the same: {availablePositions.Count() == preAvailablePositions.Count()}
+
+            // ");
+            //preAvailablePositions.ExceptWith(availablePositions);
+            //Debug.Log(@$"PreAv Difference {preAvailablePositions.Count()}
+            // ");
+
+
+            //Vector3Int missedPos = new Vector3Int(0, 0, 0);
+
+
+            //Debug.Log(@$"Is Poss Not Missed:
+            //                {availablePositions.Contains(missedPos)}
+            //                {missedPos}
+
+            //            ");
+            #endregion
+
+
+            //foreach (var placement in room.DoorPlacements)
+            //{
+
+            //    //Debug.Log(placement.PositionType);
+
+            //    List<BoundsInt> splitWalls = new List<BoundsInt>();
+
+            //    switch (placement.PositionType)
+            //    {
+            //        case SplitPosition.Left:
+
+            //            if (room.RoomType != RoomType.Corridor)
+            //            {
+            //                splitWalls = splitWall(placement.DoorBounds, curRoomWallBounds.left[0], SplitPosition.Left);
+            //            }
+            //            curRoomWallBounds.left = splitWalls;
+
+            //            break;
+
+            //        case SplitPosition.Right:
+
+            //            if (room.RoomType != RoomType.Corridor)
+            //            {
+            //                splitWalls = splitWall(placement.DoorBounds, curRoomWallBounds.right[0], SplitPosition.Right);
+            //            }
+
+            //            curRoomWallBounds.right = splitWalls;
+            //            break;
+
+            //        case SplitPosition.Top:
+
+            //            if (room.RoomType != RoomType.Corridor)
+            //            {
+            //                splitWalls = splitWall(placement.DoorBounds, curRoomWallBounds.top[0], SplitPosition.Top);
+            //            }
+            //            curRoomWallBounds.top = splitWalls;
+            //            break;
+
+            //        case SplitPosition.Bottom:
+
+            //            if (room.RoomType != RoomType.Corridor)
+            //            {
+            //                splitWalls = splitWall(placement.DoorBounds, curRoomWallBounds.bottom[0], SplitPosition.Bottom);
+            //            }
+            //            curRoomWallBounds.bottom = splitWalls;
+            //            break;
+
+
+            //    }
+            //}
+
+
+            //// testing window positioning
+
+            //if (room.RoomType != RoomType.Corridor)
+            //{
+
+            //    var wallLength = curRoomWallBounds.left[0].size.z;
+
+
+
+            //    var wallsLeft = splitWall(new BoundsInt(Vector3Int.FloorToInt(curRoomWallBounds.left[0].center) - Vector3Int.one, Vector3Int.one * 2), curRoomWallBounds.left[0], SplitPosition.Left);
+            //    curRoomWallBounds.left.RemoveAt(0);
+            //    curRoomWallBounds.left.AddRange(wallsLeft);
+
+            //    var wallRight = splitWall(new BoundsInt(Vector3Int.FloorToInt(curRoomWallBounds.right[0].center) - Vector3Int.one, Vector3Int.one * 2), curRoomWallBounds.right[0], SplitPosition.Right);
+            //    curRoomWallBounds.right.RemoveAt(0);
+            //    curRoomWallBounds.right.AddRange(wallRight);
+
+            //    var wallsTop = splitWall(new BoundsInt(Vector3Int.FloorToInt(curRoomWallBounds.top[0].center) - Vector3Int.one, Vector3Int.one * 2), curRoomWallBounds.top[0], SplitPosition.Top);
+            //    curRoomWallBounds.top.RemoveAt(0);
+            //    curRoomWallBounds.top.AddRange(wallsTop);
+
+            //    var wallsBottom = splitWall(new BoundsInt(Vector3Int.FloorToInt(curRoomWallBounds.bottom[0].center) - Vector3Int.one, Vector3Int.one * 2), curRoomWallBounds.bottom[0], SplitPosition.Bottom);
+            //    curRoomWallBounds.bottom.RemoveAt(0);
+            //    curRoomWallBounds.bottom.AddRange(wallsBottom);
+            //}
 
             return curRoomWallBounds;
 
@@ -132,8 +492,6 @@ namespace dungeonGenerator
         {
             List<BoundsInt> splitWalls = new List<BoundsInt>();
 
-            var doorSize = 2; // FIX ME: move into dungeon generator
-
             // vertical case
             if (splitDir == SplitPosition.Top || splitDir == SplitPosition.Bottom)
             {
@@ -166,15 +524,30 @@ namespace dungeonGenerator
                 splitWalls.Add(new BoundsInt(
                     new Vector3Int(
                         door.min.x,
-                        wall.min.y+doorSize,
+                        door.min.y + door.size.y,
                         wall.min.z
                     ),
                     new Vector3Int(
                         door.size.x,
-                        wall.size.y-doorSize,
+                        (wall.max.y - door.min.y) - door.size.y,
                         dungeonGenerator.wallThickness
                     )
                 ));
+
+                // add bottom segment if it exists 
+                splitWalls.Add(new BoundsInt(
+                  new Vector3Int(
+                        door.min.x,
+                        wall.min.y,
+                        wall.min.z
+                  ),
+                  new Vector3Int(
+                        door.size.x,
+                        (door.min.y) - wall.min.y,
+                        dungeonGenerator.wallThickness
+
+                  )
+                  ));
 
             }
 
@@ -210,19 +583,35 @@ namespace dungeonGenerator
                 splitWalls.Add(new BoundsInt(
                     new Vector3Int(
                         wall.min.x,
-                        wall.min.y + doorSize,
+                        door.min.y + door.size.y,
                         door.min.z
                     ),
                     new Vector3Int(
                         dungeonGenerator.wallThickness,
-                        wall.size.y - doorSize,
+                        (wall.max.y-door.min.y) - door.size.y,
                         door.size.z
                         
                     )
                 ));
 
+                // add bottom segment if it exists 
+                splitWalls.Add(new BoundsInt(
+                  new Vector3Int(
+                      wall.min.x,
+                      wall.min.y,
+                      door.min.z
+                  ),
+                  new Vector3Int(
+                      dungeonGenerator.wallThickness,
+                      (door.min.y) - wall.min.y,
+                      door.size.z
+
+                  )
+              ));
+
             }
 
+            
 
             return splitWalls;
         }
@@ -301,7 +690,7 @@ namespace dungeonGenerator
 
                 BoundsInt door1 = new BoundsInt(
                        new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f - dungeonGenerator.corridorWidth / 2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f) - dungeonGenerator.wallThickness),
-                       new Vector3Int(dungeonGenerator.corridorWidth, (int)bounds.size.y, dungeonGenerator.wallThickness) //  - dungeonGenerator.wallThickness*2
+                       new Vector3Int(dungeonGenerator.corridorWidth, dungeonGenerator.corridorHeight, dungeonGenerator.wallThickness) //  - dungeonGenerator.wallThickness*2
                     );
 
                 var splitWalls = splitWall(door1, wall1, SplitPosition.Top);

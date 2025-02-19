@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using UnityEngine.UIElements;
+using Codice.CM.SEIDInfo;
 
-namespace dungeonGenerator {
+namespace dungeonGenerator
+{
     public class DungeonCalculator
     {
         // Dungeon Properties 
         private int dungeonWidth;
         private int dungeonLength;
         private int dungeonHeight;
-        public List<Node> RoomSpaces { get => roomSpaces;}
+        public List<Node> RoomSpaces { get => roomSpaces; }
 
         private List<Node> roomSpaces;
         public DungeonCalculator(BoundsInt dungeonDimensions)
@@ -21,7 +23,8 @@ namespace dungeonGenerator {
             this.dungeonWidth = dungeonDimensions.size.x;
             this.dungeonHeight = dungeonDimensions.size.y;
             this.dungeonLength = dungeonDimensions.size.z;
-
+            
+            
             Debug.Log($"Dungeon Height: {dungeonHeight}");
         }
 
@@ -32,7 +35,7 @@ namespace dungeonGenerator {
         
         </summary>*/
 
-        public List<Node> CalculateDungeon(int maxIterations, BoundsInt roomBoundsMin, Vector3 splitCenterDeviationPercent, int corridorWidth, int wallThickness, Vector3Int roomOffset)
+        public List<Node> CalculateDungeon(int maxIterations, BoundsInt roomBoundsMin, Vector3 splitCenterDeviationPercent, int corridorWidth, int wallThickness, Vector3Int roomOffset, int corridorHeight)
         {
             // Calculate the Dungeon Floor Bounds:
 
@@ -44,49 +47,50 @@ namespace dungeonGenerator {
             #region 1. Space Partitioning
 
             // 1.1 Generate BSP graph based on minRoomWidth, minRoomLength and maxIterations
-                BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength, dungeonHeight); // initialize BSP class
+            BinarySpacePartitioner bsp = new BinarySpacePartitioner(dungeonWidth, dungeonLength, dungeonHeight); // initialize BSP class
 
-                // Vector of Minimum Space need to accomodate given Room Size
-                 
-                // TODO: Add check if this value is impossible
-                var minSpaceDim = new Vector3Int(
-                    roomWidthMin + roomOffset.x + wallThickness*2,
-                    roomLengthMin + roomOffset.y + wallThickness*2,
-                    roomHeightMin + roomOffset.z
-          
-                );
+            // Vector of Minimum Space need to accomodate given Room Size
 
-                var allNodeSpaces = bsp.PartitionSpace(maxIterations, minSpaceDim, splitCenterDeviationPercent);  // include roomOffset and wallThickness to have correct placement
+            // TODO: Add check if this value is impossible
+            var minSpaceDim = new Vector3Int(
+                roomWidthMin + roomOffset.x + wallThickness * 2,
+                roomLengthMin + roomOffset.y + wallThickness * 2,
+                roomHeightMin + roomOffset.z
 
-                // 1.2 Extract the leaves, which represent the possible room positions (BSP Step May lead to bsp overrliance)
-                var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
-                this.roomSpaces = roomSpaces;
+            );
+
+            var allNodeSpaces = bsp.PartitionSpace(maxIterations, minSpaceDim, splitCenterDeviationPercent);  // include roomOffset and wallThickness to have correct placement
+
+
+            // 1.2 Extract the leaves, which represent the possible room positions (BSP Step May lead to bsp overrliance)
+            var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
+            this.roomSpaces = roomSpaces;
 
 
             #endregion
 
             #region 2. Room Placement
 
-                // TODO: Make this be passed into the generator
-                var minRoomDim = new Vector3Int(
-                    roomWidthMin,
-                    roomLengthMin,
-                    roomHeightMin
-                );
+            // TODO: Make this be passed into the generator
+            var minRoomDim = new Vector3Int(
+                roomWidthMin,
+                roomLengthMin,
+                roomHeightMin
+            );
 
-                // FIXME: Check if this value is correct
-                var totalRoomOffset = roomOffset + new Vector3Int(1,1,0) * wallThickness * 2;
-            
-                // 2.1 Place rooms within the possible room bounds taking into account room offset
-                RoomCalculator roomGenerator = new RoomCalculator(minRoomDim, totalRoomOffset, corridorWidth); // FIXME: Make more general remove corriodr width dependency
-                var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
+            // FIXME: Check if this value is correct
+            var totalRoomOffset = roomOffset + new Vector3Int(1, 1, 0) * wallThickness * 2;
+
+            // 2.1 Place rooms within the possible room bounds taking into account room offset
+            RoomCalculator roomGenerator = new RoomCalculator(minRoomDim, totalRoomOffset, corridorWidth); // FIXME: Make more general remove corriodr width dependency
+            var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
 
             #endregion
 
             #region 3. Generate Corridors
 
             CorridorGenerator corridorGenerator = new CorridorGenerator();
-            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim);
+            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim, corridorHeight);
 
             #endregion
 

@@ -10,7 +10,7 @@ namespace dungeonGenerator
 
     public class GraphHelper
     {
-     
+        
         // genaralize this function for bsp and connections
         static public List<Node> GetLeaves(Node parentNode, bool isBSP = true)
         {
