@@ -39,5 +39,8 @@ public class DungeonDecorator : MonoBehaviour
     [Header("CornerBlock")]
     public GameObject cornerObject;
 
+    [Header("WindowMesh")]
+    public GameObject windowMesh;
+
 
 }

@@ -433,7 +433,7 @@ namespace dungeonGenerator
         public void DrawWalls(Node room, RoomStyle roomStyle, GameObject roomObj)
         {
 
-            WallCalculator wallCalculator = new WallCalculator(dungeonGenerator);
+            WallCalculator wallCalculator = new WallCalculator(dungeonGenerator, dungeonDecorator);
             WallBounds wallBounds = wallCalculator.CalculateWalls(room, wallThickness);
             GameObject wallHolder = new GameObject("wallHolder");
             wallHolder.transform.SetParent(roomObj.transform, false);

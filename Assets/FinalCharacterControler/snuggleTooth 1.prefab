@@ -3475,6 +3475,7 @@ MonoBehaviour:
   _groundLayers:
     serializedVersion: 2
     m_Bits: 1
+  isClimbing: 0
 --- !u!114 &8381915151843297821
 MonoBehaviour:
   m_ObjectHideFlags: 0
