@@ -72,7 +72,53 @@ namespace dungeonGenerator
             wallArray[xLoc] = (UInt32)(wallArray[xLoc] & ~(1 << yLoc));
             //return wallArray;
         }
-        public WallBounds CalculateWalls(Node room, int wallThickness)
+
+        public void addWindows(UInt32[] wallArray, BoundsInt wallBounds, bool isTopBottom) // FIXME add a global and local wallbounds
+        {
+            Debug.Log($"Byte Array: {getWallIntArray(wallBounds.size.z + 1, wallBounds.size.y + 1)[0]}");
+
+            for (int x = 1; x < wallArray.Length - 2; x++)
+            {
+                if (x % 2 == 0)
+                {
+                    for (int y = 3; y < 3 + 3; y++)
+                    {
+                        removeBlock(wallArray, x, y);
+                    }
+
+                    GameObject window = GameObject.Instantiate(dungeonDecorator.windowMesh, dungeonGenerator.gameObject.transform);
+
+
+                    if (isTopBottom)
+                    {
+                        window.transform.Rotate(0, 90, 0);
+                        window.transform.position = new Vector3(x, 3, 0) + wallBounds.position + dungeonGenerator.transform.position + new Vector3(1.5f, 0, 1.5f);
+                    } else
+                    {
+                        window.transform.position = new Vector3(0, 3, x) + wallBounds.position + dungeonGenerator.transform.position + new Vector3(1.5f, 0, 1.5f);
+
+                    }
+                }
+            }
+
+        }
+
+        public void addDoor(UInt32[] wallArray, BoundsInt wallBounds, BoundsInt doorBounds, bool isTopBottom)
+        {
+            for (int y = 0; y < dungeonGenerator.corridorHeight; y++)
+            {
+                removeBlock(wallArray, isTopBottom ? (doorBounds.position - wallBounds.position).x : (doorBounds.position - wallBounds.position).z, y);
+            }
+        }
+
+        public void addDoor(UInt32[] wallArray, int x)
+        {
+            for (int y = 0; y < dungeonGenerator.corridorHeight; y++)
+            {
+                removeBlock(wallArray, x, y);
+            }
+        }
+        public WallBounds CalculateWalls(Node room, int wallThickness) // FIX ME: For Chunks larger than 32
         {
 
             WallBounds curRoomWallBounds = CalculateWallBounds(wallThickness, room);
@@ -109,46 +155,127 @@ namespace dungeonGenerator
             if (room.RoomType != RoomType.Corridor)
             {
 
-                Debug.Log($"Byte Array: {getWallIntArray(curRoomWallBounds.left.ElementAt(0).size.z + 1, curRoomWallBounds.left.ElementAt(0).size.y + 1)[0]}");
-
-                UInt32[] wallArrayTest = getWallIntArray(curRoomWallBounds.left.ElementAt(0).size.z + 1, curRoomWallBounds.left.ElementAt(0).size.y);
-                
-                
-                for(int x = 0; x < wallArrayTest.Length; x++)
-                {
-                    if (x % 2 == 0)
-                    {
-                        for (int y = 1; y < 3; y++)
-                        {
-                            removeBlock(wallArrayTest, x, y);
-                        }
-
-                        removeBlock(wallArrayTest, x, 4);
-
-
-                        GameObject window = GameObject.Instantiate(dungeonDecorator.windowMesh, dungeonGenerator.gameObject.transform);
-                        window.transform.position = new Vector3(0, 1, x) + curRoomWallBounds.left[0].position + dungeonGenerator.transform.position + new Vector3(1.5f,0,1.5f);
-                    }
-
-                   
-
-
-
-                }
-             
-               
-
-          
-
+                // left 
+                UInt32[] wallArrayLeft = getWallIntArray(curRoomWallBounds.left[0].size.z + 1, curRoomWallBounds.left[0].size.y);
+                addWindows(wallArrayLeft, curRoomWallBounds.left[0], false);
             
 
+                // right 
+                UInt32[] wallArrayRight = getWallIntArray(curRoomWallBounds.right[0].size.z + 1, curRoomWallBounds.right[0].size.y);
+                addWindows(wallArrayRight, curRoomWallBounds.right[0], false);
+    
+              
 
-                List<BoundsInt> chunkBoundsTest = getChunkIntBounds(wallArrayTest, curRoomWallBounds.left[0]);
+
+                // bottom 
+                UInt32[] wallArrayBottom = getWallIntArray(curRoomWallBounds.bottom[0].size.x + 1, curRoomWallBounds.bottom[0].size.y);
+                addWindows(wallArrayBottom, curRoomWallBounds.bottom[0], true);
+
+                if (room.RoomType == RoomType.Start)
+                {
+                    addDoor(wallArrayBottom, wallArrayBottom.Length/2);
+                }
 
 
+                //// top 
+                UInt32[] wallArrayTop = getWallIntArray(curRoomWallBounds.top[0].size.x + 1, curRoomWallBounds.top[0].size.y);
+                addWindows(wallArrayTop, curRoomWallBounds.top[0], true);
+              
 
-                curRoomWallBounds.left = chunkBoundsTest;
+                // Add doors
+                if (room.RoomType != RoomType.Corridor)
+                {
+                    foreach (var placement in room.DoorPlacements)
+                    {
+
+                        //Debug.Log(placement.PositionType);
+
+                        List<BoundsInt> splitWalls = new List<BoundsInt>();
+
+                        switch (placement.PositionType)
+                        {
+                            case SplitPosition.Left:
+
+                                addDoor(wallArrayLeft, curRoomWallBounds.left[0], placement.DoorBounds, false);
+                                break;
+
+                            case SplitPosition.Right:
+
+                                addDoor(wallArrayRight, curRoomWallBounds.right[0], placement.DoorBounds, false);
+                                break;
+
+                            case SplitPosition.Top:
+
+                                addDoor(wallArrayTop, curRoomWallBounds.top[0], placement.DoorBounds, true);
+                                break;
+
+                            case SplitPosition.Bottom:
+
+                                addDoor(wallArrayBottom, curRoomWallBounds.bottom[0], placement.DoorBounds, true);
+                                break;
+
+
+                        }
+                    }
+                }
+
+
+                // Fix ME: LoopAble Make Enumberatable
+                List<BoundsInt> chunkBoundsLeft = getChunkIntBounds(wallArrayLeft, curRoomWallBounds.left[0], false);
+                List<BoundsInt> chunkBoundsRight = getChunkIntBounds(wallArrayRight, curRoomWallBounds.right[0], false);
+                List<BoundsInt> chunkBoundsBottom = getChunkIntBounds(wallArrayBottom, curRoomWallBounds.bottom[0], true);
+                List<BoundsInt> chunkBoundsTop = getChunkIntBounds(wallArrayTop, curRoomWallBounds.top[0], true);
+
+                curRoomWallBounds.left = chunkBoundsLeft;
+                curRoomWallBounds.right = chunkBoundsRight;
+                curRoomWallBounds.bottom = chunkBoundsBottom;
+                curRoomWallBounds.top = chunkBoundsTop;
             }
+
+
+            if (room.RoomType == RoomType.Corridor)
+            {
+                foreach (var placement in room.DoorPlacements)
+                {
+
+                    //Debug.Log(placement.PositionType);
+
+                    List<BoundsInt> splitWalls = new List<BoundsInt>();
+
+                    switch (placement.PositionType)
+                    {
+                        case SplitPosition.Left:
+
+                            curRoomWallBounds.left.Clear();
+                            curRoomWallBounds.right.Clear();
+
+                            break;
+
+                        case SplitPosition.Right:
+
+                            curRoomWallBounds.left.Clear();
+                            curRoomWallBounds.right.Clear();
+
+                            break;
+
+                        case SplitPosition.Top:
+
+                            curRoomWallBounds.top.Clear();
+                            curRoomWallBounds.bottom.Clear();
+
+                            break;
+
+                        case SplitPosition.Bottom:
+
+                            curRoomWallBounds.top.Clear();
+                            curRoomWallBounds.bottom.Clear();
+                            break;
+
+
+                    }
+                }
+            }
+
 
             // Right Chunks
             //int[,] rightWallBlocks = getWallArray(curRoomWallBounds.right.ElementAt(0).size.z + 1, curRoomWallBounds.right.ElementAt(0).size.y + 1);
@@ -219,7 +346,7 @@ namespace dungeonGenerator
             return curRoomWallBounds;
 
         }
-        private List<BoundsInt> getChunkIntBounds(UInt32[] wallBlocks, BoundsInt curWallBounds)
+        private List<BoundsInt> getChunkIntBounds(UInt32[] wallBlocks, BoundsInt curWallBounds, bool isTopBottom)
         {
             List<BoundsInt> chunkBoundsList = new List<BoundsInt>();
 
@@ -263,8 +390,8 @@ namespace dungeonGenerator
                             }
                         }
                         var chunk = new BoundsInt(
-                            curWallBounds.position + new Vector3Int(0, y, column),
-                            new Vector3Int(1, maxHeight, width)
+                            curWallBounds.position + (isTopBottom ? new Vector3Int(column, y, 0) : new Vector3Int(0, y, column)),
+                            (isTopBottom ? new Vector3Int(width, maxHeight, 1) : new Vector3Int(1, maxHeight, width)) 
                         );
 
                         chunkBoundsList.Add(chunk);
@@ -614,39 +741,39 @@ namespace dungeonGenerator
 
 
             // for bottom wall + check if start r
-            if (room.RoomType == RoomType.Start)
-            {
+            //if (room.RoomType == RoomType.Start)
+            //{
 
-                BoundsInt wall1 = new BoundsInt(
-                        new Vector3Int((int)bounds.min.x, (int)bounds.min.y, (int)bounds.min.z - dungeonGenerator.wallThickness),
-                        horizontalWallSize);
+            //    BoundsInt wall1 = new BoundsInt(
+            //            new Vector3Int((int)bounds.min.x, (int)bounds.min.y, (int)bounds.min.z - dungeonGenerator.wallThickness),
+            //            horizontalWallSize);
 
-                BoundsInt door1 = new BoundsInt(
-                       new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f - dungeonGenerator.corridorWidth / 2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f) - dungeonGenerator.wallThickness),
-                       new Vector3Int(dungeonGenerator.corridorWidth, dungeonGenerator.corridorHeight, dungeonGenerator.wallThickness) //  - dungeonGenerator.wallThickness*2
-                    );
+            //    BoundsInt door1 = new BoundsInt(
+            //           new Vector3Int((int)((bounds.min.x + bounds.max.x) / 2f - dungeonGenerator.corridorWidth / 2f), 0, (int)((bounds.min.z + bounds.min.z) / 2f) - dungeonGenerator.wallThickness),
+            //           new Vector3Int(dungeonGenerator.corridorWidth, dungeonGenerator.corridorHeight, dungeonGenerator.wallThickness) //  - dungeonGenerator.wallThickness*2
+            //        );
 
-                var splitWalls = splitWall(door1, wall1, SplitPosition.Top);
-                doorBounds.Add(door1);
-                wallBounds.bottom.AddRange(splitWalls);
+            //    var splitWalls = splitWall(door1, wall1, SplitPosition.Top);
+            //    doorBounds.Add(door1);
+            //    wallBounds.bottom.AddRange(splitWalls);
 
-                //wallBounds.bottom.Add(
-                //    new BoundsInt(
-                //        new Vector3Int((int)bounds.min.x, (int)bounds.min.y, (int)bounds.min.z - dungeonGenerator.wallThickness),
-                //        horizontalWallSize)
-                //    );
+            //    //wallBounds.bottom.Add(
+            //    //    new BoundsInt(
+            //    //        new Vector3Int((int)bounds.min.x, (int)bounds.min.y, (int)bounds.min.z - dungeonGenerator.wallThickness),
+            //    //        horizontalWallSize)
+            //    //    );
 
 
-            }
-            else
-            {
+            //}
+            //else
+            //{
                 wallBounds.bottom.Add(
                     new BoundsInt(
                         new Vector3Int((int)bounds.min.x, (int)bounds.min.y, (int)bounds.min.z - dungeonGenerator.wallThickness),
                         horizontalWallSize)
                     );
                     
-            }
+           // }
 
             // left right wall bounds
 
