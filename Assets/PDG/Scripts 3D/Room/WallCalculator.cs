@@ -132,12 +132,12 @@ namespace dungeonGenerator
                     {
                         light.transform.Rotate(0, 0, 90);
                         if (wallPos == WallPosition.bottom) light.transform.Rotate(0, 0, 180);
-                        light.transform.position = new Vector3(x, 2, 0) + wallBounds.position + dungeonGenerator.transform.position + ((wallPos == WallPosition.top) ? new Vector3(1.5f, 0, 0.9f) : new Vector3(1.5f, 0, 2.1f));
+                        light.transform.position = new Vector3(x, 2.5f, 0) + wallBounds.position + dungeonGenerator.transform.position + ((wallPos == WallPosition.top) ? new Vector3(1.5f, 0, 0.9f) : new Vector3(1.5f, 0, 2.1f));
                     }
                     else
                     {
                         if(wallPos == WallPosition.right) light.transform.Rotate(0, 0, 180); 
-                        light.transform.position = new Vector3(0, 2, x) + wallBounds.position + dungeonGenerator.transform.position + ((wallPos == WallPosition.left) ? new Vector3(2.1f, 0, 1.5f)  : new Vector3(0.9f, 0, 1.5f));
+                        light.transform.position = new Vector3(0, 2.5f, x) + wallBounds.position + dungeonGenerator.transform.position + ((wallPos == WallPosition.left) ? new Vector3(2.1f, 0, 1.5f)  : new Vector3(0.9f, 0, 1.5f));
 
                     }
                 }
