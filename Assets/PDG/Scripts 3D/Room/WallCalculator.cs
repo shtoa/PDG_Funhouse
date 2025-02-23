@@ -81,7 +81,7 @@ namespace dungeonGenerator
             {
                 if (x % 2 == 0)
                 {
-                    for (int y = 3; y < 3 + 3; y++)
+                    for (int y = 3; y < 3 + 2; y++)
                     {
                         removeBlock(wallArray, x, y);
                     }
