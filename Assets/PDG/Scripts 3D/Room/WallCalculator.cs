@@ -24,6 +24,15 @@ namespace dungeonGenerator
         public List<BoundsInt> WallBounds { get => wallBounds; set => wallBounds = value; }
         public List<BoundsInt> DoorBounds { get => doorBounds; set => doorBounds = value; }
 
+        public enum WallPosition
+        {
+            left,
+            right, 
+            top, 
+            bottom  
+                
+        }
+
         public WallCalculator(DungeonGenerator _dungeonGenerator, DungeonDecorator _dungeonDecortator)
         {
             dungeonGenerator = _dungeonGenerator;
@@ -87,20 +96,52 @@ namespace dungeonGenerator
                     }
 
                     GameObject window = GameObject.Instantiate(dungeonDecorator.windowMesh, dungeonGenerator.gameObject.transform);
+                    
 
 
                     if (isTopBottom)
                     {
                         window.transform.Rotate(0, 90, 0);
                         window.transform.position = new Vector3(x, 3, 0) + wallBounds.position + dungeonGenerator.transform.position + new Vector3(1.5f, 0, 1.5f);
+
+                       
                     } else
                     {
                         window.transform.position = new Vector3(0, 3, x) + wallBounds.position + dungeonGenerator.transform.position + new Vector3(1.5f, 0, 1.5f);
+
 
                     }
                 }
             }
 
+        }
+
+        public void addLights(UInt32[] wallArray, BoundsInt wallBounds, WallPosition wallPos) // FIXME add a global and local wallbounds
+        {
+            Debug.Log($"Byte Array: {getWallIntArray(wallBounds.size.z + 1, wallBounds.size.y + 1)[0]}");
+
+            for (int x = 1; x < wallArray.Length - 2; x++)
+            {
+                if (x % 2 == 0)
+                {
+
+                    GameObject light = GameObject.Instantiate(dungeonDecorator.lightMesh, dungeonGenerator.gameObject.transform);
+
+
+                    if (wallPos == WallPosition.top || wallPos == WallPosition.bottom)
+                    {
+                        light.transform.Rotate(0, 0, 90);
+                        if (wallPos == WallPosition.bottom) light.transform.Rotate(0, 0, 180);
+                        light.transform.position = new Vector3(x, 2, 0) + wallBounds.position + dungeonGenerator.transform.position + ((wallPos == WallPosition.top) ? new Vector3(1.5f, 0, 0.9f) : new Vector3(1.5f, 0, 2.1f));
+                    }
+                    else
+                    {
+                        if(wallPos == WallPosition.right) light.transform.Rotate(0, 0, 180); 
+                        light.transform.position = new Vector3(0, 2, x) + wallBounds.position + dungeonGenerator.transform.position + ((wallPos == WallPosition.left) ? new Vector3(2.1f, 0, 1.5f)  : new Vector3(0.9f, 0, 1.5f));
+
+                    }
+                }
+            }
         }
 
         public void addDoor(UInt32[] wallArray, BoundsInt wallBounds, BoundsInt doorBounds, bool isTopBottom)
@@ -158,18 +199,20 @@ namespace dungeonGenerator
                 // left 
                 UInt32[] wallArrayLeft = getWallIntArray(curRoomWallBounds.left[0].size.z + 1, curRoomWallBounds.left[0].size.y);
                 addWindows(wallArrayLeft, curRoomWallBounds.left[0], false);
+                addLights(wallArrayLeft, curRoomWallBounds.left[0], WallPosition.left);
             
 
                 // right 
                 UInt32[] wallArrayRight = getWallIntArray(curRoomWallBounds.right[0].size.z + 1, curRoomWallBounds.right[0].size.y);
                 addWindows(wallArrayRight, curRoomWallBounds.right[0], false);
-    
-              
+                addLights(wallArrayRight, curRoomWallBounds.right[0], WallPosition.right);
+
 
 
                 // bottom 
                 UInt32[] wallArrayBottom = getWallIntArray(curRoomWallBounds.bottom[0].size.x + 1, curRoomWallBounds.bottom[0].size.y);
                 addWindows(wallArrayBottom, curRoomWallBounds.bottom[0], true);
+                addLights(wallArrayBottom, curRoomWallBounds.bottom[0], WallPosition.bottom);
 
                 if (room.RoomType == RoomType.Start)
                 {
@@ -180,7 +223,8 @@ namespace dungeonGenerator
                 //// top 
                 UInt32[] wallArrayTop = getWallIntArray(curRoomWallBounds.top[0].size.x + 1, curRoomWallBounds.top[0].size.y);
                 addWindows(wallArrayTop, curRoomWallBounds.top[0], true);
-              
+                addLights(wallArrayTop, curRoomWallBounds.top[0], WallPosition.top);
+
 
                 // Add doors
                 if (room.RoomType != RoomType.Corridor)

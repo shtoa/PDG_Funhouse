@@ -42,5 +42,8 @@ public class DungeonDecorator : MonoBehaviour
     [Header("WindowMesh")]
     public GameObject windowMesh;
 
+    [Header("LightMesh")]
+    public GameObject lightMesh;
+
 
 }

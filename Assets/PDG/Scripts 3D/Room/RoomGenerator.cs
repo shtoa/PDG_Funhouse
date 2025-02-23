@@ -617,7 +617,7 @@ namespace dungeonGenerator
 
             ceiling.transform.SetParent(roomObj.transform, false);
 
-            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * room.Bounds.size.y/2 + new Vector3(1, 0, 1) * wallThickness - Vector3.up*0.001f; // added Z offset
+            ceiling.transform.localPosition = room.Bounds.center + Vector3.up * room.Bounds.size.y/2 + new Vector3(1, 0, 1) * wallThickness - Vector3.up*0.01f; // added Z offset
 
             ceiling.GetComponent<MeshRenderer>().material = ceilingMaterial;
 
