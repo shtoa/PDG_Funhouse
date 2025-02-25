@@ -70,12 +70,14 @@ namespace dungeonGenerator
                 Debug.Log(deltaSize);
 
 
-                var position = roomSpace.Bounds.position; // + new Vector3Int(Random.Range(-deltaSize.x / 4, deltaSize.x / 4), 0, Random.Range(-deltaSize.z / 4, deltaSize.z / 4));
+                var position = roomSpace.Bounds.position + new Vector3Int(Random.Range(0, roomSpace.Bounds.size.x - size.x), 0, Random.Range(0, roomSpace.Bounds.size.z - size.z));
+
+
+                // Vector3Int.up*roomSpace.Bounds.position.y + Vector3Int.CeilToInt( new Vector3(roomSpace.Bounds.center.x, 0, roomSpace.Bounds.center.z) - new Vector3(size.x / 2f, 0, size.z / 2f)),
+
 
                 BoundsInt testBounds = new BoundsInt(
-                    Vector3Int.up*roomSpace.Bounds.position.y + Vector3Int.CeilToInt(
-                    new Vector3(roomSpace.Bounds.center.x, 0, roomSpace.Bounds.center.z) - new Vector3(size.x / 2f, 0, size.z / 2f)),
-
+                    position,
                     size
                 );
 

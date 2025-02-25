@@ -16,6 +16,20 @@ namespace dungeonGenerator
         public List<Node> RoomSpaces { get => roomSpaces; }
 
         private List<Node> roomSpaces;
+
+        public void assignVoxelGrid(bool[,,] voxelGrid)
+        {
+            for(int x = 0; x < voxelGrid.GetLength(0); x++)
+            {
+                for(int y = 0; y < voxelGrid.GetLength(1); y++)
+                {
+                    for (int z = 0; z  < voxelGrid.GetLength(2); z++)
+                    {
+                        voxelGrid[x, y, z] = false;
+                    }
+                }
+            }
+        }
         public DungeonCalculator(BoundsInt dungeonDimensions)
         {
 
@@ -90,12 +104,87 @@ namespace dungeonGenerator
             #region 3. Generate Corridors
 
             CorridorGenerator corridorGenerator = new CorridorGenerator();
-            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim, corridorHeight);
+
+
+
+            bool[,,] availableVoxelGrid = new bool[dungeonWidth, dungeonHeight, dungeonLength];
+            // 0 is available space
+            // 1 is taken space
+
+            // assign voxel grid
+            assignVoxelGrid(availableVoxelGrid);
+            Debug.Log($"Voxel Grid: X: {availableVoxelGrid.GetLength(0)}, Y: {availableVoxelGrid.GetLength(1)}, Z: {availableVoxelGrid.GetLength(2)}");
+
+            // remove room spaces
+            removeRoomsFromVoxelGrid(availableVoxelGrid, rooms);
+            //visualizeVoxelGrid(availableVoxelGrid);
+
+
+
+
+
+            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid);
+            visualizeVoxelGrid(availableVoxelGrid);
+
 
             #endregion
 
             // return a list of bounds on which the floor will be (Rooms and Corridors) 
-            return new List<Node>(rooms).Concat(corridorList).ToList();
+            return new List<Node>(rooms).ToList(); // .Concat(corridorList)
         }
-    }
+
+        private void removeRoomsFromVoxelGrid(bool[,,] availableVoxelGrid, List<SpaceNode> rooms)
+        {
+
+            foreach(var room in rooms)
+            {
+                Vector3Int startPos = room.Bounds.position;
+                Vector3Int maxPos = room.Bounds.max;
+
+                for(int x = startPos.x; x < maxPos.x; x++)
+                {
+                    for(int y = startPos.y; y < maxPos.y; y++)
+                    {
+                        for (int z = startPos.z; z < maxPos.z; z++)
+                        {
+                            availableVoxelGrid[x, y, z] = true;
+                        }
+
+                    }
+
+                }
+            }
+        }
+
+
+        private void visualizeVoxelGrid(bool[,,] availableVoxelGrid)
+        {
+
+           
+
+            GameObject voxelHolder = new GameObject("voxelGridVisualizer");
+            voxelHolder.transform.parent = GameObject.Find("DungeonGen").transform;
+                for (int x = 0; x < availableVoxelGrid.GetLength(0); x++)
+                {
+                    for (int y = 0; y < availableVoxelGrid.GetLength(1); y++)
+                    {
+                        for (int z = 0; z < availableVoxelGrid.GetLength(2); z++)
+                        {
+
+                            if (availableVoxelGrid[x, y, z])
+                            {
+                                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                                cube.transform.parent = voxelHolder.transform;
+                                cube.transform.localPosition = new Vector3Int(x, y, z);
+                            }
+
+                        }
+
+                    }
+
+                }
+            }
+        }
 }
+
+

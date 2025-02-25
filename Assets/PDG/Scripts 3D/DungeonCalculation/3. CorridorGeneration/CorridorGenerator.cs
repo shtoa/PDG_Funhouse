@@ -9,9 +9,10 @@ namespace dungeonGenerator
 {
     public class CorridorGenerator
     {
-        public void CreateCorridor(SpaceNode space1, SpaceNode space2, List<Node> corridorList, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight)
+        public void CreateCorridor(SpaceNode space1, SpaceNode space2, List<Node> corridorList, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight,
+            bool[,,] availableVoxelGrid)
         {
-            CorridorNode corridor = new CorridorNode(space1, space2, corridorWidth, wallThickness, minRoomDim, corridorHeight); // create new corridor between the childeren
+            CorridorNodePath corridor = new CorridorNodePath(space1, space2, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid); // create new corridor between the childeren
 
             if (corridor.CorridorType != CorridorType.None)
             {
@@ -35,7 +36,8 @@ namespace dungeonGenerator
         /// <param name="minRoomDim"></param>
         /// <returns>corridorList</returns>
 
-        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight)
+        public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight
+              , bool[,,] availableVoxelGrid)
         {
             List<Node> corridorList = new List<Node>(); // Create list of Corridors to return
             
@@ -67,7 +69,8 @@ namespace dungeonGenerator
 
                     ) // check if there are two children to join
                 {
-                    CreateCorridor((SpaceNode)spaceToCheck.ChildrenNodeList[0], (SpaceNode)spaceToCheck.ChildrenNodeList[1], corridorList, corridorWidth, wallThickness, minRoomDim, corridorHeight);
+                    CreateCorridor((SpaceNode)spaceToCheck.ChildrenNodeList[0], (SpaceNode)spaceToCheck.ChildrenNodeList[1], corridorList, corridorWidth, wallThickness, minRoomDim, corridorHeight,
+                        availableVoxelGrid);
                 }
             }
 

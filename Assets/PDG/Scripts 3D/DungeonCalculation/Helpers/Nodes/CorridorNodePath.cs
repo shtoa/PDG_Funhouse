@@ -12,14 +12,7 @@ using Random = UnityEngine.Random;
 
 namespace dungeonGenerator
 {
-
-    public enum LateralCorridorType
-    {
-        Corridor,
-        Stairs,
-        Ladder
-    }
-    public class CorridorNode : Node
+    public class CorridorNodePath : Node
 
     {
         private Node node1;
@@ -28,8 +21,10 @@ namespace dungeonGenerator
         private int wallThickness;
         private Vector3Int minRoomDim;
         private int corridorHeight;
+        private bool[,,] availableVoxelGrid;
+        private bool[,,] corridorGrid;
 
-        public CorridorNode(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight) : base(null) // null since it doesnt have any parents
+        public CorridorNodePath(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight, bool[,,] availableVoxelGrid) : base(null) // null since it doesnt have any parents
         {
             this.node1 = node1;
             this.node2 = node2;
@@ -37,8 +32,34 @@ namespace dungeonGenerator
             this.wallThickness = wallThickness;
             this.minRoomDim = minRoomDim;
             this.corridorHeight = corridorHeight;
+            this.availableVoxelGrid = availableVoxelGrid;
+
+
+            this.corridorGrid = getCorridorGrid(availableVoxelGrid);
 
             GenerateCorridor();
+        }
+
+        private bool[,,] getCorridorGrid(bool[,,] availableVoxelGrid)
+        {
+            bool[,,] corridorVoxelGrid = new bool[availableVoxelGrid.GetLength(0), availableVoxelGrid.GetLength(1), availableVoxelGrid.GetLength(2)];
+
+            for (int x = 0; x < availableVoxelGrid.GetLength(0); x++)
+            {
+                for (int y = 0; y < availableVoxelGrid.GetLength(1); y++)
+                {
+                    for (int z = 0; z < availableVoxelGrid.GetLength(2); z++)
+                    {
+
+                        corridorVoxelGrid[x, y, z] = false;
+
+                    }
+
+                }
+
+            }
+
+            return corridorVoxelGrid;
         }
 
         /// <summary>
@@ -316,6 +337,150 @@ namespace dungeonGenerator
 
         #endregion
 
+
+        public void buildCorridorLeftRight(BoundsInt leftSpace, BoundsInt rightSpace)
+        {
+
+            Vector3Int leftStartVoxel = new Vector3Int(leftSpace.max.x, leftSpace.min.y, (leftSpace.min.z+leftSpace.max.z)/2);
+            this.corridorGrid[leftStartVoxel.x, leftStartVoxel.y, leftStartVoxel.z] = true;
+
+            Vector3Int rightEndVoxel = new Vector3Int(rightSpace.min.x-Mathf.CeilToInt(corridorWidth/2f), rightSpace.min.y, (rightSpace.min.z+rightSpace.max.z)/2);
+            this.corridorGrid[rightEndVoxel.x, rightEndVoxel.y, rightEndVoxel.z] = true;
+
+            //for (int z = -Mathf.CeilToInt(corridorWidth / 2f); z < Mathf.FloorToInt(corridorWidth / 2f); z++)
+            //{
+            //    availableVoxelGrid[leftStartVoxel.x, leftStartVoxel.y, leftStartVoxel.z + z] = true;
+            //}
+
+    
+
+
+            Vector3Int startPos = leftStartVoxel;
+
+            int i = 0;
+            while(startPos != rightEndVoxel && i < 100)
+            {
+                // get possible postions
+                List<Vector3Int> possiblePositions = new List<Vector3Int>();
+
+
+                // check if move left possible
+
+        
+
+                if (startPos.x - 1 > leftStartVoxel.x)
+                {
+                  
+                }
+
+
+                // check if move right possible
+                if (startPos.x + 1 < rightEndVoxel.x)
+                {
+                    
+                }
+
+                // check if move forward possible
+                if (startPos.z + 1 < Mathf.Max(rightEndVoxel.z, leftStartVoxel.z))
+                {
+                 
+                }
+                // check if backward possible
+                if(startPos.z - 1 > Mathf.Min(rightEndVoxel.z, leftStartVoxel.z) )
+                {
+                    
+                }
+                possiblePositions.Add(startPos + Vector3Int.left);
+                possiblePositions.Add(startPos + Vector3Int.right);
+                possiblePositions.Add(startPos + Vector3Int.forward);
+                possiblePositions.Add(startPos + Vector3Int.back);
+
+                // find best position
+                int closestDistance = int.MaxValue;
+                Vector3Int closestPos = new Vector3Int();
+
+                //for (int j = possiblePositions.Count-1; j > 0; j--)
+                //{
+                //    if (availableVoxelGrid[possiblePositions[j].x, possiblePositions[j].y, possiblePositions[j].z])
+                //    {
+                //        possiblePositions.Remove(possiblePositions[j]);
+                //    }
+                //}
+
+                foreach (Vector3Int possiblePosition in possiblePositions)
+                {
+                    // Compute manhattan distance
+                    int curDistance = Mathf.Abs(possiblePosition.x - rightEndVoxel.x) + Mathf.Abs(possiblePosition.z - rightEndVoxel.z);
+                    if (curDistance < closestDistance) {
+                        closestDistance = curDistance;
+                        closestPos = possiblePosition;
+
+
+
+                    }
+
+                }
+
+                // remove position from available positions
+
+                this.corridorGrid[closestPos.x, closestPos.y, closestPos.z] = true;
+
+                // remove points around point 
+
+                // right
+                this.corridorGrid[closestPos.x, closestPos.y, closestPos.z+1] = true;
+
+                // top right
+                this.corridorGrid[closestPos.x+1, closestPos.y, closestPos.z + 1] = true;
+
+                // bottom
+                this.corridorGrid[closestPos.x-1, closestPos.y, closestPos.z] = true;
+
+                // bottom left
+                this.corridorGrid[closestPos.x-1, closestPos.y, closestPos.z-1] = true;
+
+                // left
+                this.corridorGrid[closestPos.x, closestPos.y, closestPos.z - 1] = true;
+
+                // bottom right
+                this.corridorGrid[closestPos.x+1, closestPos.y, closestPos.z - 1] = true;
+
+                // top left
+                this.corridorGrid[closestPos.x - 1, closestPos.y, closestPos.z + 1] = true;
+
+                // top
+                this.corridorGrid[closestPos.x + 1, closestPos.y, closestPos.z] = true;
+
+
+
+                // based on relative position change avaialble voxel grid
+                //if(closestPos-startPos == Vector3Int.left || closestPos - startPos == Vector3Int.right) {
+
+
+                //    for (int z = -Mathf.CeilToInt(corridorWidth/2f); z < Mathf.FloorToInt(corridorWidth / 2f); z++)
+                //    {
+                //        availableVoxelGrid[closestPos.x, closestPos.y, closestPos.z + z] = true;
+                //    }
+
+                //} else
+                //{
+                //    for (int x = -Mathf.CeilToInt(corridorWidth / 2f); x < Mathf.FloorToInt(corridorWidth / 2f); x++)
+                //    {
+                //        availableVoxelGrid[closestPos.x+x, closestPos.y, closestPos.z] = true;
+                //    }
+                //}
+
+
+
+                startPos = closestPos;
+
+
+
+                i++;
+            }
+
+        }
+
         /// <summary>
         /// Generate a corridor between leftNode and rightNode
         /// </summary>
@@ -338,7 +503,23 @@ namespace dungeonGenerator
 
             // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
 
-            (leftSpace,rightSpace) = FindNeighborsLeftRight(sortedLeftSpaces, sortedRightSpaces);
+            // (leftSpace,rightSpace) = FindNeighborsLeftRight(sortedLeftSpaces, sortedRightSpaces);
+
+
+           
+
+
+            buildCorridorLeftRight(sortedLeftSpaces[0].Bounds, sortedRightSpaces.OrderBy(rightSpace => Vector3Int.Distance(rightSpace.Bounds.position, sortedLeftSpaces[0].Bounds.position)).First().Bounds);
+
+            // generate corridorBounds from corridor Grid 
+            generateCorridorFloorBounds();
+
+
+            // update available Grid
+            updateAvailableGrid();
+
+
+        
 
             // --- Generate Corridor Between LeftSpace and RightSpace --- 
 
@@ -372,6 +553,55 @@ namespace dungeonGenerator
 
             this.CorridorType = CorridorType.Horizontal;
 
+        }
+
+        private void generateCorridorFloorBounds()
+        {
+            for (int x = 0; x < this.availableVoxelGrid.GetLength(0); x++)
+            {
+                for (int y = 0; y < this.availableVoxelGrid.GetLength(1); y++)
+                {
+                    for (int z = 0; z < this.availableVoxelGrid.GetLength(2); z++)
+                    {
+
+                        if (this.corridorGrid[x,y,z] == true)
+                        {
+
+                            Vector3Int startPos = new Vector3Int(x, y, z);
+                            Vector3Int curPos = new Vector3Int(x, y, z);
+
+                            //while (this.corridorGrid[startPos.x, startPos.y, startPos.z] == true)
+                            //{
+                            //    // get Max Width of segmenet 
+                            //}
+
+
+
+                        }
+
+                    }
+
+                }
+
+            }
+        }
+
+        private void updateAvailableGrid()
+        {
+            for (int x = 0; x < this.availableVoxelGrid.GetLength(0); x++)
+            {
+                for (int y = 0; y < this.availableVoxelGrid.GetLength(1); y++)
+                {
+                    for (int z = 0; z < this.availableVoxelGrid.GetLength(2); z++)
+                    {
+
+                        this.availableVoxelGrid[x, y, z] = this.availableVoxelGrid[x, y, z] || this.corridorGrid[x,y,z];
+
+                    }
+
+                }
+
+            }
         }
 
         /// <summary>
@@ -544,6 +774,118 @@ namespace dungeonGenerator
             );
         }
         #endregion
+        public void buildCorridorTopBottom(BoundsInt topSpace, BoundsInt bottomSpace, bool[,,] availableVoxelGrid)
+        {
+
+            Vector3Int bottomStartVoxel = new Vector3Int((bottomSpace.min.x + bottomSpace.max.x) / 2, bottomSpace.min.y, bottomSpace.max.z + Mathf.FloorToInt(corridorWidth / 2f)) ;
+            availableVoxelGrid[bottomStartVoxel.x, bottomStartVoxel.y, bottomStartVoxel.z] = true;
+
+
+            //for (int x = -Mathf.CeilToInt(corridorWidth / 2f); x < Mathf.FloorToInt(corridorWidth / 2f); x++)
+            //{
+            //    availableVoxelGrid[bottomStartVoxel.x + x, bottomStartVoxel.y, bottomStartVoxel.z] = true;
+            //}
+
+            Vector3Int topEndVoxel = new Vector3Int((topSpace.min.x + topSpace.max.x) / 2, topSpace.min.y, topSpace.min.z - Mathf.CeilToInt(corridorWidth / 2f));
+            availableVoxelGrid[topEndVoxel.x, topEndVoxel.y, topEndVoxel.z] = true;
+
+            Vector3Int startPos = bottomStartVoxel;
+
+            int i = 0;
+            while (startPos != topEndVoxel || i < 100)
+            {
+                // get possible postions
+                List<Vector3Int> possiblePositions = new List<Vector3Int>();
+                possiblePositions.Add(startPos + Vector3Int.left);
+                possiblePositions.Add(startPos + Vector3Int.right);
+                possiblePositions.Add(startPos + Vector3Int.forward);
+                possiblePositions.Add(startPos + Vector3Int.back);
+
+                // find best position
+                int closestDistance = int.MaxValue;
+                Vector3Int closestPos = new Vector3Int();
+
+
+                //for (int j = possiblePositions.Count-1; j > 0; j--)
+                //{
+                    
+                //    if (availableVoxelGrid[possiblePositions[j].x, possiblePositions[j].y, possiblePositions[j].z])
+                //    {
+                //        possiblePositions.Remove(possiblePositions[j]);
+                //    }
+                //}
+
+                foreach (Vector3Int possiblePosition in possiblePositions)
+                {
+                    // Compute manhattan distance
+                    int curDistance = Mathf.Abs(possiblePosition.x - topEndVoxel.x) + Mathf.Abs(possiblePosition.z - topEndVoxel.z);
+                    if (curDistance < closestDistance)
+                    {
+                        closestDistance = curDistance;
+                        closestPos = possiblePosition;
+                    }
+
+                }
+
+                // remove position from available positions
+                availableVoxelGrid[closestPos.x, closestPos.y, closestPos.z] = true;
+
+
+                //if (closestPos - startPos == Vector3Int.left || closestPos - startPos == Vector3Int.right)
+                //{
+
+
+                //    for (int z = -Mathf.CeilToInt(corridorWidth / 2f); z < Mathf.FloorToInt(corridorWidth / 2f); z++)
+                //    {
+                //        availableVoxelGrid[closestPos.x, closestPos.y, closestPos.z + z] = true;
+                //    }
+
+                //}
+                //else
+                //{
+                //    for (int x = -Mathf.CeilToInt(corridorWidth / 2f); x < Mathf.FloorToInt(corridorWidth / 2f); x++)
+                //    {
+                //        availableVoxelGrid[closestPos.x + x, closestPos.y, closestPos.z] = true;
+                //    }
+                //}
+
+                // remove points around point 
+
+                // right
+                availableVoxelGrid[closestPos.x, closestPos.y, closestPos.z + 1] = true;
+
+                // top right
+                availableVoxelGrid[closestPos.x + 1, closestPos.y, closestPos.z + 1] = true;
+
+                // bottom
+                availableVoxelGrid[closestPos.x - 1, closestPos.y, closestPos.z] = true;
+
+                // bottom left
+                availableVoxelGrid[closestPos.x - 1, closestPos.y, closestPos.z - 1] = true;
+
+                // left
+                availableVoxelGrid[closestPos.x, closestPos.y, closestPos.z - 1] = true;
+
+                // bottom right
+                availableVoxelGrid[closestPos.x + 1, closestPos.y, closestPos.z - 1] = true;
+
+                // top left
+                availableVoxelGrid[closestPos.x - 1, closestPos.y, closestPos.z + 1] = true;
+
+                // top
+                availableVoxelGrid[closestPos.x + 1, closestPos.y, closestPos.z] = true;
+
+
+                startPos = closestPos;
+
+
+
+
+
+                i++;
+            }
+
+        }
         private void GenerateCorridorTopBottom(Node topNode, Node bottomNode)
         {
             // --- Initialize Leaves Arrays and Spaces to Connect ---
@@ -561,7 +903,9 @@ namespace dungeonGenerator
 
             // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
 
-            (topSpace, bottomSpace) = FindNeighborsTopBottom(sortedTopSpaces, sortedBottomSpaces);
+            //(topSpace, bottomSpace) = FindNeighborsTopBottom(sortedTopSpaces, sortedBottomSpaces);
+
+            //buildCorridorTopBottom(sortedTopSpaces[0].Bounds, sortedBottomSpaces.OrderBy(rightSpace => Vector3Int.Distance(rightSpace.Bounds.position, sortedTopSpaces[0].Bounds.position)).First().Bounds, this.availableVoxelGrid);
 
             // --- Generate Corridor Between LeftSpace and RightSpace --- 
 
