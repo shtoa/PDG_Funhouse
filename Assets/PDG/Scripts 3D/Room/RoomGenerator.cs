@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
+using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
 using static dungeonGenerator.RoomGenerator;
 using static UnityEngine.UI.CanvasScaler;
@@ -144,19 +145,61 @@ namespace dungeonGenerator
 
 
 
-                if (!room.CorridorType.Equals(CorridorType.Perpendicular))
+                if (!room.CorridorType.Equals(CorridorType.Perpendicular) && !(room.RoomType == RoomType.Corridor))
                 {
-                   // DrawCeiling(room, roomStyle, roomObj);
-                   //DrawFloor(room, roomStyle, roomObj);
+                    // DrawCeiling(room, roomStyle, roomObj);
+                    DrawFloor(room, roomStyle, roomObj);
                 }
 
                 if (room.RoomType.Equals(RoomType.Corridor))
                 {
+               
 
-                   
+                    foreach (BoundsInt bound in room.CorridorBoundsList)
+                    {
+
+                        Debug.Log($"THE NEW CORRIDOR FLOOR SIZE {bound.size}");
+
+                        GameObject floor = MeshHelper.CreatePlane(bound.size, 1, false);
+                        floor.transform.tag = "Floor";
+                        floor.transform.SetParent(roomObj.transform, false);
+
+                        // FIX ME: CHECK THIS TRANSFORMATION
+                        floor.transform.localPosition = (bound.center - new Vector3(0, bound.size.y / 2f, 0)) + new Vector3(1, 0, 1) * wallThickness + Vector3.up * 0.001f; ; // CHECK ME: May be wrong
+                        floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+
+
+
+
+                    }
+
                 }
-               // DrawWalls(room, roomStyle, roomObj);
 
+                if (room.RoomType != RoomType.Corridor)
+                {
+                    DrawWalls(room, roomStyle, roomObj);
+                } else
+                {
+                    GameObject wallHolder = new GameObject("wallHolder");
+                    wallHolder.transform.SetParent(roomObj.transform, false);
+
+                    foreach (BoundsInt wallBound in room.CorridorWallBoundsList)
+                    {
+                        GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
+                        wall.name = "Wall";
+                        wall.transform.SetParent(wallHolder.transform, false);
+
+                        if (room.CorridorType.Equals(CorridorType.Perpendicular))
+                        {
+                            wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+                        }
+
+
+
+                        wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+                        wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+                    }
+                }
 
                 //room.HolePlacements.Where(holePlacement => holePlacement.PositionType == SplitPosition.Up).Count() == 0
 

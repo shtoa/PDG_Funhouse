@@ -124,13 +124,13 @@ namespace dungeonGenerator
 
 
             var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid);
-            visualizeVoxelGrid(availableVoxelGrid);
+            //visualizeVoxelGrid(availableVoxelGrid);
 
 
             #endregion
 
             // return a list of bounds on which the floor will be (Rooms and Corridors) 
-            return new List<Node>(rooms).ToList(); // .Concat(corridorList)
+            return new List<Node>(rooms).Concat(corridorList).ToList(); // .Concat(corridorList)
         }
 
         private void removeRoomsFromVoxelGrid(bool[,,] availableVoxelGrid, List<SpaceNode> rooms)

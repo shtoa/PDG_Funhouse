@@ -14,14 +14,16 @@ namespace dungeonGenerator
         {
             CorridorNodePath corridor = new CorridorNodePath(space1, space2, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid); // create new corridor between the childeren
 
-            if (corridor.CorridorType != CorridorType.None)
-            {
-                corridor.RoomType = RoomType.Corridor; // set room type to corridor
-                corridorList.Add(corridor); // add created corridor for list to return 
-            } else
-            {
-                haveCorridorsFailed = true;
-            }
+            corridor.RoomType = RoomType.Corridor;
+            corridorList.Add(corridor);
+            //if (corridor.CorridorType != CorridorType.None)
+            //{
+            //    corridor.RoomType = RoomType.Corridor; // set room type to corridor
+            //    corridorList.Add(corridor); // add created corridor for list to return 
+            //} else
+            //{
+            //    haveCorridorsFailed = true;
+            //}
      
         }
 

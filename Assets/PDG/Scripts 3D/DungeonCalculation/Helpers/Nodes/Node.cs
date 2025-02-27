@@ -74,6 +74,7 @@ namespace dungeonGenerator
         public BoundsInt Bounds { get; set; }
 
         public List<BoundsInt> CorridorBoundsList { get; set; } = new List<BoundsInt>();
+        public List<BoundsInt> CorridorWallBoundsList { get; set; } = new List<BoundsInt>();
         public List<Node> ConnectionsList { get => connectionsList; set => connectionsList = value; }
         public int ConnectionDepthIndex { get => connectionDepthIndex; set => connectionDepthIndex = value; }
 
