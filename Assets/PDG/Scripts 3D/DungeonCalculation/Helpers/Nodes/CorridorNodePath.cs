@@ -618,7 +618,7 @@ namespace dungeonGenerator
 
 
             // generate corridorBounds from corridor Grid 
-            generateCorridorFloorBounds();
+            generateCorridorFloorBounds(rightSpace.Bounds.y);
 
 
 
@@ -832,14 +832,15 @@ namespace dungeonGenerator
 
         }
 
-        private void generateCorridorFloorBounds()
+        private void generateCorridorFloorBounds(int y)
         {
             for (int x = 0; x < this.availableVoxelGrid.GetLength(0); x++)
             {
-                for (int y = 0; y < this.availableVoxelGrid.GetLength(1); y++)
-                {
+                //for (int y = 0; y < this.availableVoxelGrid.GetLength(1); y++)
+                //{
                     for (int z = 0; z < this.availableVoxelGrid.GetLength(2); z++)
                     {
+                      
 
                         if (this.corridorGrid[x,y,z] == true)
                         {
@@ -915,7 +916,7 @@ namespace dungeonGenerator
 
                     }
 
-                }
+                //}
 
             }
         }
@@ -1350,7 +1351,7 @@ namespace dungeonGenerator
 
 
             // generate corridorBounds from corridor Grid 
-            generateCorridorFloorBounds();
+            generateCorridorFloorBounds(bottomSpace.Bounds.y);
             calculateWallsFromCorridorTest(SplitPosition.Top);
 
 

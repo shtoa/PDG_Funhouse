@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Quaternion = UnityEngine.Quaternion;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
@@ -69,6 +70,69 @@ namespace dungeonGenerator
 
 
         }
+        // change to use templates ... 
+        public static GameObject CreatePlaneFromPoints(Vector3[] points, int uvUnit, bool isInverted = false)
+        {
+
+            // from code monkey
+
+            Vector3 bottomLeftV = points[0];
+            Vector3 bottomRightV = points[1];
+            Vector3 topLeftV = points[2];
+            Vector3 topRightV = points[3];
+
+            Vector3[] vertices = new Vector3[]
+            {
+            topLeftV,
+            topRightV,
+            bottomLeftV,
+            bottomRightV
+            };
+
+            // likely wrong double check
+            Vector2[] uvs = new Vector2[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                uvs[i] = new Vector2(vertices[i].x, vertices[i].z) * 0.5f;
+            }
+
+            int[] triangles;
+
+            if (!isInverted)
+            {
+                triangles = new int[]
+                {
+                    0,1,2,
+                    2,1,3
+                };
+            }
+            else
+            {
+                triangles = new int[]
+             {
+                    0,2,1,
+                    1,2,3
+             };
+            }
+
+            Mesh plane = new Mesh();
+            plane.vertices = vertices;
+            plane.triangles = triangles;
+            plane.uv = uvs;
+            plane.RecalculateNormals();
+            plane.RecalculateBounds();
+
+            GameObject planeObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
+            planeObject.GetComponent<MeshFilter>().mesh = plane;
+            planeObject.GetComponent<MeshCollider>().sharedMesh = plane;
+
+            return planeObject;
+
+
+
+
+        }
+
 
         public static Vector3 normalizeLocation(Vector3 location, Vector3 min)
         {
