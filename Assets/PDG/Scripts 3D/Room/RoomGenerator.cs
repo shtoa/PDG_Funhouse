@@ -4,6 +4,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
 using static dungeonGenerator.RoomGenerator;
 using static UnityEngine.UI.CanvasScaler;
 using Random = UnityEngine.Random;
@@ -137,7 +138,7 @@ namespace dungeonGenerator
             {
 
                 RoomStyle roomStyle = dungeonDecorator.roomStyles[Random.Range(0, dungeonDecorator.roomStyles.Count)];
-                GameObject roomObj = new GameObject(roomStyle.name);
+                GameObject roomObj = new GameObject(roomStyle.name+room.SplitPosition);
 
 
 
@@ -147,7 +148,7 @@ namespace dungeonGenerator
 
                 if (!room.CorridorType.Equals(CorridorType.Perpendicular) && !(room.RoomType == RoomType.Corridor))
                 {
-                    // DrawCeiling(room, roomStyle, roomObj);
+                    //DrawCeiling(room, roomStyle, roomObj);
                     DrawFloor(room, roomStyle, roomObj);
                 }
 
@@ -180,24 +181,33 @@ namespace dungeonGenerator
                     DrawWalls(room, roomStyle, roomObj);
                 } else
                 {
-                    GameObject wallHolder = new GameObject("wallHolder");
-                    wallHolder.transform.SetParent(roomObj.transform, false);
-
-                    foreach (BoundsInt wallBound in room.CorridorWallBoundsList)
+                    if (room.CorridorType == CorridorType.Perpendicular)
                     {
-                        GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
-                        wall.name = "Wall";
-                        wall.transform.SetParent(wallHolder.transform, false);
+                        DrawWalls(room, roomStyle, roomObj);
+                    }
+                    else
+                    {
 
-                        if (room.CorridorType.Equals(CorridorType.Perpendicular))
+
+                        GameObject wallHolder = new GameObject("wallHolder");
+                        wallHolder.transform.SetParent(roomObj.transform, false);
+
+                        foreach (BoundsInt wallBound in room.CorridorWallBoundsList)
                         {
-                            wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+                            GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
+                            wall.name = "Wall";
+                            wall.transform.SetParent(wallHolder.transform, false);
+
+                            if (room.CorridorType.Equals(CorridorType.Perpendicular))
+                            {
+                                wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+                            }
+
+
+
+                            wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+                            wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
                         }
-
-
-
-                        wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
-                        wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
                     }
                 }
 
@@ -445,32 +455,187 @@ namespace dungeonGenerator
 
         public void HandlePerpendicularWalls(WallBounds wallBounds, Node room, RoomStyle roomStyle, GameObject roomObj)
         {
-            // generate aladder
-            BoundsInt ladderBounds = wallBounds.getWalls()[Random.Range(0, wallBounds.getWalls().Count)];
-            wallBounds.removeWall(ladderBounds);
+            // generate a ladder
+            //BoundsInt ladderBounds = wallBounds.getWalls()[Random.Range(0, wallBounds.getWalls().Count)];
+            //wallBounds.removeWall(ladderBounds);
 
+            Vector3 planeSize = new Vector3(2, 0, 2);
 
             var connectedRoomsOrderedByY = room.ConnectionsList.OrderBy(connectedRoom => connectedRoom.Bounds.min.y).ToArray();
 
-            ladderBounds = new BoundsInt(
-                    new Vector3Int(ladderBounds.x, connectedRoomsOrderedByY[0].Bounds.y, ladderBounds.z), // Bottom Room min Bounds y
-                    new Vector3Int(ladderBounds.size.x, connectedRoomsOrderedByY[0].Bounds.size.y + ladderBounds.size.y, ladderBounds.size.z)
-            );
+            var startPos = connectedRoomsOrderedByY[0].Bounds.position + dungeonGenerator.transform.position + planeSize;
+            var endPos = new Vector3(connectedRoomsOrderedByY[1].Bounds.position.x+planeSize.x, 
+                                     connectedRoomsOrderedByY[1].Bounds.position.y, 
+                                     connectedRoomsOrderedByY[1].Bounds.position.z + planeSize.x) 
+                            + dungeonGenerator.transform.position;
+            var preEndPos = new Vector3(connectedRoomsOrderedByY[1].Bounds.position.x + planeSize.x+6,
+                                     connectedRoomsOrderedByY[1].Bounds.position.y-2f,
+                                     connectedRoomsOrderedByY[1].Bounds.position.z + planeSize.x)
+                            + dungeonGenerator.transform.position;
+
+            // single spiral around room
+            List<Vector3> planeOffsets = new List<Vector3>
+                {
+                    new Vector3(0f, 2f, connectedRoomsOrderedByY[0].Bounds.size.z-2f),
+                    new Vector3(connectedRoomsOrderedByY[0].Bounds.size.x-2f, 2f, 0f),
+                    new Vector3(0f, 2f, -connectedRoomsOrderedByY[0].Bounds.size.z+2f),
+                    new Vector3(-connectedRoomsOrderedByY[0].Bounds.size.x+2f, 2f, 0f),
+                };
+
+            List<Vector3> planeOffsetsTopRoom = new List<Vector3>
+                {
+                    new Vector3(0f, 0f, connectedRoomsOrderedByY[1].Bounds.size.z-2f),
+                    new Vector3(connectedRoomsOrderedByY[1].Bounds.size.x-2f, 1f, 0f),
+                    new Vector3(0f, 0f, -connectedRoomsOrderedByY[1].Bounds.size.z+2f),
+                    new Vector3(-connectedRoomsOrderedByY[1].Bounds.size.x+2f, 1f, 0f),
+                };
+
+            var maxIter = 20;
+            int i = 0;
+
+
+            var endOffset = endPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            var preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            var curPosOffset = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            // get to correct height
+
+            #region get to correct y level
+            while (curPosOffset.y < connectedRoomsOrderedByY[0].Bounds.max.y && i < maxIter)
+            {
+                planeOffsets.Add(planeOffsets[i]);
+                i++;
+                //endOffset = endPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                curPosOffset = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            }
+            #endregion
+
+            // get to correct position
+            preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            //var prePos = Vector3.Scale(new Vector3((planeOffsets.Last().x == 0) ? 1 : 0, 0, (planeOffsets.Last().z == 0) ? 1 : 0), preEndPosOffset);
+
+
+            maxIter = 10+i;
+
+            curPosOffset = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            #region connect Paths
+
+
+            //while (i < maxIter
+            //        //&& (curPosOffset.x != preEndPosOffset.x || curPosOffset.z != preEndPosOffset.z
+
+            //        //|| (curPosOffset.x == preEndPosOffset.x && curPosOffset.z == preEndPosOffset.z)
+            //        && ((new Vector3(0, 0, 0) == new Vector3((preEndPosOffset.x == 0) ? 1 : 0, 0, (preEndPosOffset.z == 0) ? 1 : 0)
+
+            //        || (new Vector3((planeOffsets[i].x == 0) ? 1 : 0, 0, (planeOffsets[i].z == 0) ? 1 : 0) == new Vector3((preEndPosOffset.x == 0) ? 1 : 0, 0, (preEndPosOffset.z == 0) ? 1 : 0)))
+            //        )
+            //        )
+            //{
+
+
+            //    curPosOffset = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            //    preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            //    i++;
+
+            //}
+
+            if ((new Vector3((planeOffsets.Last().x == 0) ? 1 : 0, 0, (planeOffsets.Last().z == 0) ? 1 : 0) == new Vector3((preEndPosOffset.x == 0) ? 1 : 0, 0, (preEndPosOffset.z == 0) ? 1 : 0))){
+                Debug.Log("CONNECTION ONTO ITSELF");
+            }
+
+            while (i < maxIter
+                    //&& (curPosOffset.x != preEndPosOffset.x || curPosOffset.z != preEndPosOffset.z
+
+                    //|| (curPosOffset.x == preEndPosOffset.x && curPosOffset.z == preEndPosOffset.z)
+                    && ((new Vector3(0, 0, 0) == new Vector3((preEndPosOffset.x == 0) ? 1 : 0, 0, (preEndPosOffset.z == 0) ? 1 : 0) // avoids diagonals
+
+                    || (new Vector3((planeOffsets.Last().x == 0) ? 1 : 0, 0, (planeOffsets.Last().z == 0) ? 1 : 0) == new Vector3((preEndPosOffset.x == 0) ? 1 : 0, 0, (preEndPosOffset.z == 0) ? 1 : 0))) // avoiuds same direction
+
+                   
+                    )
+                    )
+            {
+                // check if point is connectable, else restart
+
+                if ((new Vector3((planeOffsets.Last().x == 0) ? 1 : 0, 0, (planeOffsets.Last().z == 0) ? 1 : 0) == new Vector3((preEndPosOffset.x == 0) ? 1 : 0, 0, (preEndPosOffset.z == 0) ? 1 : 0))
+                    //&&
+                    //preEndPosOffset.z == 0 && preEndPosOffset.x != 0
+
+                    )
+                {
+                    planeOffsets.Add(new Vector3(planeOffsets[i].x, 0, planeOffsets[i].z));
+                }
+                else
+                {
+
+
+                    var newOffset = Vector3.Scale(new Vector3((planeOffsets[i].x > 0) ? 1 : 0, 0, (planeOffsets[i].z > 0) ? 1 : 0), preEndPosOffset); // * Mathf.Sign(planeOffsets[i].x)  * Mathf.Sign(planeOffsets[i].z)
+
+
+                    preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) - newOffset;
+
+                    if ((Math.Abs(newOffset.z) < 4 && newOffset.z != 0) || (Math.Abs(newOffset.x) < 4 && newOffset.x != 0)
+                        
+                        
+                        
+                       || (new Vector3((preEndPosOffset.x == 0) ? 1 : 0, 0, (preEndPosOffset.z == 0) ? 1 : 0) == new Vector3((newOffset.x == 0) ? 1 : 0, 0, (newOffset.z == 0) ? 1 : 0))
+                       || (new Vector3((planeOffsets.Last().x == 0) ? 1 : 0, 0, (planeOffsets.Last().z == 0) ? 1 : 0) == new Vector3((preEndPosOffset.x == 0) ? 1 : 0, 0, (preEndPosOffset.z == 0) ? 1 : 0))
+                        )
+                    {
+                        planeOffsets.Add(new Vector3(planeOffsets[i].x, 0, planeOffsets[i].z));
+                    }
+                    else
+                    {
+                        planeOffsets.Add(newOffset);
+                    }
+
+                }
+                curPosOffset = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+                i++;
+            }
+            #endregion
+
+
+            #region endOffset
+            preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            planeOffsets.Add(preEndPosOffset);
+
+            endOffset = endPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            planeOffsets.Add(endOffset);
+            #endregion
+
+
+            StairsGenerator.GenerateStairs(roomObj.transform, startPos, floorMaterial, planeSize, planeOffsets);
+
+
+            #region ladder generation
+
+            //ladderBounds = new BoundsInt(
+            //        new Vector3Int(ladderBounds.x, connectedRoomsOrderedByY[0].Bounds.y, ladderBounds.z), // Bottom Room min Bounds y
+            //        new Vector3Int(ladderBounds.size.x, connectedRoomsOrderedByY[0].Bounds.size.y + ladderBounds.size.y, ladderBounds.size.z)
+            //);
 
 
 
-            GameObject ladder = MeshHelper.CreateCuboid(ladderBounds.size, 1);
-            ladder.name = "ladder";
-            BoxCollider boxCollider = ladder.AddComponent<BoxCollider>();
-            boxCollider.isTrigger = true;
-            boxCollider.size = boxCollider.size + new Vector3(0.1f, 0, 0.1f);
+            //GameObject ladder = MeshHelper.CreateCuboid(ladderBounds.size, 1);
+            //ladder.name = "ladder";
+            //BoxCollider boxCollider = ladder.AddComponent<BoxCollider>();
+            //boxCollider.isTrigger = true;
+            //boxCollider.size = boxCollider.size + new Vector3(0.1f, 0, 0.1f);
 
-            ladder.AddComponent<Ladder>();
-            ladder.transform.SetParent(roomObj.transform, false);
-            ladder.transform.localPosition = ladderBounds.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
-            ladder.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.ladder;
+            //ladder.AddComponent<Ladder>();
+            //ladder.transform.SetParent(roomObj.transform, false);
+            //ladder.transform.localPosition = ladderBounds.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+            //ladder.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.ladder;
 
-            ladder.transform.transform.position = ladder.transform.transform.position - new Vector3(0, 0.001f, 0); // prevent z fighting
+            //ladder.transform.transform.position = ladder.transform.transform.position - new Vector3(0, 0.001f, 0); // prevent z fighting
+            #endregion
         }
 
         public void DrawWalls(Node room, RoomStyle roomStyle, GameObject roomObj)
@@ -481,29 +646,35 @@ namespace dungeonGenerator
             GameObject wallHolder = new GameObject("wallHolder");
             wallHolder.transform.SetParent(roomObj.transform, false);
 
+            Debug.Log($"The room type is {room.CorridorType}");
+
             if (room.CorridorType.Equals(CorridorType.Perpendicular))
             {
                 HandlePerpendicularWalls(wallBounds, room, roomStyle, roomObj);
+                // if else removed if ladders generated... 
             }
-
-            foreach (var wallBound in wallBounds.getWalls())
+            else
             {
 
-                GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
-                wall.name = "Wall";
-                wall.transform.SetParent(wallHolder.transform, false);
-
-                if (room.CorridorType.Equals(CorridorType.Perpendicular))
+                foreach (var wallBound in wallBounds.getWalls())
                 {
-                    wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+
+                    GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
+                    wall.name = "Wall";
+                    wall.transform.SetParent(wallHolder.transform, false);
+
+                    if (room.CorridorType.Equals(CorridorType.Perpendicular))
+                    {
+                        wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+                    }
+
+
+
+                    wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+                    wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+
+
                 }
-
-
-
-                wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
-                wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
-
-
             }
 
             

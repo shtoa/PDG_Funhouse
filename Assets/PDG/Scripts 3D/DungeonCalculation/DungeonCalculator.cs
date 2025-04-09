@@ -124,6 +124,8 @@ namespace dungeonGenerator
 
 
             var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid);
+
+
             //visualizeVoxelGrid(availableVoxelGrid);
 
 
@@ -175,7 +177,7 @@ namespace dungeonGenerator
                             {
                                 GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
                                 cube.transform.parent = voxelHolder.transform;
-                                cube.transform.localPosition = new Vector3Int(x, y, z);
+                                cube.transform.localPosition = new Vector3Int(x, y, z) + GameObject.Find("DungeonGen").transform.position + new Vector3(1.5f,0.5f,1.5f);
                             }
 
                         }

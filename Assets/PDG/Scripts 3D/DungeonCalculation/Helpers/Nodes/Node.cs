@@ -205,8 +205,10 @@ namespace dungeonGenerator
             if (splitPosition == SplitPosition.Up)
             {
                 holePlacement = new HolePlacement(new BoundsInt(
-                            new Vector3Int(holeBounds.min.x + wallThickness, holeBounds.max.y, holeBounds.min.z + wallThickness),
-                            new Vector3Int(holeBounds.size.x - 2 * wallThickness, 0, holeBounds.size.z - 2 * wallThickness)
+                      new Vector3Int(holeBounds.min.x, holeBounds.max.y, holeBounds.min.z ),
+                      new Vector3Int(holeBounds.size.x, 0, holeBounds.size.z )
+                      //new Vector3Int(holeBounds.min.x + wallThickness, holeBounds.max.y, holeBounds.min.z + wallThickness),
+                      //new Vector3Int(holeBounds.size.x - 2 * wallThickness, 0, holeBounds.size.z - 2 * wallThickness)
                       ),
                       SplitPosition.Down
                   );

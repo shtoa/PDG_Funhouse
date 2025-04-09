@@ -4,122 +4,118 @@ using UnityEngine;
 using dungeonGenerator;
 using System.Linq;
 
-public class StairsGenerator : MonoBehaviour
+namespace dungeonGenerator
 {
-    [SerializeField]
-    public Material stairsMaterial;
-
-    void connectPlatforms(Vector3 plane1position,Vector3 planeSize, Vector3 plane2offset) {
-
-
-
-        Vector3 offsetDirection = Mathf.Abs(plane2offset.x- plane1position.x) > Mathf.Abs(plane2offset.z-plane1position.z) ?
-                                  Mathf.Sign(plane2offset.x - plane1position.x) * Vector3.right :
-                                  Mathf.Sign(plane2offset.z - plane1position.z) * Vector3.forward;
-
-        Debug.Log($"offset direction: {offsetDirection}");
-
-        // figure out which vertices are needed
-
-        Vector3 bottomLeftV = plane1position 
-                              + Vector3.Scale(offsetDirection, planeSize / 2) 
-                              + Vector3.Scale(new Vector3(1, 0, 1)
-                                                - new Vector3(Mathf.Abs(offsetDirection.x), 
-                                                              Mathf.Abs(offsetDirection.y), 
-                                                              Mathf.Abs(offsetDirection.z)
-                                                              ),
-                                                - planeSize / 2);
-
-        Vector3 bottomRightV = plane1position 
-                               + Vector3.Scale(offsetDirection, planeSize / 2) 
-                               + Vector3.Scale(new Vector3(1, 0, 1)
-                                                - new Vector3(Mathf.Abs(offsetDirection.x), 
-                                                              Mathf.Abs(offsetDirection.y), 
-                                                              Mathf.Abs(offsetDirection.z)
-                                                              ),
-                                                planeSize / 2);
-
-        Vector3 topLeftV = plane1position + new Vector3(plane2offset.x,
-                                        plane2offset.y,
-                                        plane2offset.z) - bottomLeftV;
-
-        Vector3 topRightV = plane1position + new Vector3(plane2offset.x,
-                                        plane2offset.y,
-                                        plane2offset.z) - bottomRightV;
-
-        Vector3[] vertices = new Vector3[]
+    public static class StairsGenerator
+    {
+        static void ConnectPlatforms(Transform transform, Vector3 startPos, Material stairsMaterial, Vector3 plane1position, Vector3 planeSize, Vector3 plane2offset)
         {
+
+
+
+            Vector3 offsetDirection = Mathf.Abs(plane2offset.x - plane1position.x) > Mathf.Abs(plane2offset.z - plane1position.z) ?
+                                      Mathf.Sign(plane2offset.x - plane1position.x) * Vector3.right :
+                                      Mathf.Sign(plane2offset.z - plane1position.z) * Vector3.forward;
+
+            Debug.Log($"offset direction: {offsetDirection}");
+
+            // figure out which vertices are needed
+
+            Vector3 bottomLeftV = plane1position
+                                  + Vector3.Scale(offsetDirection, planeSize / 2)
+                                  + Vector3.Scale(new Vector3(1, 0, 1)
+                                                    - new Vector3(Mathf.Abs(offsetDirection.x),
+                                                                  Mathf.Abs(offsetDirection.y),
+                                                                  Mathf.Abs(offsetDirection.z)
+                                                                  ),
+                                                    -planeSize / 2);
+
+            Vector3 bottomRightV = plane1position
+                                   + Vector3.Scale(offsetDirection, planeSize / 2)
+                                   + Vector3.Scale(new Vector3(1, 0, 1)
+                                                    - new Vector3(Mathf.Abs(offsetDirection.x),
+                                                                  Mathf.Abs(offsetDirection.y),
+                                                                  Mathf.Abs(offsetDirection.z)
+                                                                  ),
+                                                    planeSize / 2);
+
+            Vector3 topLeftV = plane1position + new Vector3(plane2offset.x,
+                                            plane2offset.y,
+                                            plane2offset.z) - bottomLeftV;
+
+            Vector3 topRightV = plane1position + new Vector3(plane2offset.x,
+                                            plane2offset.y,
+                                            plane2offset.z) - bottomRightV;
+
+            Vector3[] vertices = new Vector3[]
+            {
             topRightV,
             topLeftV,
             bottomLeftV,
             bottomRightV
-        };
+            };
 
-        GameObject stairsPlane = MeshHelper.CreatePlaneFromPoints(vertices, 2, offsetDirection.x < 0 || offsetDirection.z > 0);
-        stairsPlane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
+            GameObject stairsPlane = MeshHelper.CreatePlaneFromPoints(vertices, 2, offsetDirection.x < 0 || offsetDirection.z > 0);
+            stairsPlane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
 
-        stairsPlane.transform.position = transform.position;
-        stairsPlane.transform.SetParent(transform);
+            stairsPlane.transform.localPosition = startPos;
+            stairsPlane.transform.SetParent(transform);
 
-    }
-
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        Vector3 planeSize = new Vector3(2, 0, 2);
-
-        //List<Vector3> planeOffsets = new List<Vector3>
-        //{
-        //    new Vector3(20f, 5.5f, 0f),
-        //    new Vector3(0, 0f, -20f),
-        //    new Vector3(-20f, -5.5f, 0f),
-        //    new Vector3(0f, 3.5f, 20f),
-        //    new Vector3(20f, 3.5f, 0f),
-        //    new Vector3(0, 0f, -20f),
-        //    new Vector3(-20f, -5.5f, 0f),
-        //    new Vector3(0f, 3.5f, 20f)
-        //};
-        List<Vector3> planeOffsets = new List<Vector3>
-        {
-            new Vector3(0f, 2.5f, -14f),
-            new Vector3(-13f, 2.5f, 0f),
-            new Vector3(0f, 2.5f, 17f),
-            new Vector3(13f, 2.5f, 0f),
-            new Vector3(0f, 2.5f, -17f),
-            new Vector3(-13f, 2.5f, 0f),
-            new Vector3(0, 0f, 5f),
-            new Vector3(13f, 2.5f, 0f),
-
-        };
-
-        Vector3 curOffset = Vector3.zero;
-
-        GameObject plane = MeshHelper.CreatePlane(Vector3Int.CeilToInt(planeSize), 2, false);
-        plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
-        plane.transform.position = transform.position;
-        plane.transform.SetParent(transform);
-
-        foreach (var planeOffset in planeOffsets)
-        {
-            if(Mathf.Abs(planeOffset.x) > planeSize.x || Mathf.Abs(planeOffset.z) > planeSize.z)
-            {
-                connectPlatforms(curOffset, planeSize, curOffset + planeOffset);
-            }
-
-            curOffset += planeOffset;
-
-            plane = MeshHelper.CreatePlane(Vector3Int.CeilToInt(planeSize), 2, false);
-            plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
-            plane.transform.position = transform.position + curOffset;
-            plane.transform.SetParent(transform);
         }
 
-    }
+        public static void GenerateStairs(Transform transform, Vector3 startPos, Material stairsMaterial, Vector3 planeSize, List<Vector3> planeOffsets)
+        {
+            Vector3 curOffset = Vector3.zero;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+            GameObject plane = MeshHelper.CreatePlane(Vector3Int.CeilToInt(planeSize), 2, false);
+            plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
+            plane.transform.localPosition = startPos;
+            plane.transform.SetParent(transform);
+
+            foreach (var planeOffset in planeOffsets)
+            {
+                if (Mathf.Abs(planeOffset.x) > planeSize.x || Mathf.Abs(planeOffset.z) > planeSize.z)
+                {
+                    StairsGenerator.ConnectPlatforms(transform, startPos, stairsMaterial, curOffset, planeSize, curOffset + planeOffset);
+                }
+
+                curOffset += planeOffset;
+
+                plane = MeshHelper.CreatePlane(Vector3Int.CeilToInt(planeSize), 2, false);
+                plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
+                plane.transform.localPosition = startPos + curOffset;
+                plane.transform.SetParent(transform);
+            }
+        }
+
+
+
+        //// Start is called before the first frame update
+        //void Start()
+        //{
+        //    Vector3 planeSize = new Vector3(2, 0, 2);
+
+        //    List<Vector3> planeOffsets = new List<Vector3>
+        //    {
+        //        new Vector3(0f, 2.5f, -14f),
+        //        new Vector3(-13f, 2.5f, 0f),
+        //        new Vector3(0f, 2.5f, 17f),
+        //        new Vector3(13f, 2.5f, 0f),
+        //        new Vector3(0f, 2.5f, -17f),
+        //        new Vector3(-13f, 2.5f, 0f),
+        //        new Vector3(0, 0f, 5f),
+        //        new Vector3(13f, 2.5f, 0f),
+
+        //    };
+
+        //    GenerateStairs(planeSize, planeOffsets);
+
+        //}
+
+        //// Update is called once per frame
+        //void Update()
+        //{
+
+        //}
     }
 }
