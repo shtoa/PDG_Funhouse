@@ -67,6 +67,7 @@ namespace dungeonGenerator
 
         }
 
+        #region Corridor Pathfinding Methods
         private bool[,,] getCorridorGrid(bool[,,] availableVoxelGrid)
         {
             bool[,,] corridorVoxelGrid = new bool[availableVoxelGrid.GetLength(0), availableVoxelGrid.GetLength(1), availableVoxelGrid.GetLength(2)];
@@ -88,6 +89,287 @@ namespace dungeonGenerator
 
             return corridorVoxelGrid;
         }
+        private void calculateWallsFromCorridorTest(SplitPosition splitPosition)
+        {
+            Vector3Int minPos = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
+            Vector3Int maxPos = Vector3Int.zero;
+
+            // find Min and Max Positions in the Corridors
+
+            foreach (BoundsInt bound in CorridorBoundsList)
+            {
+
+                minPos = Vector3Int.Min(minPos, bound.min);     // find Min
+                maxPos = Vector3Int.Max(maxPos, bound.max);     // find Max
+
+            }
+
+            minPos = minPos - new Vector3Int(1, 0, 1); // wall offset
+            maxPos = maxPos + new Vector3Int(2, 0, 2); // wall offset
+
+            Vector3Int size = maxPos - minPos;
+
+            // Generate to 
+            bool[,] corridorArray = new bool[size.x, size.z];
+            bool[,] wallArray = new bool[size.x, size.z];
+
+
+            foreach (BoundsInt bound in CorridorBoundsList)
+            {
+                Vector3Int startPos = bound.position;
+                Vector3Int mPos = bound.size;
+
+                for (int x = (startPos.x - minPos.x); x < mPos.x + (startPos.x - minPos.x); x++)
+                {
+                    for (int z = (startPos.z - minPos.z); z < mPos.z + (startPos.z - minPos.z); z++)
+                    {
+
+                        corridorArray[x, z] = true;
+
+                    }
+
+                }
+            }
+
+            // loop over all corridor Array positions and populate wallArray
+            for (int x = 0; x < corridorArray.GetLength(0); x++)
+            {
+                for (int z = 0; z < corridorArray.GetLength(1); z++)
+                {
+                    //  check if in corridor space is taken 
+                    if (corridorArray[x, z] == true)
+                    {
+
+                        // Check all neighbouring cells 
+                        foreach (Vector3Int dir in possibleDir)
+                        {
+                            Debug.Log($"WALL ARRAY NOT WORK {dir.ToString()}");
+
+
+
+                            // issue with wall condition not allowing for generation of walls in certain places
+                            //bool wallCondition = ((splitPosition == SplitPosition.Left) ? (x + dir.x > 0 && x + dir.x < (corridorArray.GetLength(0) - 2) && z + dir.z >= 0 && (z + dir.z) < corridorArray.GetLength(1)) :
+                            //    (x + dir.x >= 0 && x + dir.x < (corridorArray.GetLength(0) - 1) && z + dir.z > 1 && (z + dir.z) < corridorArray.GetLength(1) - 2));
+
+
+                            // wallCondition = true;
+
+                            if (!this.availableVoxelGrid[x + dir.x + minPos.x, minPos.y, z + dir.z + minPos.z]) // change the y value based on the corriodr height
+                            {
+
+                                if (corridorArray[x + dir.x, z + dir.z] == false)
+                                {
+                                    Debug.Log("WALL ARRAY WORK");
+                                    wallArray[x + dir.x, z + dir.z] = true;
+                                }
+                            }
+                        }
+
+
+
+                    }
+
+                }
+            }
+
+
+            // convert wall Array to bounds 
+            for (int x = 0; x < wallArray.GetLength(0); x++)
+            {
+                for (int z = 0; z < wallArray.GetLength(1); z++)
+                {
+                    if (wallArray[x, z] == true)
+                    {
+
+                        Vector3Int startPos = new Vector3Int(x, 0, z);
+                        Vector3Int curPos = new Vector3Int(x, 0, z);
+
+                        int width = 0;
+                        int i = 0;
+
+                        // get maxwidth
+
+                        while (wallArray[curPos.x, curPos.z] == true && i < 100) //  && width < (wallArray.GetLength(0)-1)
+                        {
+                            wallArray[curPos.x, curPos.z] = false;
+                            curPos = curPos + Vector3Int.right; // get Max Width of segmenet 
+                            width++;
+                            i++;
+
+
+                            Debug.Log($"CurPos Width: {curPos.ToString()}, Wall Array Size x:{wallArray.GetLength(0)} y: {wallArray.GetLength(1)}");
+                        }
+
+                        Debug.Log($"WIDTH OF THE SEGMENT: {width}");
+
+                        // get max height
+                        int height = 1;
+                        i = 0;
+                        bool isWidthFound = true;
+                        curPos = new Vector3Int(x, 0, z) + Vector3Int.forward;
+
+
+                        while (wallArray[curPos.x, curPos.z] == true && i < 100 && isWidthFound)
+                        {
+
+                            for (int j = 1; j < width; j++)
+                            {
+                                curPos = startPos + j * Vector3Int.right + Vector3Int.forward * (height);
+                                if (wallArray[curPos.x, curPos.z] == false)
+                                {
+                                    isWidthFound = false;
+                                    break;
+                                }
+                            }
+
+                            if (isWidthFound == true)
+                            {
+                                for (int j = 1; j <= width; j++)
+                                {
+
+                                    wallArray[curPos.x, curPos.z] = false;
+                                    curPos = startPos + j * Vector3Int.right + Vector3Int.forward * (height);
+
+                                }
+                            }
+
+
+                            if (height < (wallArray.GetLength(1) - 1) && isWidthFound)
+                            {
+                                height++;
+                            }
+                            else
+                            {
+                                break;
+                            }
+
+
+                            curPos = startPos + 0 * Vector3Int.right + Vector3Int.forward * height;
+
+                            i++;
+
+                            Debug.Log($"CurPos Height: {curPos.ToString()}, Wall Array Size x:{wallArray.GetLength(0)} y: {wallArray.GetLength(1)}");
+
+
+                        }
+
+                        //Debug.Log($"FINAL SEGMENT: width: {width}, height: {height}");
+                        BoundsInt floorBounds = new BoundsInt(new Vector3Int(x + minPos.x, minPos.y, z + minPos.z), new Vector3Int(width, corridorHeight, height));
+                        Debug.Log("THe Wall Segment BOunds" + floorBounds.ToString());
+                        CorridorWallBoundsList.Add(floorBounds);
+
+                    }
+                }
+            }
+        }
+        private void generateCorridorFloorBounds(int y)
+        {
+            for (int x = 0; x < this.availableVoxelGrid.GetLength(0); x++)
+            {
+                //for (int y = 0; y < this.availableVoxelGrid.GetLength(1); y++)
+                //{
+                for (int z = 0; z < this.availableVoxelGrid.GetLength(2); z++)
+                {
+
+
+                    if (this.corridorGrid[x, y, z] == true)
+                    {
+
+                        Vector3Int startPos = new Vector3Int(x, y, z);
+                        Vector3Int curPos = new Vector3Int(x, y, z);
+
+                        int width = 0;
+                        int i = 0;
+
+                        // get maxwidth
+
+                        while (this.corridorGrid[curPos.x, curPos.y, curPos.z] == true && i < 100)
+                        {
+                            this.corridorGrid[curPos.x, curPos.y, curPos.z] = false;
+                            curPos = curPos + Vector3Int.right; // get Max Width of segmenet 
+                            width++;
+                            i++;
+                        }
+
+                        Debug.Log($"WIDTH OF THE SEGMENT: {width}");
+
+                        // get max height
+                        int height = 1;
+                        i = 0;
+                        bool isWidthFound = true;
+                        curPos = new Vector3Int(x, y, z) + Vector3Int.forward;
+
+
+                        while (this.corridorGrid[curPos.x, curPos.y, curPos.z] == true && i < 100 && isWidthFound)
+                        {
+
+                            for (int j = 1; j < width; j++)
+                            {
+                                this.corridorGrid[curPos.x, curPos.y, curPos.z] = false;
+                                curPos = startPos + j * Vector3Int.right + Vector3Int.forward * height;
+
+                                if (this.corridorGrid[curPos.x, curPos.y, curPos.z] == false)
+                                {
+                                    isWidthFound = false;
+                                }
+                            }
+
+                            if (isWidthFound == true)
+                            {
+                                for (int j = 1; j <= width; j++)
+                                {
+                                    this.corridorGrid[curPos.x, curPos.y, curPos.z] = false;
+                                    curPos = startPos + j * Vector3Int.right + Vector3Int.forward * height;
+
+                                }
+                            }
+
+
+
+
+                            height++;
+                            curPos = startPos + 0 * Vector3Int.right + Vector3Int.forward * height;
+
+                            i++;
+
+
+                        }
+
+                        Debug.Log($"FINAL SEGMENT: width: {width}, height: {height}");
+                        BoundsInt floorBounds = new BoundsInt(new Vector3Int(x, y, z), new Vector3Int(width, corridorHeight, height));
+                        Debug.Log("THe floor BOunds" + floorBounds.ToString());
+                        CorridorBoundsList.Add(floorBounds);
+
+
+
+
+                    }
+
+                }
+
+                //}
+
+            }
+        }
+        private void updateAvailableGrid()
+        {
+            for (int x = 0; x < this.availableVoxelGrid.GetLength(0); x++)
+            {
+                for (int y = 0; y < this.availableVoxelGrid.GetLength(1); y++)
+                {
+                    for (int z = 0; z < this.availableVoxelGrid.GetLength(2); z++)
+                    {
+
+                        this.availableVoxelGrid[x, y, z] = this.availableVoxelGrid[x, y, z] || this.corridorGrid[x, y, z];
+
+                    }
+
+                }
+
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Generate Corridor Based on relative Room Alignment
@@ -176,119 +458,6 @@ namespace dungeonGenerator
 
         }
 
-        private List<Node> ReturnPossibleNeighborsRightSpace(Node leftSpace, List<Node> rightSpaceNeighborCandidates)
-        {
-            return rightSpaceNeighborCandidates.Where(rightSpace =>
-                GetCorridorPositionLeftRightZ(leftSpace, rightSpace) != -1
-            // && (leftSpace.FloorIndex == rightSpace.FloorIndex)
-            ).OrderBy(rightSpace => rightSpace.Bounds.min.x).Where(rightSpace => Mathf.Abs(rightSpace.Bounds.min.y - leftSpace.Bounds.min.y) == 0).ToList(); // order by ascending (smallest) x
-
-            /* FOR NOW NO LADDERS / STAIR CASES
-            * 
-            * No Ladder Condition: .Where(rightSpace => Mathf.Abs(rightSpace.Bounds.min.y - leftSpace.Bounds.min.y) == 0).ToList()
-            * .Where(rightSpace => Mathf.Abs(rightSpace.Bounds.min.y - leftSpace.Bounds.min.y) == 0)
-           */
-        }
-
-        private (Node leftSpace, Node rightSpace) FindNeighborsLeftRight(List<Node> sortedLeftSpaces, List<Node> sortedRightSpaces)
-        {
-            // intialize output nodes
-            Node rightSpace = null;
-            Node leftSpace = null;
-
-            leftSpace = sortedLeftSpaces[Random.Range(0, sortedLeftSpaces.Count)]; // pick a left space from candidates
-            var neighborsInRightSpaceList = ReturnPossibleNeighborsRightSpace(leftSpace, sortedRightSpaces); // get possible neighbors in rightSpace
-
-            if (neighborsInRightSpaceList.Count() > 0)
-            {
-                rightSpace = neighborsInRightSpaceList[Random.Range(0, neighborsInRightSpaceList.Count)]; //[Random.Range(0, neighborsInRightSpaceList.Count)]; // if neighbors exist choose one at random 
-            }
-            else
-            {
-                // --- Added Check if no neighbors are found to reselect leftSpace
-
-                sortedLeftSpaces.Remove(leftSpace);
-
-                foreach (var newLeftSpace in sortedLeftSpaces)
-                {
-                    neighborsInRightSpaceList = ReturnPossibleNeighborsRightSpace(newLeftSpace, sortedRightSpaces); // select new LeftSpace and check if it has any neighbors
-
-                    if (neighborsInRightSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
-                    {
-                        leftSpace = newLeftSpace;
-                        rightSpace = neighborsInRightSpaceList[Random.Range(0, neighborsInRightSpaceList.Count)]; // select closest one //[Random.Range(0, neighborsInRightSpaceList.Count)];
-                        break;
-                    }
-                }
-            }
-
-            return (leftSpace, rightSpace);
-        }
-
-        public void GenerateCorridorBoundsLeftRight(Node leftSpace, Node rightSpace)
-        {
-            int corridorZ = GetCorridorPositionLeftRightZ(leftSpace, rightSpace);
-            #region Debug Corridor
-            if (corridorZ == -1)
-            {
-                // Incase no Neighbours are Found 
-                // TODO: Move this to Unit Testing
-                Debug.Log("Wrong Size");
-            }
-
-            if (leftSpace == null || rightSpace == null)
-            {
-                Debug.Log("Spaces not Found");
-            }
-            #endregion
-
-
-            // --- Get Lateral Corridor Type --- 
-            LateralCorridorType t = GetLateralCorridorType(leftSpace, rightSpace, SplitPosition.Left);
-
-            Debug.Log($"type of corridor {t}");
-
-            // --- Generate Bounds for Corridor Type --- 
-
-            // --- Generate Bounds for the Corridors --- 
-
-            if (t == LateralCorridorType.Corridor) {
-
-                var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
-                var pos = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, corridorZ - Mathf.FloorToInt(this.corridorWidth / 2f));
-
-                Bounds = new BoundsInt(
-                    pos,
-                    new Vector3Int(sizeX, this.corridorHeight, this.corridorWidth) // assumption that both spaces are the same height
-                );
-            } else // FIX ME: Make More Concise
-            {
-
-                var doorHeight = 2;
-
-                if (leftSpace.Bounds.min.y < rightSpace.Bounds.min.y)
-                {
-                    var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
-                    var pos = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, corridorZ - Mathf.FloorToInt(this.corridorWidth / 2f));
-
-                    Bounds = new BoundsInt(
-                        pos,
-                        new Vector3Int(sizeX, rightSpace.Bounds.min.y - leftSpace.Bounds.min.y + doorHeight, this.corridorWidth) // assumption that both spaces are the same height
-                    );
-                }
-                else
-                {
-                    var sizeX = rightSpace.Bounds.min.x - leftSpace.Bounds.max.x;
-                    var pos = new Vector3Int(leftSpace.Bounds.max.x, rightSpace.Bounds.min.y, corridorZ - Mathf.FloorToInt(this.corridorWidth / 2f));
-
-                    Bounds = new BoundsInt(
-                        pos,
-                        new Vector3Int(sizeX, leftSpace.Bounds.min.y - rightSpace.Bounds.min.y + doorHeight, this.corridorWidth) // assumption that both spaces are the same height
-                    );
-                }
-            }
-        }
-
         // FIX ME: Write Function to Infer Relative Position <<<<< Cant use Split position
         // FIX ME: Rewrite in less verbos way
         public LateralCorridorType GetLateralCorridorType(Node node1, Node node2, SplitPosition node1Spit)
@@ -364,13 +533,8 @@ namespace dungeonGenerator
 
         #endregion
 
-
         public void buildCorridorLeftRight(Node leftSpace, Node rightSpace)
         {
-
-
-
-
 
             Vector3Int leftStartVoxel = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, (leftSpace.Bounds.min.z + leftSpace.Bounds.max.z) / 2);
             this.corridorGrid[leftStartVoxel.x, leftStartVoxel.y, leftStartVoxel.z] = true;
@@ -631,22 +795,6 @@ namespace dungeonGenerator
             calculateWallsFromCorridorTest(SplitPosition.Left);
 
 
-
-
-
-            // --- Generate Corridor Between LeftSpace and RightSpace --- 
-
-            Debug.Log($"LeftSpace Value {leftSpace is null} children in leftNode {leftNode.ChildrenNodeList.Count} leaves {leftSpaceLeaves.Count}");
-            Debug.Log($"RightSpace Value {rightSpace is null} children in rightNode {rightNode.ChildrenNodeList.Count} leaves {rightSpaceLeaves.Count}");
-
-            //if (leftSpace == null || rightSpace == null)
-            //{
-            //    this.CorridorType = CorridorType.None;
-            //    return;
-            //}
-
-            //GenerateCorridorBoundsLeftRight(leftSpace, rightSpace);
-
             // --- Add Neighbours to the Connection List of Respective Nodes --- 
 
             leftSpace.ConnectionsList.Add(rightSpace);
@@ -659,352 +807,6 @@ namespace dungeonGenerator
 
         }
 
-        private void calculateWallsFromCorridorTest(SplitPosition splitPosition)
-        {
-            Vector3Int minPos = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
-            Vector3Int maxPos = Vector3Int.zero;
-
-            // find Min and Max Positions in the Corridors
-
-            foreach (BoundsInt bound in CorridorBoundsList)
-            {
-
-                minPos = Vector3Int.Min(minPos, bound.min);     // find Min
-                maxPos = Vector3Int.Max(maxPos, bound.max);     // find Max
-
-            }
-
-            minPos = minPos - new Vector3Int(1, 0, 1); // wall offset
-            maxPos = maxPos + new Vector3Int(2, 0, 2); // wall offset
-
-            Vector3Int size = maxPos - minPos;
-
-            // Generate to 
-            bool[,] corridorArray = new bool[size.x, size.z];
-            bool[,] wallArray = new bool[size.x, size.z];
-
-
-            foreach (BoundsInt bound in CorridorBoundsList)
-            {
-                Vector3Int startPos = bound.position;
-                Vector3Int mPos = bound.size;
-
-                for (int x = (startPos.x - minPos.x); x < mPos.x + (startPos.x - minPos.x); x++)
-                {
-                    for (int z = (startPos.z - minPos.z); z < mPos.z + (startPos.z - minPos.z); z++)
-                    {
-
-                        corridorArray[x, z] = true;
-
-                    }
-
-                }
-            }
-
-            // loop over all corridor Array positions and populate wallArray
-            for (int x = 0; x < corridorArray.GetLength(0); x++)
-            {
-                for (int z = 0; z < corridorArray.GetLength(1); z++)
-                {
-                    //  check if in corridor space is taken 
-                    if (corridorArray[x, z] == true)
-                    {
-
-                        // Check all neighbouring cells 
-                        foreach (Vector3Int dir in possibleDir)
-                        {
-                            Debug.Log($"WALL ARRAY NOT WORK {dir.ToString()}");
-
-
-
-                            // issue with wall condition not allowing for generation of walls in certain places
-                            //bool wallCondition = ((splitPosition == SplitPosition.Left) ? (x + dir.x > 0 && x + dir.x < (corridorArray.GetLength(0) - 2) && z + dir.z >= 0 && (z + dir.z) < corridorArray.GetLength(1)) :
-                            //    (x + dir.x >= 0 && x + dir.x < (corridorArray.GetLength(0) - 1) && z + dir.z > 1 && (z + dir.z) < corridorArray.GetLength(1) - 2));
-
-
-                            // wallCondition = true;
-
-                            if (!this.availableVoxelGrid[x + dir.x + minPos.x, minPos.y, z + dir.z + minPos.z]) // change the y value based on the corriodr height
-                            {
-
-                                if (corridorArray[x + dir.x, z + dir.z] == false)
-                                {
-                                    Debug.Log("WALL ARRAY WORK");
-                                    wallArray[x + dir.x, z + dir.z] = true;
-                                }
-                            }
-                        }
-
-
-
-                    }
-
-                }
-            }
-
-
-            // convert wall Array to bounds 
-            for (int x = 0; x < wallArray.GetLength(0); x++)
-            {
-                for (int z = 0; z < wallArray.GetLength(1); z++)
-                {
-                    if (wallArray[x, z] == true)
-                    {
-
-                        Vector3Int startPos = new Vector3Int(x, 0, z);
-                        Vector3Int curPos = new Vector3Int(x, 0, z);
-
-                        int width = 0;
-                        int i = 0;
-
-                        // get maxwidth
-
-                        while (wallArray[curPos.x, curPos.z] == true && i < 100) //  && width < (wallArray.GetLength(0)-1)
-                        {
-                            wallArray[curPos.x, curPos.z] = false;
-                            curPos = curPos + Vector3Int.right; // get Max Width of segmenet 
-                            width++;
-                            i++;
-
-
-                            Debug.Log($"CurPos Width: {curPos.ToString()}, Wall Array Size x:{wallArray.GetLength(0)} y: {wallArray.GetLength(1)}");
-                        }
-
-                        Debug.Log($"WIDTH OF THE SEGMENT: {width}");
-
-                        // get max height
-                        int height = 1;
-                        i = 0;
-                        bool isWidthFound = true;
-                        curPos = new Vector3Int(x, 0, z) + Vector3Int.forward;
-
-
-                        while (wallArray[curPos.x, curPos.z] == true && i < 100 && isWidthFound)
-                        {
-
-                            for (int j = 1; j < width; j++)
-                            {
-                                curPos = startPos + j * Vector3Int.right + Vector3Int.forward * (height);
-                                if (wallArray[curPos.x, curPos.z] == false)
-                                {
-                                    isWidthFound = false;
-                                    break;
-                                }
-                            }
-
-                            if (isWidthFound == true)
-                            {
-                                for (int j = 1; j <= width; j++)
-                                {
-
-                                    wallArray[curPos.x, curPos.z] = false;
-                                    curPos = startPos + j * Vector3Int.right + Vector3Int.forward * (height);
-
-                                }
-                            }
-
-
-                            if (height < (wallArray.GetLength(1) - 1) && isWidthFound)
-                            {
-                                height++;
-                            } else
-                            {
-                                break;
-                            }
-
-
-                            curPos = startPos + 0 * Vector3Int.right + Vector3Int.forward * height;
-
-                            i++;
-
-                            Debug.Log($"CurPos Height: {curPos.ToString()}, Wall Array Size x:{wallArray.GetLength(0)} y: {wallArray.GetLength(1)}");
-
-
-                        }
-
-                        //Debug.Log($"FINAL SEGMENT: width: {width}, height: {height}");
-                        BoundsInt floorBounds = new BoundsInt(new Vector3Int(x + minPos.x, minPos.y, z + minPos.z), new Vector3Int(width, corridorHeight, height));
-                        Debug.Log("THe Wall Segment BOunds" + floorBounds.ToString());
-                        CorridorWallBoundsList.Add(floorBounds);
-
-                    }
-                }
-            }
-        }
-
-        private void calculateWallsFromCorridor()
-        {
-
-
-
-
-
-        }
-
-        private void generateCorridorFloorBounds(int y)
-        {
-            for (int x = 0; x < this.availableVoxelGrid.GetLength(0); x++)
-            {
-                //for (int y = 0; y < this.availableVoxelGrid.GetLength(1); y++)
-                //{
-                for (int z = 0; z < this.availableVoxelGrid.GetLength(2); z++)
-                {
-
-
-                    if (this.corridorGrid[x, y, z] == true)
-                    {
-
-                        Vector3Int startPos = new Vector3Int(x, y, z);
-                        Vector3Int curPos = new Vector3Int(x, y, z);
-
-                        int width = 0;
-                        int i = 0;
-
-                        // get maxwidth
-
-                        while (this.corridorGrid[curPos.x, curPos.y, curPos.z] == true && i < 100)
-                        {
-                            this.corridorGrid[curPos.x, curPos.y, curPos.z] = false;
-                            curPos = curPos + Vector3Int.right; // get Max Width of segmenet 
-                            width++;
-                            i++;
-                        }
-
-                        Debug.Log($"WIDTH OF THE SEGMENT: {width}");
-
-                        // get max height
-                        int height = 1;
-                        i = 0;
-                        bool isWidthFound = true;
-                        curPos = new Vector3Int(x, y, z) + Vector3Int.forward;
-
-
-                        while (this.corridorGrid[curPos.x, curPos.y, curPos.z] == true && i < 100 && isWidthFound)
-                        {
-
-                            for (int j = 1; j < width; j++)
-                            {
-                                this.corridorGrid[curPos.x, curPos.y, curPos.z] = false;
-                                curPos = startPos + j * Vector3Int.right + Vector3Int.forward * height;
-
-                                if (this.corridorGrid[curPos.x, curPos.y, curPos.z] == false)
-                                {
-                                    isWidthFound = false;
-                                }
-                            }
-
-                            if (isWidthFound == true) {
-                                for (int j = 1; j <= width; j++)
-                                {
-                                    this.corridorGrid[curPos.x, curPos.y, curPos.z] = false;
-                                    curPos = startPos + j * Vector3Int.right + Vector3Int.forward * height;
-
-                                }
-                            }
-
-
-
-
-                            height++;
-                            curPos = startPos + 0 * Vector3Int.right + Vector3Int.forward * height;
-
-                            i++;
-
-
-                        }
-
-                        Debug.Log($"FINAL SEGMENT: width: {width}, height: {height}");
-                        BoundsInt floorBounds = new BoundsInt(new Vector3Int(x, y, z), new Vector3Int(width, corridorHeight, height));
-                        Debug.Log("THe floor BOunds" + floorBounds.ToString());
-                        CorridorBoundsList.Add(floorBounds);
-
-
-
-
-                    }
-
-                }
-
-                //}
-
-            }
-        }
-
-        private void updateAvailableGrid()
-        {
-            for (int x = 0; x < this.availableVoxelGrid.GetLength(0); x++)
-            {
-                for (int y = 0; y < this.availableVoxelGrid.GetLength(1); y++)
-                {
-                    for (int z = 0; z < this.availableVoxelGrid.GetLength(2); z++)
-                    {
-
-                        this.availableVoxelGrid[x, y, z] = this.availableVoxelGrid[x, y, z] || this.corridorGrid[x, y, z];
-
-                    }
-
-                }
-
-            }
-        }
-
-        /// <summary>
-        /// Get the Position of the Corridor Along the Z-Axis
-        /// </summary>
-        /// <param name="leftSpace"></param>
-        /// <param name="rightSpace"></param>
-        /// <returns></returns>
-
-        private int GetCorridorPositionLeftRightZ(Node leftSpace, Node rightSpace)
-        {
-
-            // right space is within bounds of left space
-            if (leftSpace.Bounds.max.z >= rightSpace.Bounds.max.z && rightSpace.Bounds.min.z >= leftSpace.Bounds.min.z)
-            {
-                return CalculateMiddlePoint(
-                    rightSpace.Bounds.min,
-                    rightSpace.Bounds.max
-                ).z;
-            }
-            // right space contain bounds of left space
-            if (rightSpace.Bounds.max.z >= leftSpace.Bounds.max.z && leftSpace.Bounds.min.z >= rightSpace.Bounds.min.z)
-            {
-                return CalculateMiddlePoint(
-                    leftSpace.Bounds.min,
-                    leftSpace.Bounds.max
-                ).z;
-            }
-
-            // right space is above left space
-            if (leftSpace.Bounds.max.z >= rightSpace.Bounds.min.z && rightSpace.Bounds.min.z > leftSpace.Bounds.min.z) {
-
-                if (leftSpace.Bounds.max.z - rightSpace.Bounds.min.z <= this.corridorWidth + 2 * wallThickness) // changed to 2x wallThickness
-                {
-                    return -1;
-                }
-
-                return CalculateMiddlePoint(
-                    rightSpace.Bounds.min,
-                    leftSpace.Bounds.max
-                ).z;
-            }
-            // right space is bellow left space
-            if (rightSpace.Bounds.max.z >= leftSpace.Bounds.min.z && leftSpace.Bounds.min.z > rightSpace.Bounds.min.z) // before was >=
-            {
-
-                if (rightSpace.Bounds.max.z - leftSpace.Bounds.min.z <= this.corridorWidth + 2 * wallThickness)
-                {
-                    return -1;
-                }
-
-                return CalculateMiddlePoint(
-                   leftSpace.Bounds.min,
-                   rightSpace.Bounds.max
-                ).z;
-            }
-
-            return -1;
-        }
         #endregion
 
         #region Top-Bottom Generation
@@ -1043,79 +845,6 @@ namespace dungeonGenerator
                 return sortedBottomSpace;
             }
 
-        }
-        private List<Node> ReturnPossibleNeighborsBottomSpace(Node topSpace, List<Node> bottomSpaceNeighborCandidates)
-        {
-            return bottomSpaceNeighborCandidates.Where(bottomSpace =>
-                GetCorridorPositionTopBottomX(topSpace, bottomSpace) != -1
-            // && (bottomSpace.FloorIndex == topSpace.FloorIndex)
-            ).OrderByDescending(bottomSpace => bottomSpace.Bounds.max.z).Where(bottomSpace => Mathf.Abs(topSpace.Bounds.min.y - bottomSpace.Bounds.min.y) == 0).ToList(); // order by descenmding (max) z
-
-            /* FOR NOW NO LADDERS / STAIR CASES
-             * 
-             * No Ladder Condition: .Where(bottomSpace => Mathf.Abs(topSpace.Bounds.min.y - bottomSpace.Bounds.min.y) == 0)
-            */
-        }
-        private (Node topSpace, Node bottomSpace) FindNeighborsTopBottom(List<Node> sortedTopSpace, List<Node> sortedBottomSpace)
-        {
-            // intialize output nodes
-            Node bottomSpace = null;
-            Node topSpace = null;
-
-            topSpace = sortedTopSpace[Random.Range(0, sortedTopSpace.Count)]; // pick a left space from candidates
-            var neighborsInBottomSpaceList = ReturnPossibleNeighborsBottomSpace(topSpace, sortedBottomSpace); // get possible neighbors in rightSpace
-
-            if (neighborsInBottomSpaceList.Count() > 0)
-            {
-                bottomSpace = neighborsInBottomSpaceList[0]; // [Random.Range(0, neighborsInBottomSpaceList.Count)]; // if neighbors exist choose one at random 
-            }
-            else
-            {
-                // --- Added Check if no neighbors are found to reselect leftSpace
-
-                sortedTopSpace.Remove(topSpace);
-
-                foreach (var newTopSpace in sortedTopSpace)
-                {
-                    neighborsInBottomSpaceList = ReturnPossibleNeighborsBottomSpace(newTopSpace, sortedBottomSpace); // select new LeftSpace and check if it has any neighbors
-
-                    if (neighborsInBottomSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
-                    {
-                        topSpace = newTopSpace;
-                        bottomSpace = neighborsInBottomSpaceList[0]; //[Random.Range(0, neighborsInBottomSpaceList.Count)];
-                        break;
-                    }
-                }
-            }
-
-            return (topSpace, bottomSpace);
-        }
-        public void GenerateCorridorBoundsTopBottom(Node topSpace, Node bottomSpace)
-        {
-            int corridorX = GetCorridorPositionTopBottomX(topSpace, bottomSpace);
-
-            #region Debug Corridor
-            if (corridorX == -1)
-            {
-                // Incase no Neighbours are Found 
-                // TODO: Move this to Unit Testing
-                Debug.Log("Wrong Size");
-            }
-
-            if (topSpace == null || bottomSpace == null)
-            {
-                Debug.Log("Spaces not Found");
-            }
-            #endregion
-
-            // --- Generate Bounds for the Corridors --- 
-            var sizeZ = topSpace.Bounds.min.z - bottomSpace.Bounds.max.z;
-            var pos = new Vector3Int(corridorX - Mathf.FloorToInt(this.corridorWidth / 2f), topSpace.Bounds.min.y, bottomSpace.Bounds.max.z);
-
-            Bounds = new BoundsInt(
-                pos,
-                new Vector3Int(this.corridorWidth, this.corridorHeight, sizeZ) // assumption that both spaces are the same height
-            );
         }
         #endregion
         public void buildCorridorTopBottom(Node topSpace, Node bottomSpace)
@@ -1342,13 +1071,13 @@ namespace dungeonGenerator
 
             // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
 
-            //(topSpace, bottomSpace) = FindNeighborsTopBottom(sortedTopSpaces, sortedBottomSpaces);
-
-
             topSpace = sortedTopSpaces[0];
 
-            while (sortedBottomSpaces.OrderBy(bottomSpace => Vector3Int.Distance(bottomSpace.Bounds.position, sortedTopSpaces[0].Bounds.position)).Where((bottomSpace) => (topSpace.Bounds.y == bottomSpace.Bounds.y)).Count() == 0
-
+            while (sortedBottomSpaces.OrderBy(bottomSpace => 
+                                              Vector3Int.Distance(bottomSpace.Bounds.position, 
+                                                                  sortedTopSpaces[0].Bounds.position)
+                                              ).Where((bottomSpace)=> (topSpace.Bounds.y == bottomSpace.Bounds.y)
+                                              ).Count() == 0
                 && sortedTopSpaces.Count() > 0
                 )
             {
@@ -1359,28 +1088,15 @@ namespace dungeonGenerator
 
             bottomSpace = sortedBottomSpaces.OrderBy(bottomSpace => Vector3Int.Distance(bottomSpace.Bounds.position, sortedTopSpaces[0].Bounds.position)).Where((bottomSpace) => (topSpace.Bounds.y == bottomSpace.Bounds.y)).First();
 
+            // build corridor between found top and bottomSpace
             buildCorridorTopBottom(topSpace, bottomSpace);
+            
             // update available Grid
             updateAvailableGrid();
-
 
             // generate corridorBounds from corridor Grid 
             generateCorridorFloorBounds(bottomSpace.Bounds.y);
             calculateWallsFromCorridorTest(SplitPosition.Top);
-
-
-            // --- Generate Corridor Between LeftSpace and RightSpace --- 
-
-            //Debug.Log($"TopSpace Value {topSpace is null} children in topNode {topNode.ChildrenNodeList.Count}");
-            //Debug.Log($"BottomSpace Value {bottomSpace is null} children in bottomNode {bottomNode.ChildrenNodeList.Count}");
-
-            //if (topSpace == null || bottomSpace == null)
-            //{
-            //    this.CorridorType = CorridorType.None;
-            //    return;
-            //}
-
-            //GenerateCorridorBoundsTopBottom(topSpace, bottomSpace);
 
             // --- Add Neighbours to the Connection List of Respective Nodes --- 
 
@@ -1389,74 +1105,11 @@ namespace dungeonGenerator
 
             // --- calculate the bounds of the door to be used in mesh generation ---
 
-
-            //// calculate the bounds of the door for the left space and the right spaces
-            //topSpace.calculateDoorPlacement(this.Bounds, SplitPosition.Top, wallThickness);
-            //bottomSpace.calculateDoorPlacement(this.Bounds, SplitPosition.Bottom, wallThickness);
-
-            //// add the doorbounds found for the left and right space to the corridor
-            //this.addDoorPlacement(topSpace.DoorPlacements.Last());
-            //this.addDoorPlacement(bottomSpace.DoorPlacements.Last());
-
             this.CorridorType = CorridorType.Vertical;
 
-
-        
-
-
         }
-        private int GetCorridorPositionTopBottomX(Node topSpace, Node bottomSpace)
-        {
-            // right space is above left space
-            if (topSpace.Bounds.max.x >= bottomSpace.Bounds.min.x && bottomSpace.Bounds.min.x > topSpace.Bounds.min.x)
-            {
-                if (topSpace.Bounds.max.x - bottomSpace.Bounds.min.x <= this.corridorWidth + 2 * wallThickness) // change to 2 FIXME
-                {
-                    return -1;
-                }
-
-                return CalculateMiddlePoint(
-                    bottomSpace.Bounds.min,
-                    topSpace.Bounds.max
-                    ).x;
-            }
-            // right space is bellow left space
-            if (bottomSpace.Bounds.max.x >= topSpace.Bounds.min.x && topSpace.Bounds.min.x > bottomSpace.Bounds.min.x) // before was >=
-            {
-
-                if (bottomSpace.Bounds.max.x - topSpace.Bounds.min.x <= this.corridorWidth + 2 * wallThickness)
-                {
-                    return -1;
-                }
-
-                return CalculateMiddlePoint(
-                   topSpace.Bounds.min,
-                   bottomSpace.Bounds.max
-                ).x;
-            }
-            // right space is within bounds of left space
-            if (topSpace.Bounds.max.x >= bottomSpace.Bounds.max.x && bottomSpace.Bounds.min.x >= topSpace.Bounds.min.x)
-            {
-                return CalculateMiddlePoint(
-                    bottomSpace.Bounds.min,
-                    bottomSpace.Bounds.max
-                ).x;
-            }
-            // right space contain bounds of left space
-            if (bottomSpace.Bounds.max.x >= topSpace.Bounds.max.x && topSpace.Bounds.min.x >= bottomSpace.Bounds.min.x)
-            {
-                return CalculateMiddlePoint(
-                    topSpace.Bounds.min,
-                    topSpace.Bounds.max
-                ).x;
-            }
-
-            return -1;
-        }
+      
         #endregion
-
-
-
 
         #region Up-Down Generation
 
@@ -1502,11 +1155,7 @@ namespace dungeonGenerator
                 GetCorridorPositionUpDownXZ(upSpace, downSpace).z != -1
 
             //&& Mathf.Abs(downSpace.Bounds.max.y - upSpace.Bounds.min.y) < minRoomDim.z // FIX ME: Rewrite minRoomDim with correct yz switch
-
             // otherwise there is a room inbetween // stops from generating updown corridors through rooms
-
-
-
             // && (upSpace.FloorIndex-1 == downSpace.FloorIndex)
             ).OrderByDescending(downSpace => downSpace.Bounds.max.y).ToList(); // order by descending (max) y
 
@@ -1599,16 +1248,12 @@ namespace dungeonGenerator
             Debug.Log($"Upspace Value {upSpace is null} children in upNode {upNode.ChildrenNodeList.Count}");
             Debug.Log($"DownSpace Value {downSpace is null} children in downNode {downNode.ChildrenNodeList.Count}");
 
-
-
-
             if (upSpace is null || downSpace is null)
             {
                 this.CorridorType = CorridorType.None;
                 return;
 
             }
-
 
             GenerateCorridorBoundsUpDown(upSpace, downSpace);
 
@@ -1642,7 +1287,6 @@ namespace dungeonGenerator
             this.CorridorType = CorridorType.Perpendicular;
 
         }
-
         private bool unboundedContains(BoundsInt bounds, Vector3Int position)
         {
             return position.x >= bounds.xMin && position.z >= bounds.zMin && position.x <= bounds.xMax && position.z <= bounds.zMax; // without y component
@@ -1728,20 +1372,13 @@ namespace dungeonGenerator
 
             //if (nIntersections == 0)
             //{
-
             //    if (!(upSpacePlane.size.x == downSpacePlane.size.x && upSpacePlane.size.z == downSpacePlane.size.z))
             //    {
-
             //        Debug.Log($"<color=#00FF14> FAILED TO FIND </color>");
             //        upSpacePlane = MeshHelper.planeIntersectBounds(downSpacePlane, upSpacePlane);
-
             //    }
-
             //}
-
-
             // return the resulting position if its large enough to have a perpendicular corridor geenerated
-
 
 
             bool downSpaceAndupSpaceSame = (upSpacePlane.size.x == downSpacePlane.size.x && upSpacePlane.size.z == downSpacePlane.size.z) &&
@@ -1760,11 +1397,7 @@ namespace dungeonGenerator
                 )
             {
 
-
-
-
                 // return random point inside the possible upSpace plane 
-
 
                 // FIX ME: DOUBLE CHECK
 
@@ -1814,37 +1447,6 @@ namespace dungeonGenerator
 
         }
         #endregion 
-
-
-
-
-        private void visualizeVoxelGrid(bool[,,] availableVoxelGrid)
-        {
-
-
-
-            GameObject voxelHolder = new GameObject("voxelGridVisualizer");
-            voxelHolder.transform.parent = GameObject.Find("DungeonGen").transform;
-            for (int x = 0; x < availableVoxelGrid.GetLength(0); x++)
-            {
-                for (int y = 0; y < availableVoxelGrid.GetLength(1); y++)
-                {
-                    for (int z = 0; z < availableVoxelGrid.GetLength(2); z++)
-                    {
-
-                        if (availableVoxelGrid[x, y, z])
-                        {
-                            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                            cube.transform.parent = voxelHolder.transform;
-                            cube.transform.localPosition = new Vector3Int(x, y, z) + GameObject.Find("DungeonGen").transform.position + new Vector3(1.5f, 0.5f, 1.5f);
-                        }
-
-                    }
-
-                }
-
-            }
-        }
     
 }
 }

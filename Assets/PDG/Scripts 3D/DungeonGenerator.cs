@@ -73,7 +73,13 @@ namespace dungeonGenerator
             DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
             
             // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
-            roomList = calculator.CalculateDungeon(maxIterations, roomBoundsMin, splitCenterDeviation, corridorWidthAndWall, wallThickness, roomOffsetMin, corridorHeight);
+            roomList = calculator.CalculateDungeon(maxIterations, 
+                                                   roomBoundsMin, 
+                                                   splitCenterDeviation, 
+                                                   corridorWidthAndWall, 
+                                                   wallThickness, 
+                                                   roomOffsetMin, 
+                                                   corridorHeight);
 
             if(roomList.Count == 0)
             {

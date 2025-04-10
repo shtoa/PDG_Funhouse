@@ -484,7 +484,35 @@ namespace dungeonGenerator
 
         }
 
+        public static void VisualizeVoxelGrid(bool[,,] availableVoxelGrid)
+        {
+            GameObject voxelHolder = new GameObject("voxelGridVisualizer");
+            voxelHolder.transform.parent = GameObject.Find("DungeonGen").transform;
+            for (int x = 0; x < availableVoxelGrid.GetLength(0); x++)
+            {
+                for (int y = 0; y < availableVoxelGrid.GetLength(1); y++)
+                {
+                    for (int z = 0; z < availableVoxelGrid.GetLength(2); z++)
+                    {
+
+                        if (availableVoxelGrid[x, y, z])
+                        {
+                            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            cube.transform.parent = voxelHolder.transform;
+                            cube.transform.localPosition = new Vector3Int(x, y, z) + GameObject.Find("DungeonGen").transform.position + new Vector3(1.5f, 0.5f, 1.5f);
+                        }
+
+                    }
+
+                }
+
+            }
+        }
+
     }
+
+
+    
 
 
 
