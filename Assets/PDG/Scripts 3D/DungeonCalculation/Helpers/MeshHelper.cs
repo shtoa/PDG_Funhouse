@@ -483,7 +483,10 @@ namespace dungeonGenerator
 
 
         }
-
+        public static float ManhattanDistance3(Vector3 a, Vector3 b)
+        {
+            return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z);
+        }
         public static void VisualizeVoxelGrid(bool[,,] availableVoxelGrid)
         {
             GameObject voxelHolder = new GameObject("voxelGridVisualizer");

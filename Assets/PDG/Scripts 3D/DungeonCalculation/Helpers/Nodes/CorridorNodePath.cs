@@ -29,6 +29,7 @@ namespace dungeonGenerator
         private bool[,,] availableVoxelGrid;
         private bool[,,] corridorGrid;
         private bool[,,] corridorWallGrid;
+        private int randPos;
 
 
         private List<Vector3Int> possibleDir = new List<Vector3Int>();
@@ -39,8 +40,9 @@ namespace dungeonGenerator
             Vector3Int.back,
         };
 
-        public CorridorNodePath(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight, bool[,,] availableVoxelGrid) : base(null) // null since it doesnt have any parents
+        public CorridorNodePath(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight, bool[,,] availableVoxelGrid, int randPos) : base(null) // null since it doesnt have any parents
         {
+            this.randPos = randPos;
             this.node1 = node1;
             this.node2 = node2;
             this.corridorWidth = corridorWidth;
@@ -67,28 +69,29 @@ namespace dungeonGenerator
 
         }
 
+
         #region Corridor Pathfinding Methods
         private bool[,,] getCorridorGrid(bool[,,] availableVoxelGrid)
+    {
+        bool[,,] corridorVoxelGrid = new bool[availableVoxelGrid.GetLength(0), availableVoxelGrid.GetLength(1), availableVoxelGrid.GetLength(2)];
+
+        for (int x = 0; x < availableVoxelGrid.GetLength(0); x++)
         {
-            bool[,,] corridorVoxelGrid = new bool[availableVoxelGrid.GetLength(0), availableVoxelGrid.GetLength(1), availableVoxelGrid.GetLength(2)];
-
-            for (int x = 0; x < availableVoxelGrid.GetLength(0); x++)
+            for (int y = 0; y < availableVoxelGrid.GetLength(1); y++)
             {
-                for (int y = 0; y < availableVoxelGrid.GetLength(1); y++)
+                for (int z = 0; z < availableVoxelGrid.GetLength(2); z++)
                 {
-                    for (int z = 0; z < availableVoxelGrid.GetLength(2); z++)
-                    {
 
-                        corridorVoxelGrid[x, y, z] = false;
-
-                    }
+                    corridorVoxelGrid[x, y, z] = false;
 
                 }
 
             }
 
-            return corridorVoxelGrid;
         }
+
+        return corridorVoxelGrid;
+    }
         private void calculateWallsFromCorridorTest(SplitPosition splitPosition)
         {
             Vector3Int minPos = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
@@ -757,21 +760,67 @@ namespace dungeonGenerator
             var sortedLeftSpaces = ReturnRightMostSpaces(leftSpaceLeaves);
             var sortedRightSpaces = ReturnLeftMostSpaces(rightSpaceLeaves);
 
+
+            //Debug.Log($"sortedLeft {sortedLeftSpaces.Count}, sortedRight{sortedRightSpaces.Count}");
+
             // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
 
             // (leftSpace,rightSpace) = FindNeighborsLeftRight(sortedLeftSpaces, sortedRightSpaces);
 
+
+            for (int i = sortedRightSpaces.Count() - 1; i >= 0; i--)
+            {
+                foreach (var doorPlacement in sortedRightSpaces[i].DoorPlacements)
+                {
+                    if (doorPlacement.PositionType == SplitPosition.Left)
+                    {
+                        Debug.Log("Removed rightSpace");
+                        sortedRightSpaces.RemoveAt(i);
+                    }
+                }
+            }
+
+
+            for (int i = sortedLeftSpaces.Count() - 1; i >= 0; i--)
+            {
+                foreach (var doorPlacement in sortedLeftSpaces[i].DoorPlacements)
+                {
+                    if (doorPlacement.PositionType == SplitPosition.Right)
+                    {
+                        sortedLeftSpaces.RemoveAt(i);
+                    }
+                }
+            }
+
+
+            if (sortedLeftSpaces.Count() < 1 || sortedRightSpaces.Count() < 1)
+            {
+                this.CorridorType = CorridorType.None;
+                return;
+            }
+
             leftSpace = sortedLeftSpaces[0];
 
-
+            // ERROR DUE TO INDEX OIUT OF RANGE 
             while (sortedRightSpaces.OrderBy(rightSpace => Vector3Int.Distance(rightSpace.Bounds.position, sortedLeftSpaces[0].Bounds.position)).Where(rightSpace => (rightSpace.Bounds.y == leftSpace.Bounds.y)).Count() == 0
 
             && sortedLeftSpaces.Count() > 0
             )
             {
+                //
+                leftSpace = sortedLeftSpaces[Random.Range(0, sortedLeftSpaces.Count())]; // can throw 0 exception????
                 sortedLeftSpaces.Remove(leftSpace);
-                leftSpace = sortedLeftSpaces[Random.Range(0, sortedLeftSpaces.Count())];
 
+                if (sortedLeftSpaces.Count() == 0)
+                {
+                    this.CorridorType = CorridorType.None;
+                    break;
+                }
+            }
+
+            if (sortedLeftSpaces.Count() == 0)
+            {
+                return;
             }
 
             rightSpace = sortedRightSpaces.OrderBy(rightSpace => Vector3Int.Distance(rightSpace.Bounds.position, sortedLeftSpaces[0].Bounds.position)).Where(rightSpace => (rightSpace.Bounds.y == leftSpace.Bounds.y)).First();
@@ -886,8 +935,9 @@ namespace dungeonGenerator
             Vector3Int startPos = bottomStartVoxel;
 
             int i = 0;
-            while (startPos != topEndVoxel || i < 100)
+            while (startPos != topEndVoxel && i < 100) // may cause slow down
             {
+                Debug.Log($"i for start Voxel {i}, {startPos}");
                 // get possible postions
                 List<Vector3Int> possiblePositions = new List<Vector3Int>();
 
@@ -953,7 +1003,9 @@ namespace dungeonGenerator
 
                 if (possiblePositions.Count < 1)
                 {
+
                     throw new Exception("Path not possible");
+                   
                 }
 
 
@@ -1071,7 +1123,41 @@ namespace dungeonGenerator
 
             // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
 
+
+            for (int i = sortedBottomSpaces.Count() - 1; i >= 0; i--)
+            {
+                foreach (var doorPlacement in sortedBottomSpaces[i].DoorPlacements)
+                {
+                    if (doorPlacement.PositionType == SplitPosition.Top)
+                    {
+                        Debug.Log("Removed bottomSpace");
+                        sortedBottomSpaces.RemoveAt(i);
+                    }
+                }
+            }
+
+
+            for (int i = sortedTopSpaces.Count() - 1; i >= 0; i--)
+            {
+                foreach (var doorPlacement in sortedTopSpaces[i].DoorPlacements)
+                {
+                    if (doorPlacement.PositionType == SplitPosition.Bottom)
+                    {
+                        Debug.Log("Removed topSpace");
+                        sortedTopSpaces.RemoveAt(i);
+                    }
+                }
+            }
+
+
+            if (sortedTopSpaces.Count() < 1 || sortedBottomSpaces.Count < 1)
+            {
+                this.CorridorType = CorridorType.None;
+                return;
+            }
+
             topSpace = sortedTopSpaces[0];
+
 
             while (sortedBottomSpaces.OrderBy(bottomSpace => 
                                               Vector3Int.Distance(bottomSpace.Bounds.position, 
@@ -1081,12 +1167,23 @@ namespace dungeonGenerator
                 && sortedTopSpaces.Count() > 0
                 )
             {
-                sortedTopSpaces.Remove(topSpace);
                 topSpace = sortedTopSpaces[Random.Range(0, sortedTopSpaces.Count())];
+                sortedTopSpaces.Remove(topSpace);
+
+                if(sortedTopSpaces.Count() == 0)
+                {
+                    this.CorridorType = CorridorType.None;
+                    break; 
+                }
 
             }
 
-            bottomSpace = sortedBottomSpaces.OrderBy(bottomSpace => Vector3Int.Distance(bottomSpace.Bounds.position, sortedTopSpaces[0].Bounds.position)).Where((bottomSpace) => (topSpace.Bounds.y == bottomSpace.Bounds.y)).First();
+            if (sortedTopSpaces.Count() == 0)
+            {
+                return;
+            }
+
+                bottomSpace = sortedBottomSpaces.OrderBy(bottomSpace => Vector3Int.Distance(bottomSpace.Bounds.position, sortedTopSpaces[0].Bounds.position)).Where((bottomSpace) => (topSpace.Bounds.y == bottomSpace.Bounds.y)).First();
 
             // build corridor between found top and bottomSpace
             buildCorridorTopBottom(topSpace, bottomSpace);
