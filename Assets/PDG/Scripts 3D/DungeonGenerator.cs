@@ -80,8 +80,8 @@ namespace dungeonGenerator
                                                    wallThickness, 
                                                    roomOffsetMin, 
                                                    corridorHeight);
-
-            if(roomList.Count == 0)
+         
+            if (roomList.Count == 0)
             {
                 this.RegenerateDungeon();
                 return;
@@ -92,6 +92,19 @@ namespace dungeonGenerator
 
             RoomGenerator roomGenerator = new RoomGenerator(roomList, this.gameObject);
             roomGenerator.GenerateRooms(roomList);
+
+            checkDungeonConnections(roomList);
+        }
+
+        private void checkDungeonConnections(List<Node> roomList)
+        {
+            foreach (Node room in roomList)
+            {
+                if(room.ConnectionsList.Count() == 0 && room.RoomType != RoomType.Corridor)
+                {
+                    throw new Exception("Not All Rooms Connected");
+                }
+            }
         }
 
         private void InitializeStartAndEnd(List<Node> roomSpaces)
@@ -103,17 +116,20 @@ namespace dungeonGenerator
             // get edge rooms  
             // TODO: MOVE THIS INTO SEPARATE FUNCTION
             var deadEnds = GraphHelper.GetLeaves(startAndEnd[0], false);
+            int deadEndsCount = 0; 
+
             foreach (var deadEnd in deadEnds)
             {
-                if (deadEnd != startAndEnd[1])
+                if (deadEnd != startAndEnd[0] && deadEnd != startAndEnd[1] && deadEnd.ConnectionsList.Count() == 1)
                 {
                     deadEnd.RoomType = RoomType.DeadEnd;
+                    deadEndsCount++;
                 } 
             }
 
             // TODO: Refactor this to an event 
             total[CollectableType.cylinder] = 1;
-            total[CollectableType.sphere] = deadEnds.Count - 1;
+            total[CollectableType.sphere] = deadEndsCount; // -1
             total[CollectableType.cube] = roomSpaces.Count - 2 - total[CollectableType.sphere];
 
             saveDungeonConfig();

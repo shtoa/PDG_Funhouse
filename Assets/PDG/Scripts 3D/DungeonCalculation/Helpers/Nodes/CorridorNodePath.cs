@@ -535,8 +535,8 @@ namespace dungeonGenerator
         }
 
         #endregion
-
-        public void buildCorridorLeftRight(Node leftSpace, Node rightSpace)
+        // returns success or failure
+        public bool buildCorridorLeftRight(Node leftSpace, Node rightSpace)
         {
 
             Vector3Int leftStartVoxel = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, (leftSpace.Bounds.min.z + leftSpace.Bounds.max.z) / 2);
@@ -639,7 +639,7 @@ namespace dungeonGenerator
 
                 }
 
-                if (possiblePositions.Count < 1)
+                if (possiblePositions.Count() < 1)
                 {
                     throw new Exception("Path not possible");
                 }
@@ -738,6 +738,16 @@ namespace dungeonGenerator
                 i++;
             }
 
+            if(startPos != rightEndVoxel)
+            {
+                this.CorridorType = CorridorType.None;
+                Debug.LogWarning("Additional Path not completed");
+                return false;
+              
+            }
+
+            return true;
+
         }
 
         /// <summary>
@@ -828,31 +838,33 @@ namespace dungeonGenerator
 
 
 
-            buildCorridorLeftRight(leftSpace, rightSpace);
+            if (buildCorridorLeftRight(leftSpace, rightSpace))
+            {
 
 
-            // update available Grid
-            updateAvailableGrid();
+                // update available Grid
+                updateAvailableGrid();
 
 
-            // generate corridorBounds from corridor Grid 
-            generateCorridorFloorBounds(rightSpace.Bounds.y);
+                // generate corridorBounds from corridor Grid 
+                generateCorridorFloorBounds(rightSpace.Bounds.y);
 
 
 
 
-            calculateWallsFromCorridorTest(SplitPosition.Left);
+                calculateWallsFromCorridorTest(SplitPosition.Left);
 
 
-            // --- Add Neighbours to the Connection List of Respective Nodes --- 
+                // --- Add Neighbours to the Connection List of Respective Nodes --- 
 
-            leftSpace.ConnectionsList.Add(rightSpace);
-            rightSpace.ConnectionsList.Add(leftSpace);
+                leftSpace.ConnectionsList.Add(rightSpace);
+                rightSpace.ConnectionsList.Add(leftSpace);
 
 
-            // --- calculate the bounds of the door to be used in mesh generation ---
+                // --- calculate the bounds of the door to be used in mesh generation ---
 
-            this.CorridorType = CorridorType.Horizontal;
+                this.CorridorType = CorridorType.Horizontal;
+            }
 
         }
 
@@ -896,7 +908,8 @@ namespace dungeonGenerator
 
         }
         #endregion
-        public void buildCorridorTopBottom(Node topSpace, Node bottomSpace)
+        // Return Success
+        public bool buildCorridorTopBottom(Node topSpace, Node bottomSpace)
         {
 
             Vector3Int bottomStartVoxel = new Vector3Int((bottomSpace.Bounds.min.x + bottomSpace.Bounds.max.x) / 2, bottomSpace.Bounds.min.y, bottomSpace.Bounds.max.z);
@@ -1001,7 +1014,7 @@ namespace dungeonGenerator
 
                 }
 
-                if (possiblePositions.Count < 1)
+                if (possiblePositions.Count() < 1)
                 {
 
                     throw new Exception("Path not possible");
@@ -1105,6 +1118,15 @@ namespace dungeonGenerator
                 i++;
             }
 
+            if(startPos != topEndVoxel)
+            {
+                this.CorridorType = CorridorType.None;
+                Debug.LogWarning("Additional Path not completed");
+                return false;
+            }
+
+            return true;
+
         }
         private void GenerateCorridorTopBottom(Node topNode, Node bottomNode)
         {
@@ -1186,24 +1208,27 @@ namespace dungeonGenerator
                 bottomSpace = sortedBottomSpaces.OrderBy(bottomSpace => Vector3Int.Distance(bottomSpace.Bounds.position, sortedTopSpaces[0].Bounds.position)).Where((bottomSpace) => (topSpace.Bounds.y == bottomSpace.Bounds.y)).First();
 
             // build corridor between found top and bottomSpace
-            buildCorridorTopBottom(topSpace, bottomSpace);
-            
-            // update available Grid
-            updateAvailableGrid();
+            if (buildCorridorTopBottom(topSpace, bottomSpace))
+            {
 
-            // generate corridorBounds from corridor Grid 
-            generateCorridorFloorBounds(bottomSpace.Bounds.y);
-            calculateWallsFromCorridorTest(SplitPosition.Top);
 
-            // --- Add Neighbours to the Connection List of Respective Nodes --- 
 
-            topSpace.ConnectionsList.Add(bottomSpace);
-            bottomSpace.ConnectionsList.Add(topSpace);
+                // update available Grid
+                updateAvailableGrid();
 
-            // --- calculate the bounds of the door to be used in mesh generation ---
+                // generate corridorBounds from corridor Grid 
+                generateCorridorFloorBounds(bottomSpace.Bounds.y);
+                calculateWallsFromCorridorTest(SplitPosition.Top);
 
-            this.CorridorType = CorridorType.Vertical;
+                // --- Add Neighbours to the Connection List of Respective Nodes --- 
 
+                topSpace.ConnectionsList.Add(bottomSpace);
+                bottomSpace.ConnectionsList.Add(topSpace);
+
+                // --- calculate the bounds of the door to be used in mesh generation ---
+
+                this.CorridorType = CorridorType.Vertical;
+            }
         }
       
         #endregion
@@ -1247,14 +1272,26 @@ namespace dungeonGenerator
         }
         private List<Node> ReturnPossibleNeighborsDownSpace(Node upSpace, List<Node> downSpaceNeighborCandidates)
         {
-            return downSpaceNeighborCandidates.Where(downSpace =>
-                GetCorridorPositionUpDownXZ(upSpace, downSpace).x != -1 &&
-                GetCorridorPositionUpDownXZ(upSpace, downSpace).z != -1
 
-            //&& Mathf.Abs(downSpace.Bounds.max.y - upSpace.Bounds.min.y) < minRoomDim.z // FIX ME: Rewrite minRoomDim with correct yz switch
-            // otherwise there is a room inbetween // stops from generating updown corridors through rooms
-            // && (upSpace.FloorIndex-1 == downSpace.FloorIndex)
-            ).OrderByDescending(downSpace => downSpace.Bounds.max.y).ToList(); // order by descending (max) y
+            return downSpaceNeighborCandidates.OrderByDescending(downSpace => //downSpace.Bounds.max.y
+                                                                              -Vector3.Distance(upSpace.Bounds.center, downSpace.Bounds.center)).ToList(); 
+            
+            
+            
+            // order by descending (max) y
+
+            //.Where(downSpace =>
+            //   // GetCorridorPositionUpDownXZ(upSpace, downSpace).x != -1 &&
+            //    // GetCorridorPositionUpDownXZ(upSpace, downSpace).z != -1
+
+
+
+
+            ////&& Mathf.Abs(downSpace.Bounds.max.y - upSpace.Bounds.min.y) < minRoomDim.z // FIX ME: Rewrite minRoomDim with correct yz switch
+            //// otherwise there is a room inbetween // stops from generating updown corridors through rooms
+            //// && (upSpace.FloorIndex-1 == downSpace.FloorIndex)
+            //)
+
 
         }
         private (Node upSpace, Node downSpace) FindNeighborsUpDown(List<Node> sortedUpSpace, List<Node> sortedDownSpace)
@@ -1263,12 +1300,13 @@ namespace dungeonGenerator
             Node downSpace = null;
             Node upSpace = null;
 
-            upSpace = sortedUpSpace[Random.Range(0, sortedUpSpace.Count)]; // pick a left space from candidates
+            upSpace = sortedUpSpace[Random.Range(0, sortedUpSpace.Count())]; // pick a left space from candidates
             var neighborsInDownSpaceList = ReturnPossibleNeighborsDownSpace(upSpace, sortedDownSpace); // get possible neighbors in rightSpace
 
             if (neighborsInDownSpaceList.Count() > 0)
             {
-                downSpace = neighborsInDownSpaceList[Random.Range(0, neighborsInDownSpaceList.Count)]; // if neighbors exist choose one at random 
+                downSpace = neighborsInDownSpaceList[0]; // get closest one
+                //downSpace = neighborsInDownSpaceList[Random.Range(0, neighborsInDownSpaceList.Count)]; // if neighbors exist choose one at random 
             }
             else
             {
@@ -1285,7 +1323,7 @@ namespace dungeonGenerator
                     if (neighborsInDownSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
                     {
                         upSpace = newUpSpace;
-                        downSpace = neighborsInDownSpaceList[Random.Range(0, neighborsInDownSpaceList.Count)];
+                        downSpace = neighborsInDownSpaceList[Random.Range(0, neighborsInDownSpaceList.Count())];
                         break;
                     }
                 }
@@ -1336,6 +1374,49 @@ namespace dungeonGenerator
             var sortedUpSpaces = ReturnDownMostSpaces(upSpaceLeaves);
             var sortedDownSpaces = ReturnUpMostSpaces(downSpaceLeaves);
 
+
+
+
+            if (sortedUpSpaces.Count() > 0)
+            {
+                for (int i = sortedUpSpaces.Count() - 1; i >= 0; i--)
+                {
+                    foreach (var holePlacement in sortedUpSpaces[i].HolePlacements)
+                    {
+                        if (holePlacement.PositionType == SplitPosition.Down)
+                        {
+                            Debug.Log("Removed upSpace");
+                            sortedUpSpaces.RemoveAt(i); // bugs out 
+                            break;
+                        }
+                    }
+                }
+            }
+
+
+            if (sortedDownSpaces.Count() > 0)
+            {
+                for (int i = sortedDownSpaces.Count() - 1; i >= 0; i--)
+                {
+                    foreach (var holePlacement in sortedDownSpaces[i].HolePlacements)
+                    {
+                        if (holePlacement.PositionType == SplitPosition.Up)
+                        {
+                            Debug.Log("Removed downSpace");
+                            sortedDownSpaces.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+            }
+
+
+            if (sortedUpSpaces.Count() < 1 || sortedDownSpaces.Count() < 1)
+            {
+                this.CorridorType = CorridorType.None;
+                return;
+            }
+
             // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
 
             (upSpace, downSpace) = FindNeighborsUpDown(sortedUpSpaces, sortedDownSpaces);
@@ -1348,9 +1429,11 @@ namespace dungeonGenerator
             if (upSpace is null || downSpace is null)
             {
                 this.CorridorType = CorridorType.None;
-                return;
+                throw new Exception("Failed up and Down Connection");
 
             }
+
+
 
             GenerateCorridorBoundsUpDown(upSpace, downSpace);
 

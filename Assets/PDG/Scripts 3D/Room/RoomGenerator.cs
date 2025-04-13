@@ -458,7 +458,7 @@ namespace dungeonGenerator
         {
 
             var connectedRoomsOrderedByY = room.ConnectionsList.OrderBy(connectedRoom => connectedRoom.Bounds.min.y).ToArray(); // order rooms by descending height
-            Vector3 planeSize = new Vector3(1, 0, 1); // stair segment size
+            Vector3 planeSize = new Vector3(2, 0, 2); // stair segment size
 
             var startPos = connectedRoomsOrderedByY[0].Bounds.position + dungeonGenerator.transform.position + planeSize*0.5f+new Vector3(1,0,1); // start position for plane  
 
@@ -468,20 +468,25 @@ namespace dungeonGenerator
                             + dungeonGenerator.transform.position;
 
             var preEndPos = new Vector3(connectedRoomsOrderedByY[1].Bounds.position.x + planeSize.x+6,
-                                     connectedRoomsOrderedByY[1].Bounds.position.y-2,
+                                     connectedRoomsOrderedByY[1].Bounds.position.y-1,
                                      connectedRoomsOrderedByY[1].Bounds.position.z + planeSize.x)
                             + dungeonGenerator.transform.position;
 
 
-      
+
 
             // single spiral around room
+
+            // check with correct angle... 
+            float roomSpiralIncrement = (connectedRoomsOrderedByY[0].Bounds.size.y) / 4f; // figure out correct amount of turns for room x,z ~(has to be atleast 4)
+
+
             List<Vector3> planeOffsets = new List<Vector3>
                 {
-                    new Vector3(0f, planeSize.z, connectedRoomsOrderedByY[0].Bounds.size.z-planeSize.z),
-                    new Vector3(connectedRoomsOrderedByY[0].Bounds.size.x-planeSize.x, planeSize.x, 0f),
-                    new Vector3(0f, planeSize.z, -connectedRoomsOrderedByY[0].Bounds.size.z+planeSize.z),
-                    new Vector3(-connectedRoomsOrderedByY[0].Bounds.size.x+planeSize.x, planeSize.x, 0f),
+                    new Vector3(0f, roomSpiralIncrement, connectedRoomsOrderedByY[0].Bounds.size.z-planeSize.z),
+                    new Vector3(connectedRoomsOrderedByY[0].Bounds.size.x-planeSize.x, roomSpiralIncrement, 0f),
+                    new Vector3(0f, roomSpiralIncrement, -connectedRoomsOrderedByY[0].Bounds.size.z+planeSize.z),
+                    new Vector3(-connectedRoomsOrderedByY[0].Bounds.size.x+planeSize.x, roomSpiralIncrement, 0f),
                 };
 
 
@@ -511,7 +516,7 @@ namespace dungeonGenerator
             //var prePos = Vector3.Scale(new Vector3((planeOffsets.Last().x == 0) ? 1 : 0, 0, (planeOffsets.Last().z == 0) ? 1 : 0), preEndPosOffset);
 
 
-            maxIter = 40+i;
+            maxIter = 100+i;
 
             curPosOffset = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
 
@@ -522,10 +527,10 @@ namespace dungeonGenerator
                 Vector3.back*planeSize.z*2+Vector3.up*0.5f,
                 Vector3.left*planeSize.x*2+Vector3.up*0.5f,
                 Vector3.right*planeSize.x*2+Vector3.up*0.5f,
-                Vector3.forward*planeSize.z*2,
-                Vector3.back*planeSize.z*2,
-                Vector3.left*planeSize.x*2,
-                Vector3.right*planeSize.x*2
+                //Vector3.forward*planeSize.z*2,
+                //Vector3.back*planeSize.z*2,
+                //Vector3.left*planeSize.x*2,
+                //Vector3.right*planeSize.x*2
             };
             var curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
 
@@ -549,8 +554,8 @@ namespace dungeonGenerator
 
                         //Debug.Log($"dotP: {Vector3.Dot((curPosOverlapCheck - curPos), Vector3.up)}");
 
-                        if (Vector3.Dot((curPos-curPosOverlapCheck), Vector3.up) <= 2
-                            && ((curPos - curPosOverlapCheck).x == 0) && ((curPos - curPosOverlapCheck).z == 0)
+                        if (Vector3.Dot((curPos-curPosOverlapCheck), Vector3.up) < 2
+                            && (Mathf.Abs((curPos - curPosOverlapCheck).x) <= planeSize.x) && (Mathf.Abs((curPos - curPosOverlapCheck).z) <= planeSize.z)
                             )
                         {
 
@@ -562,7 +567,7 @@ namespace dungeonGenerator
                     }
 
                     if (
-                        Vector3.Dot((curPos - endPos), Vector3.up) <= 2
+                        Vector3.Dot((curPos - endPos), Vector3.up) < 2
                         && ((curPos - endPos + startPos).x == 0) && ((curPos - endPos + startPos).z == 0)
                         )
                     {
@@ -596,15 +601,15 @@ namespace dungeonGenerator
                                     ) == -1;
 
                     if (
-                        Vector3.Dot(Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
-                                    Vector3.Normalize(Vector3.ProjectOnPlane(preEndPosOffset, Vector3.up))
-                                    ) != -1
+                        //Vector3.Dot(Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
+                        //            Vector3.Normalize(Vector3.ProjectOnPlane(preEndPosOffset, Vector3.up))
+                        //            ) != -1
 
-                        && !isDirectionBackwards
+                        !isDirectionBackwards
                         && isWithinBounds
                         && !isOverlapingHeight
-                        && (Vector3.Normalize(curPos-preEndPos) != new Vector3(-1,0,0))
-                        && !((curPos.z + startPos.z == (preEndPos.z)) && (curPos.y + startPos.y > (preEndPos.y-1)))
+                        //&& (Vector3.Normalize(curPos-preEndPos) != new Vector3(-1,0,0)) // ceck breaks if done too low
+                        && !((curPos.z + startPos.z == (preEndPos.z) && ((curPos.x + startPos.x != (preEndPos.x))))) /// && (curPos.y + startPos.y > (preEndPos.y-1)) && (preEndPos.x- (curPos.x + startPos.x) < 4))
 
                         )
 
@@ -620,7 +625,7 @@ namespace dungeonGenerator
                         var distanceFromClosestPos = MeshHelper.ManhattanDistance3(planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + closestOffset + startPos, preEndPos); ;
 
 
-                        if (distanceFromNewPos < distanceFromClosestPos || closestOffset == Vector3.zero)
+                        if (distanceFromNewPos > distanceFromClosestPos || closestOffset == Vector3.zero)
                         {
                             Debug.Log($"New Pos: {closestOffset}, {distanceFromClosestPos}, Best Pos {possDirection}, distance {distanceFromNewPos}, Prev Offset {planeOffsets.Last()}");
                             closestOffset = possDirection;
@@ -719,14 +724,197 @@ namespace dungeonGenerator
             //}
             #endregion
 
+            // path find to pre-entry 
+            // !!! STILL HAS CHANCE TO OVERLAP FIX !!!
+
+
+            List<Vector3> possDirections2 = new List<Vector3>() {
+                Vector3.forward*(planeSize.z),
+                Vector3.back*(planeSize.z),
+                Vector3.left*(planeSize.x),
+                Vector3.right*(planeSize.x),
+                Vector3.forward*(planeSize.z+1),
+                Vector3.back*(planeSize.z+1),
+                Vector3.left*(planeSize.x+1),
+                Vector3.right*(planeSize.x+1)
+            };
+
+
+            while (i < maxIter &&
+                ((curPos.x + startPos.x != preEndPos.x) || (Mathf.Abs(curPos.z + startPos.z- preEndPos.z) > 4)) &&
+                (((curPos.z + startPos.z != preEndPos.z)) || (Mathf.Abs(curPos.x + startPos.x - preEndPos.x) > 4))
+                
+                )
+                //&& (Vector3.Normalize(curPos - preEndPos) == new Vector3(-1, 0, 0) && (Mathf.Abs(curPos.x - preEndPos.x) > 2)))
+
+            {
+                // check if angle is ok
+                Vector3 closestOffset = Vector3.zero;
+                foreach (var possDirection in possDirections2)
+                {
+                    Debug.Log($"New Pos:--- ---- {possDirection} ---- New Pos:---");
+
+                    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection;
+
+                    // check if  there is enough space between positions 
+                    var curPosOverlapCheck = Vector3.zero;
+                    bool isOverlapingHeight = false;
+                    var overlapCount = 0;
+
+                    // dont need to check every offset>>>
+                    foreach (var offset in planeOffsets) // looping over backwards might be better
+                    {
+                        curPosOverlapCheck += offset;
+
+                        //Debug.Log($"dotP: {Vector3.Dot((curPosOverlapCheck - curPos), Vector3.up)}");
+
+                        if ((Vector3.Dot((curPos - curPosOverlapCheck), Vector3.up) <= 2f
+                            && ((Mathf.Abs((curPos - curPosOverlapCheck).x) <= planeSize.x) && ((curPos - curPosOverlapCheck).z == 0) || ((curPos - curPosOverlapCheck).x == 0) && (Mathf.Abs((curPos - curPosOverlapCheck).z) <= planeSize.z))
+                            && (curPosOverlapCheck.y != curPos.y))
+                            //&& ((curPos - curPosOverlapCheck).x == 0) && ((curPos - curPosOverlapCheck).z == 0)
+
+
+                            || ((Vector3.Dot((curPos - curPosOverlapCheck), Vector3.up) <= 2f) && (((curPos - curPosOverlapCheck).z == 0) && (curPos - curPosOverlapCheck).x == 0))
+                            )
+                        {
+                            overlapCount++;
+
+                            if ((Vector3.Dot((curPos - curPosOverlapCheck), Vector3.up) <= 2f) && (((curPos - curPosOverlapCheck).z == 0) && (curPos - curPosOverlapCheck).x == 0)) { }//overlapCount++;}
+
+
+                            Debug.Log($"Overlap: curPos {curPos}, overLapCheckPos {curPosOverlapCheck}, possDir: {possDirection}, dotP {Vector3.Dot((curPos - curPosOverlapCheck), Vector3.up)}, secondaryCheck {Vector3.Dot((curPos - curPosOverlapCheck), new Vector3(1, 0, 1))}");
+                         
+
+                        }
+                    }
+
+                    if (overlapCount > 1)
+                    {
+                        
+                        isOverlapingHeight = true;
+                        //break;
+                    }
+
+                    if (
+                        Vector3.Dot((curPos - endPos), Vector3.up) <= 2
+                 
+                        && ((curPos - endPos + startPos).x == 0) && ((curPos - endPos + startPos).z == 0)
+                        )
+                    {
+
+                        isOverlapingHeight = true;
+                    }
+
+
+
+                    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection;
+
+                    bool posInBounds = (curPos.x + startPos.x <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x, connectedRoomsOrderedByY[0].Bounds.max.x) + GameObject.Find("DungeonGen").transform.position.x)
+                                    && curPos.x + startPos.x >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.x, connectedRoomsOrderedByY[0].Bounds.min.x) + GameObject.Find("DungeonGen").transform.position.x)
+                                    && curPos.z + startPos.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z, connectedRoomsOrderedByY[0].Bounds.max.z) + GameObject.Find("DungeonGen").transform.position.z)
+                                    && curPos.z + startPos.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z, connectedRoomsOrderedByY[0].Bounds.min.z) + GameObject.Find("DungeonGen").transform.position.z));
+
+                    Debug.Log($"New Pos:--- possDir{possDirection}, planeOffsetLast {planeOffsets.Last()}, projected: {Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up)}, dotProduct {Vector3.Dot(Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)), Vector3.Normalize(Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up)))}, distance {MeshHelper.ManhattanDistance3(planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection + startPos, preEndPos)}" +
+                        $"posinBounds:  {posInBounds}, isOverlapingHeight {isOverlapingHeight}");
+
+
+                    Debug.Log($"curPos eq: {curPos.z + startPos.z == (preEndPos.z)}, curPos.z: {curPos.z + startPos.z}, preEndPos.z: {preEndPos.z}");
+
+                    bool isWithinBounds = curPos.x + startPos.x <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x, connectedRoomsOrderedByY[0].Bounds.max.x) + GameObject.Find("DungeonGen").transform.position.x)
+                                    && curPos.x + startPos.x >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.x, connectedRoomsOrderedByY[0].Bounds.min.x) + GameObject.Find("DungeonGen").transform.position.x)
+                                    && curPos.z + startPos.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z, connectedRoomsOrderedByY[0].Bounds.max.z) + GameObject.Find("DungeonGen").transform.position.z)
+                                    && curPos.z + startPos.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z, connectedRoomsOrderedByY[0].Bounds.min.z) + GameObject.Find("DungeonGen").transform.position.z);
+
+                    bool isDirectionBackwards = Vector3.Dot(
+                                    Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
+                                    Vector3.Normalize(Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up))
+                                    ) == -1;
+
+                    bool overlapsWithTargetX = Mathf.Abs(((curPos.x + startPos.x) - preEndPos.x)) < 2 && !(Mathf.Abs(((curPos.x + startPos.x) - preEndPos.x)) == 0);
+                    bool overlapsWithTargetZ = Mathf.Abs(((curPos.z + startPos.z) - preEndPos.z)) < 2 && !(Mathf.Abs(((curPos.z + startPos.z) - preEndPos.z)) == 0);
+
+                    if (
+                        //Vector3.Dot(Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
+                        //            Vector3.Normalize(Vector3.ProjectOnPlane(preEndPosOffset, Vector3.up))
+                        //            ) != -1
+
+                        !isDirectionBackwards
+                        && isWithinBounds
+                        && !isOverlapingHeight
+                        && !overlapsWithTargetX
+                        && !overlapsWithTargetZ
+
+
+                        && !((curPos.z + startPos.z == (preEndPos.z) && (curPos.y + startPos.y > (preEndPos.y - 2))))
+                        //&& !((curPos.z + startPos.z == (preEndPos.z)) && (curPos.y + startPos.y > (preEndPos.y - 1)))
+                        //&& !((curPos.z + startPos.z < (preEndPos.z + planeSize.z)) ||
+                        //        (curPos.z + startPos.z > (preEndPos.z + planeSize.z) && (curPos.z + startPos.z < (preEndPos.z + planeSize.z))
+
+                        //        )
+
+
+                        // )
+
+
+                        // this check doesnt work
+                        //&& !((curPos.z + startPos.z > (preEndPos.z - planeSize.z)))
+
+                        )
+
+
+
+                    {
+
+
+
+
+                        // find closest position to preEndPos that is within the bounds of the top room
+
+                        var testPos_ = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection + startPos;
+                        var closestPos_ = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + closestOffset + startPos;
+
+                        var distanceFromNewPos = MeshHelper.ManhattanDistance3(planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection + startPos, preEndPos); //  + planeOffsets.Sum((vec1) => MeshHelper.ManhattanDistance3(vec1,testPos_));
+                        var distanceFromClosestPos = MeshHelper.ManhattanDistance3(planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + closestOffset + startPos, preEndPos); /// + planeOffsets.Sum((vec1) => MeshHelper.ManhattanDistance3(vec1, closetsPos_));
+
+
+
+
+                        if (distanceFromNewPos < distanceFromClosestPos || closestOffset == Vector3.zero)
+                        {
+                            Debug.Log($"New Pos: {closestOffset}, {distanceFromClosestPos}, Best Pos {possDirection}, distance {distanceFromNewPos}, Prev Offset {planeOffsets.Last()}");
+                            closestOffset = possDirection;
+                        }
+                    }
+                    else
+                    {
+                        //Debug.LogWarning($"Moving on backwards");
+                        Debug.Log("New Pos: ---- moving Backwards");
+                    }
+
+                }
+
+                Debug.Log($"New Pos: ---- -------------------------------------");
+                Debug.Log($"New Pos: ---- Closest Pos Stairs {closestOffset}");
+                Debug.Log($"New Pos: ---- -------------------------------------");
+                planeOffsets.Add(closestOffset);
+                preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+                i++;
+
+
+            }
+
+
+
 
             #region endOffset
             preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
-            //planeOffsets.Add(preEndPosOffset);
+            planeOffsets.Add(preEndPosOffset);
 
             endOffset = endPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
 
-            //planeOffsets.Add(endOffset);
+            planeOffsets.Add(endOffset);
             #endregion
 
 
