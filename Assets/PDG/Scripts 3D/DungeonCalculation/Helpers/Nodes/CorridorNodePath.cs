@@ -817,15 +817,10 @@ namespace dungeonGenerator
             && sortedLeftSpaces.Count() > 0
             )
             {
-                //
-                leftSpace = sortedLeftSpaces[Random.Range(0, sortedLeftSpaces.Count())]; // can throw 0 exception????
+                
                 sortedLeftSpaces.Remove(leftSpace);
+                leftSpace = sortedLeftSpaces[Random.Range(0, sortedLeftSpaces.Count())]; // can throw 0 exception????
 
-                if (sortedLeftSpaces.Count() == 0)
-                {
-                    this.CorridorType = CorridorType.None;
-                    break;
-                }
             }
 
             if (sortedLeftSpaces.Count() == 0)
@@ -1189,14 +1184,9 @@ namespace dungeonGenerator
                 && sortedTopSpaces.Count() > 0
                 )
             {
-                topSpace = sortedTopSpaces[Random.Range(0, sortedTopSpaces.Count())];
                 sortedTopSpaces.Remove(topSpace);
-
-                if(sortedTopSpaces.Count() == 0)
-                {
-                    this.CorridorType = CorridorType.None;
-                    break; 
-                }
+                topSpace = sortedTopSpaces[Random.Range(0, sortedTopSpaces.Count())];
+              
 
             }
 
