@@ -8,8 +8,10 @@ using UnityEditor;
 using UnityEditor.AI;
 using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
+using Random = UnityEngine.Random;
 using UnityEngine;
 namespace dungeonGenerator
+
 {
 
     public class DungeonGenerator : MonoBehaviour
@@ -44,6 +46,11 @@ namespace dungeonGenerator
         public float doorThickness;
 
 
+        [Header("Seed")]
+        public bool seededGenerationEnabled;
+        public int generationSeed;
+
+
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
         
@@ -71,7 +78,14 @@ namespace dungeonGenerator
         private void GenerateDungeon()
         {
             DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
-            
+
+            if (!seededGenerationEnabled)
+            {
+                generationSeed = Random.Range(int.MinValue, int.MaxValue);
+            }
+
+            Random.InitState(generationSeed); // set generation seed
+
             // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
             roomList = calculator.CalculateDungeon(maxIterations, 
                                                    roomBoundsMin, 
@@ -115,17 +129,19 @@ namespace dungeonGenerator
 
             // get edge rooms  
             // TODO: MOVE THIS INTO SEPARATE FUNCTION
-            var deadEnds = GraphHelper.GetLeaves(startAndEnd[0], false);
+            var deadEnds = GraphHelper.GetLeaves(startAndEnd[0], false); // does not find unique dead ends due to loops
             int deadEndsCount = 0; 
 
-            foreach (var deadEnd in deadEnds)
+            foreach (var deadEnd in deadEnds.Distinct())
             {
-                if (deadEnd != startAndEnd[0] && deadEnd != startAndEnd[1] && deadEnd.ConnectionsList.Count() == 1)
+                if (deadEnd.Bounds.position != startAndEnd[0].Bounds.position && deadEnd.Bounds.position != startAndEnd[1].Bounds.position && deadEnd.ConnectionsList.Count() == 1)
                 {
                     deadEnd.RoomType = RoomType.DeadEnd;
                     deadEndsCount++;
                 } 
             }
+            
+            Debug.Log($"DeadEnd Count: {deadEndsCount}");
 
             // TODO: Refactor this to an event 
             total[CollectableType.cylinder] = 1;

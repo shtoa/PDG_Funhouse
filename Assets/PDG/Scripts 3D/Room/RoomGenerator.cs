@@ -527,10 +527,10 @@ namespace dungeonGenerator
                 Vector3.back*planeSize.z*2+Vector3.up*0.5f,
                 Vector3.left*planeSize.x*2+Vector3.up*0.5f,
                 Vector3.right*planeSize.x*2+Vector3.up*0.5f,
-                //Vector3.forward*planeSize.z*2,
-                //Vector3.back*planeSize.z*2,
-                //Vector3.left*planeSize.x*2,
-                //Vector3.right*planeSize.x*2
+                Vector3.forward*planeSize.z*(2+0.5f)+Vector3.up*0.5f,
+                Vector3.back*planeSize.z*(2+0.5f)+Vector3.up*0.5f,
+                Vector3.left*planeSize.x*(2+0.5f)+Vector3.up*0.5f,
+                Vector3.right*planeSize.x*(2+0.5f)+Vector3.up*0.5f,
             };
             var curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
 
@@ -567,8 +567,8 @@ namespace dungeonGenerator
                     }
 
                     if (
-                        Vector3.Dot((curPos - endPos), Vector3.up) < 2
-                        && ((curPos - endPos + startPos).x == 0) && ((curPos - endPos + startPos).z == 0)
+                        Vector3.Dot((curPos - endPos), Vector3.up) < 2f
+                        && ((curPos - endPos + startPos).x <= planeSize.x) && ((curPos - endPos + startPos).z <= planeSize.z)
                         )
                     {
 
