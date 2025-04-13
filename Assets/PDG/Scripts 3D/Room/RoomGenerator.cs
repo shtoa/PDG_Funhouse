@@ -456,19 +456,17 @@ namespace dungeonGenerator
 
         public void HandlePerpendicularWalls(WallBounds wallBounds, Node room, RoomStyle roomStyle, GameObject roomObj)
         {
-            // generate a ladder
-            //BoundsInt ladderBounds = wallBounds.getWalls()[Random.Range(0, wallBounds.getWalls().Count)];
-            //wallBounds.removeWall(ladderBounds);
 
-            Vector3 planeSize = new Vector3(2, 0, 2);
+            var connectedRoomsOrderedByY = room.ConnectionsList.OrderBy(connectedRoom => connectedRoom.Bounds.min.y).ToArray(); // order rooms by descending height
+            Vector3 planeSize = new Vector3(1, 0, 1); // stair segment size
 
-            var connectedRoomsOrderedByY = room.ConnectionsList.OrderBy(connectedRoom => connectedRoom.Bounds.min.y).ToArray();
+            var startPos = connectedRoomsOrderedByY[0].Bounds.position + dungeonGenerator.transform.position + planeSize*0.5f+new Vector3(1,0,1); // start position for plane  
 
-            var startPos = connectedRoomsOrderedByY[0].Bounds.position + dungeonGenerator.transform.position + planeSize;
             var endPos = new Vector3(connectedRoomsOrderedByY[1].Bounds.position.x+planeSize.x, 
                                      connectedRoomsOrderedByY[1].Bounds.position.y, 
                                      connectedRoomsOrderedByY[1].Bounds.position.z + planeSize.x) 
                             + dungeonGenerator.transform.position;
+
             var preEndPos = new Vector3(connectedRoomsOrderedByY[1].Bounds.position.x + planeSize.x+6,
                                      connectedRoomsOrderedByY[1].Bounds.position.y-2,
                                      connectedRoomsOrderedByY[1].Bounds.position.z + planeSize.x)
@@ -519,7 +517,6 @@ namespace dungeonGenerator
 
             #region connect Paths
 
-
             List<Vector3> possDirections = new List<Vector3>() {
                 Vector3.forward*planeSize.z*2+Vector3.up*0.5f,
                 Vector3.back*planeSize.z*2+Vector3.up*0.5f,
@@ -530,30 +527,15 @@ namespace dungeonGenerator
                 Vector3.left*planeSize.x*2,
                 Vector3.right*planeSize.x*2
             };
-
-
             var curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
 
-
-            //  && (curPos.x != (preEndPos.x - startPos.x) || curPos.z != (preEndPos.z - startPos.z))))
-
-            while (i < maxIter 
-
-
-                    // && ((curPos.y < (preEndPos.y - startPos.y)) || curPos.x != (preEndPos.x - startPos.x))
-
-
-                    && ((curPos.y + startPos.y) < (preEndPos.y))
-
-                    //&& (curPos.x != (preEndPos.x - startPos.x))
-                    )
-                
+            while (i < maxIter && ((curPos.y + startPos.y) < (preEndPos.y)))
+            
             {
                 // check if angle is ok
                 Vector3 closestOffset = Vector3.zero;
                 foreach(var possDirection in possDirections)
                 {
-
 
                     curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection;
 
@@ -569,8 +551,6 @@ namespace dungeonGenerator
 
                         if (Vector3.Dot((curPos-curPosOverlapCheck), Vector3.up) <= 2
                             && ((curPos - curPosOverlapCheck).x == 0) && ((curPos - curPosOverlapCheck).z == 0)
-
-
                             )
                         {
 
@@ -581,11 +561,10 @@ namespace dungeonGenerator
                         }
                     }
 
-                    if (Vector3.Dot((curPos - endPos), Vector3.up) <= 2
-                           && ((curPos - endPos + startPos).x == 0) && ((curPos - endPos + startPos).z == 0)
-
-
-                           )
+                    if (
+                        Vector3.Dot((curPos - endPos), Vector3.up) <= 2
+                        && ((curPos - endPos + startPos).x == 0) && ((curPos - endPos + startPos).z == 0)
+                        )
                     {
 
                         isOverlapingHeight = true;
@@ -606,33 +585,28 @@ namespace dungeonGenerator
 
                     Debug.Log($"curPos eq: {curPos.z + startPos.z == (preEndPos.z)}, curPos.z: {curPos.z + startPos.z}, preEndPos.z: {preEndPos.z}");
 
-                    if (
-
-
-                        Vector3.Dot(
-                                    Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
-                                    Vector3.Normalize(Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up))
-                                    ) != -1
-                        &&
-                                    Vector3.Dot(Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
-                                                Vector3.Normalize(Vector3.ProjectOnPlane(preEndPosOffset, Vector3.up))
-                                                ) != -1
-
-                                    && curPos.x + startPos.x <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x, connectedRoomsOrderedByY[0].Bounds.max.x) + GameObject.Find("DungeonGen").transform.position.x)
+                    bool isWithinBounds = curPos.x + startPos.x <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x, connectedRoomsOrderedByY[0].Bounds.max.x) + GameObject.Find("DungeonGen").transform.position.x)
                                     && curPos.x + startPos.x >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.x, connectedRoomsOrderedByY[0].Bounds.min.x) + GameObject.Find("DungeonGen").transform.position.x)
                                     && curPos.z + startPos.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z, connectedRoomsOrderedByY[0].Bounds.max.z) + GameObject.Find("DungeonGen").transform.position.z)
-                                    && curPos.z + startPos.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z, connectedRoomsOrderedByY[0].Bounds.min.z) + GameObject.Find("DungeonGen").transform.position.z)
+                                    && curPos.z + startPos.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z, connectedRoomsOrderedByY[0].Bounds.min.z) + GameObject.Find("DungeonGen").transform.position.z);
 
-                                    //&& curPos != (preEndPos - startPos + Vector3.right)
-                                    &&
-                                    !isOverlapingHeight
+                    bool isDirectionBackwards = Vector3.Dot(
+                                    Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
+                                    Vector3.Normalize(Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up))
+                                    ) == -1;
 
+                    if (
+                        Vector3.Dot(Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
+                                    Vector3.Normalize(Vector3.ProjectOnPlane(preEndPosOffset, Vector3.up))
+                                    ) != -1
 
-                                    && (Vector3.Normalize(curPos-preEndPos) != new Vector3(-1,0,0))
+                        && !isDirectionBackwards
+                        && isWithinBounds
+                        && !isOverlapingHeight
+                        && (Vector3.Normalize(curPos-preEndPos) != new Vector3(-1,0,0))
+                        && !((curPos.z + startPos.z == (preEndPos.z)) && (curPos.y + startPos.y > (preEndPos.y-1)))
 
-                                    && !((curPos.z + startPos.z == (preEndPos.z)) && (curPos.y + startPos.y > (preEndPos.y-1)))
-
-                                    )
+                        )
 
 
 
@@ -649,7 +623,6 @@ namespace dungeonGenerator
                         if (distanceFromNewPos < distanceFromClosestPos || closestOffset == Vector3.zero)
                         {
                             Debug.Log($"New Pos: {closestOffset}, {distanceFromClosestPos}, Best Pos {possDirection}, distance {distanceFromNewPos}, Prev Offset {planeOffsets.Last()}");
-
                             closestOffset = possDirection;
                         }
                     }
@@ -759,15 +732,17 @@ namespace dungeonGenerator
 
             StairsGenerator.GenerateStairs(roomObj.transform, startPos, floorMaterial, planeSize, planeOffsets);
 
-
             #region ladder generation
+
+            // generate a ladder
+            //BoundsInt ladderBounds = wallBounds.getWalls()[Random.Range(0, wallBounds.getWalls().Count)];
+            //wallBounds.removeWall(ladderBounds);
+
 
             //ladderBounds = new BoundsInt(
             //        new Vector3Int(ladderBounds.x, connectedRoomsOrderedByY[0].Bounds.y, ladderBounds.z), // Bottom Room min Bounds y
             //        new Vector3Int(ladderBounds.size.x, connectedRoomsOrderedByY[0].Bounds.size.y + ladderBounds.size.y, ladderBounds.size.z)
             //);
-
-
 
             //GameObject ladder = MeshHelper.CreateCuboid(ladderBounds.size, 1);
             //ladder.name = "ladder";
