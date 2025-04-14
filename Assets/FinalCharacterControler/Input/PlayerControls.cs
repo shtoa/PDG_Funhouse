@@ -80,6 +80,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Stab"",
+                    ""type"": ""Button"",
+                    ""id"": ""30527d43-b82a-4fc9-b6d6-419d19894eea"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -225,6 +234,17 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""ToggleMinimap"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d3489c8e-d47a-4b2d-be05-0be85777aa1a"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Stab"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -239,6 +259,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_PlayerLocomotionMap_Jump = m_PlayerLocomotionMap.FindAction("Jump", throwIfNotFound: true);
         m_PlayerLocomotionMap_Interact = m_PlayerLocomotionMap.FindAction("Interact", throwIfNotFound: true);
         m_PlayerLocomotionMap_ToggleMinimap = m_PlayerLocomotionMap.FindAction("ToggleMinimap", throwIfNotFound: true);
+        m_PlayerLocomotionMap_Stab = m_PlayerLocomotionMap.FindAction("Stab", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -306,6 +327,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerLocomotionMap_Jump;
     private readonly InputAction m_PlayerLocomotionMap_Interact;
     private readonly InputAction m_PlayerLocomotionMap_ToggleMinimap;
+    private readonly InputAction m_PlayerLocomotionMap_Stab;
     public struct PlayerLocomotionMapActions
     {
         private @PlayerControls m_Wrapper;
@@ -316,6 +338,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         public InputAction @Jump => m_Wrapper.m_PlayerLocomotionMap_Jump;
         public InputAction @Interact => m_Wrapper.m_PlayerLocomotionMap_Interact;
         public InputAction @ToggleMinimap => m_Wrapper.m_PlayerLocomotionMap_ToggleMinimap;
+        public InputAction @Stab => m_Wrapper.m_PlayerLocomotionMap_Stab;
         public InputActionMap Get() { return m_Wrapper.m_PlayerLocomotionMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -343,6 +366,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @ToggleMinimap.started += instance.OnToggleMinimap;
             @ToggleMinimap.performed += instance.OnToggleMinimap;
             @ToggleMinimap.canceled += instance.OnToggleMinimap;
+            @Stab.started += instance.OnStab;
+            @Stab.performed += instance.OnStab;
+            @Stab.canceled += instance.OnStab;
         }
 
         private void UnregisterCallbacks(IPlayerLocomotionMapActions instance)
@@ -365,6 +391,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @ToggleMinimap.started -= instance.OnToggleMinimap;
             @ToggleMinimap.performed -= instance.OnToggleMinimap;
             @ToggleMinimap.canceled -= instance.OnToggleMinimap;
+            @Stab.started -= instance.OnStab;
+            @Stab.performed -= instance.OnStab;
+            @Stab.canceled -= instance.OnStab;
         }
 
         public void RemoveCallbacks(IPlayerLocomotionMapActions instance)
@@ -390,5 +419,6 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnInteract(InputAction.CallbackContext context);
         void OnToggleMinimap(InputAction.CallbackContext context);
+        void OnStab(InputAction.CallbackContext context);
     }
 }

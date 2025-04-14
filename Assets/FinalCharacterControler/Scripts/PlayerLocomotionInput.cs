@@ -119,7 +119,23 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
         }
     }
 
-    public void OnToggleMinimap(InputAction.CallbackContext context)
+    public void OnStab(InputAction.CallbackContext context)
+    {
+
+        if (context.performed)
+        {
+            GameObject.Find("armTest_Fencing_unity").GetComponent<Animator>().SetBool("isStabbing", true);
+        }
+
+        else if (context.canceled)
+        {
+
+            GameObject.Find("armTest_Fencing_unity").GetComponent<Animator>().SetBool("isStabbing", false);
+
+        }
+    }
+
+        public void OnToggleMinimap(InputAction.CallbackContext context)
     {
         GameObject minimap = GameObject.FindGameObjectWithTag("minimap");
         if (context.performed)
