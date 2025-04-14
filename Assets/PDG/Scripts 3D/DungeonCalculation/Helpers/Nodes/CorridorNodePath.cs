@@ -576,6 +576,48 @@ namespace dungeonGenerator
             
         }
 
+        //private SplitPosition getRelativeRoomPlacement(startSpace, endSpace)
+        //{
+        //    return startSpace.Bounds.position
+        //}
+        private(Vector3Int startVoxel, Vector3Int endVoxel) generateDoorPlacements(Node startSpace, Node endSpace)
+        {
+            // figure out relative placement
+            Vector3Int connectionAxis = new Vector3Int(1, 0, 0);
+            Vector3Int perpendicularAxis = new Vector3Int(0, 0, 1);
+
+
+            // Calculate Bounds for Starting Voxels (Positions of the Doors)
+            Vector3Int startVoxel = Vector3Int.Scale(startSpace.Bounds.max,connectionAxis) 
+                                    + Vector3Int.Scale(Vector3Int.CeilToInt(startSpace.Bounds.center), perpendicularAxis)
+                                    + Vector3Int.up*startSpace.Bounds.min.y;
+            Vector3Int endVoxel = Vector3Int.Scale(endSpace.Bounds.min - Mathf.CeilToInt(corridorWidth / 2f)*Vector3Int.one, connectionAxis)
+                                    + Vector3Int.Scale(Vector3Int.CeilToInt(endSpace.Bounds.center), perpendicularAxis)
+                                    + Vector3Int.up * endSpace.Bounds.min.y;
+
+            // update grid
+            this.corridorGrid[startVoxel.x, startVoxel.y, startVoxel.z] = true;
+            this.corridorGrid[endVoxel.x, endVoxel.y, endVoxel.z] = true;
+
+            // Start and Endspace the Door Placements
+            startSpace.calculateDoorPlacement(new BoundsInt(
+                    startVoxel + Vector3Int.back,
+                    new Vector3Int(1, 1, 1)
+                ), this.node1.SplitPosition, this.wallThickness);
+
+            endSpace.calculateDoorPlacement(new BoundsInt(
+                  endVoxel + Vector3Int.back,
+                  new Vector3Int(1, 1, 1)
+                ), this.node2.SplitPosition, this.wallThickness); // error due to split position
+
+            // add the door placemetns to the node
+            this.addDoorPlacement(startSpace.DoorPlacements.Last());
+            this.addDoorPlacement(endSpace.DoorPlacements.Last());
+
+          
+            return (startVoxel, endVoxel);
+        }
+
         /// <summary>
         /// Generate a corridor between leftNode and rightNode
         /// </summary>
@@ -597,8 +639,8 @@ namespace dungeonGenerator
             var sortedRightSpaces = ReturnLeftMostSpaces(rightSpaceLeaves);
 
             // --- Check already connected spaces 
-            removeConnectedSpaces(sortedRightSpaces, SplitPosition.Left);
-            removeConnectedSpaces(sortedLeftSpaces, SplitPosition.Right);
+            removeConnectedSpaces(sortedRightSpaces, leftNode.SplitPosition);
+            removeConnectedSpaces(sortedLeftSpaces, rightNode.SplitPosition);
 
             if (sortedLeftSpaces.Count() < 1 || sortedRightSpaces.Count() < 1)
             {
@@ -616,29 +658,42 @@ namespace dungeonGenerator
                 return;
             }
 
-            // calculate door positions
-            Vector3Int leftStartVoxel = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, (leftSpace.Bounds.min.z + leftSpace.Bounds.max.z) / 2);
-            this.corridorGrid[leftStartVoxel.x, leftStartVoxel.y, leftStartVoxel.z] = true;
+            // --- Calculate Door Positions ---- 
 
-            Vector3Int rightEndVoxel = new Vector3Int(rightSpace.Bounds.min.x - Mathf.CeilToInt(corridorWidth / 2f), rightSpace.Bounds.min.y, (rightSpace.Bounds.min.z + rightSpace.Bounds.max.z) / 2);
-            this.corridorGrid[rightEndVoxel.x, rightEndVoxel.y, rightEndVoxel.z] = true;
+            (Vector3Int leftStartVoxel, Vector3Int rightEndVoxel) = generateDoorPlacements(leftSpace, rightSpace);
 
-            leftSpace.calculateDoorPlacement(new BoundsInt(
-                    leftStartVoxel + Vector3Int.back,
-                    new Vector3Int(1, 1, 1)
+            //Vector3Int leftStartVoxel = new Vector3Int(leftSpace.Bounds.max.x, leftSpace.Bounds.min.y, (leftSpace.Bounds.min.z + leftSpace.Bounds.max.z) / 2);
 
-                ), SplitPosition.Left, wallThickness);
-            rightSpace.calculateDoorPlacement(new BoundsInt(
-                  rightEndVoxel + Vector3Int.back,
-                  new Vector3Int(1, 1, 1)
+            //Vector3Int connectionAxis = new Vector3Int(1, 0, 0);
+            //Vector3Int perpendicularAxis = new Vector3Int(0, 0, 1);
 
 
+            //Vector3Int leftStartVoxel = Vector3Int.Scale(leftSpace.Bounds.max, connectionAxis)
+            //             + Vector3Int.Scale(Vector3Int.CeilToInt(leftSpace.Bounds.center), perpendicularAxis)
+            //             + Vector3Int.up * leftSpace.Bounds.min.y;
+            //Vector3Int rightEndVoxel = Vector3Int.Scale(rightSpace.Bounds.min - Mathf.CeilToInt(corridorWidth / 2f) * Vector3Int.one, connectionAxis)
+            //                        + Vector3Int.Scale(Vector3Int.CeilToInt(rightSpace.Bounds.center), perpendicularAxis)
+            //                        + Vector3Int.up * rightSpace.Bounds.min.y;
 
+            //this.corridorGrid[leftStartVoxel.x, leftStartVoxel.y, leftStartVoxel.z] = true;
 
-                ), SplitPosition.Right, wallThickness);
+            ////Vector3Int rightEndVoxel = new Vector3Int(rightSpace.Bounds.min.x - Mathf.CeilToInt(corridorWidth / 2f), rightSpace.Bounds.min.y, (rightSpace.Bounds.min.z + rightSpace.Bounds.max.z) / 2);
+            //this.corridorGrid[rightEndVoxel.x, rightEndVoxel.y, rightEndVoxel.z] = true;
 
-            this.addDoorPlacement(leftSpace.DoorPlacements.Last());
-            this.addDoorPlacement(rightSpace.DoorPlacements.Last());
+            //leftSpace.calculateDoorPlacement(new BoundsInt(
+            //        leftStartVoxel + Vector3Int.back,
+            //        new Vector3Int(1, 1, 1)
+
+            //    ), SplitPosition.Left, wallThickness);
+            //rightSpace.calculateDoorPlacement(new BoundsInt(
+            //      rightEndVoxel + Vector3Int.back,
+            //      new Vector3Int(1, 1, 1)
+            //    ), SplitPosition.Right, wallThickness);
+
+            //this.addDoorPlacement(leftSpace.DoorPlacements.Last());
+            //this.addDoorPlacement(rightSpace.DoorPlacements.Last());
+
+            // --- Build Corridor Between found Spaces ---
 
             if (buildCorridorLateral(leftStartVoxel,rightEndVoxel))
             {
@@ -646,14 +701,14 @@ namespace dungeonGenerator
                 updateAvailableGrid();
 
                 // generate corridorBounds from corridor Grid 
-                generateCorridorFloorBounds(rightSpace.Bounds.y);
+                generateCorridorFloorBounds(rightSpace.Bounds.y); // doesnt matter which one
                 calculateWallsFromCorridorTest(SplitPosition.Left);
 
                 // --- Add Neighbours to the Connection List of Respective Nodes --- 
                 leftSpace.ConnectionsList.Add(rightSpace);
                 rightSpace.ConnectionsList.Add(leftSpace);
 
-                // --- calculate the bounds of the door to be used in mesh generation ---
+                // --- select type of corridor ---
                 this.CorridorType = CorridorType.Horizontal;
             }
 
@@ -811,8 +866,8 @@ namespace dungeonGenerator
 
             // --- Remove Already Connected Spaces ---
 
-            removeConnectedSpaces(sortedBottomSpaces, SplitPosition.Top);
-            removeConnectedSpaces(sortedTopSpaces, SplitPosition.Bottom);
+            removeConnectedSpaces(sortedBottomSpaces, topNode.SplitPosition);
+            removeConnectedSpaces(sortedTopSpaces, bottomNode.SplitPosition);
 
             if (sortedTopSpaces.Count() < 1 || sortedBottomSpaces.Count() < 1)
             {
@@ -822,24 +877,13 @@ namespace dungeonGenerator
 
             // --- Find Neighbor pair in TopSpaces and BottomSpaces ---
 
-            topSpace = sortedTopSpaces[0]; // Choose starting space
-            IEnumerable<Node> bottomSpaceNeighbors = sortedBottomSpaces.OrderBy(bottomSpace => 
-                                                                                Vector3Int.Distance(bottomSpace.Bounds.position, topSpace.Bounds.position)
-                                                                                ).Where((bottomSpace) => (topSpace.Bounds.y == bottomSpace.Bounds.y));
-
-            while (bottomSpaceNeighbors.Count() == 0 && sortedTopSpaces.Count() > 0)
-            {                         
-                sortedTopSpaces.Remove(topSpace);
-                topSpace = sortedTopSpaces[Random.Range(0, sortedTopSpaces.Count())];
-            }
+            (topSpace, bottomSpace) = getLateralNeighbors(sortedTopSpaces, sortedBottomSpaces);
 
             if (sortedTopSpaces.Count() == 0)
             {
                 this.CorridorType = CorridorType.None;
                 return;
             }
-
-            bottomSpace = bottomSpaceNeighbors.First();
 
             // calculate door positions
 
