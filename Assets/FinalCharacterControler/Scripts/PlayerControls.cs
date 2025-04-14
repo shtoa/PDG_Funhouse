@@ -188,6 +188,9 @@ public class PlayerController : MonoBehaviour
             {
                 _verticalVelocity = _terminalVelocity;
             }
+
+         
+            
         }
 
         

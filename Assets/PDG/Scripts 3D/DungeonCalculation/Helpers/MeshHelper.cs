@@ -86,7 +86,13 @@ namespace dungeonGenerator
             topLeftV,
             topRightV,
             bottomLeftV,
-            bottomRightV
+            bottomRightV,
+
+            // for double sided mesh
+            topLeftV-0.0001f*Vector3.up,
+            topRightV-0.0001f*Vector3.up,
+            bottomLeftV-0.0001f*Vector3.up,
+            bottomRightV-0.0001f*Vector3.up,
             };
 
             // likely wrong double check
@@ -103,7 +109,11 @@ namespace dungeonGenerator
                 triangles = new int[]
                 {
                     0,1,2,
-                    2,1,3
+                    2,1,3,
+                    // if double sided
+                    5, 6, 4,
+                    5, 7, 6
+
                 };
             }
             else
@@ -111,7 +121,12 @@ namespace dungeonGenerator
                 triangles = new int[]
              {
                     0,2,1,
-                    1,2,3
+                    1,2,3,
+
+
+                    // if double sided
+                    5, 6, 4,
+                    5, 7, 6
              };
             }
 
@@ -119,8 +134,19 @@ namespace dungeonGenerator
             plane.vertices = vertices;
             plane.triangles = triangles;
             plane.uv = uvs;
-            plane.RecalculateNormals();
+
+            //Vector3[] normals = new Vector3[plane.normals.Length];
+            //for (var i = 0; i < plane.normals.Length; i++)
+            //{
+            //    normals[i] = -1 * plane.normals[i];
+            //}
+
+            //plane.SetNormals(normals);    
+       
             plane.RecalculateBounds();
+            plane.RecalculateTangents();
+            plane.RecalculateNormals();
+
 
             GameObject planeObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
             planeObject.GetComponent<MeshFilter>().mesh = plane;
@@ -487,6 +513,12 @@ namespace dungeonGenerator
         {
             return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z);
         }
+
+        public static int ManhattanDistance3(Vector3Int a, Vector3Int b)
+        {
+            return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) + Mathf.Abs(a.z - b.z);
+        }
+
         public static void VisualizeVoxelGrid(bool[,,] availableVoxelGrid)
         {
             GameObject voxelHolder = new GameObject("voxelGridVisualizer");
