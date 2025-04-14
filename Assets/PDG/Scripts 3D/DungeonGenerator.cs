@@ -48,7 +48,7 @@ namespace dungeonGenerator
 
         [Header("Seed")]
         public bool seededGenerationEnabled;
-        public int generationSeed;
+        public int randomSeed;
 
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
@@ -81,10 +81,10 @@ namespace dungeonGenerator
 
             if (!seededGenerationEnabled)
             {
-                generationSeed = Random.Range(int.MinValue, int.MaxValue);
+                randomSeed = Random.Range(int.MinValue, int.MaxValue);
             }
 
-            Random.InitState(generationSeed); // set generation seed
+            Random.InitState(randomSeed); // set generation seed
 
             // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
             roomList = calculator.CalculateDungeon(maxIterations, 

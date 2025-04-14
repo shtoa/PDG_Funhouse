@@ -67,7 +67,7 @@ public class TestCollectableUI : MonoBehaviour
     {
         foreach (CollectableType collectableType in Enum.GetValues(typeof(CollectableType)))
         {
-            Counters.Add(collectableType, CreateCounter(collectableType.ToString(), new Vector2(20f+(int)collectableType * 100f, 10f)));
+            Counters.Add(collectableType, CreateCounter(collectableType.ToString(), new Vector2(1.8f +(int)collectableType * 0.5f, -0.10f))); // -125, 100 ,-200
         }
 
     }
@@ -90,7 +90,7 @@ public class TestCollectableUI : MonoBehaviour
 
 
         // need to make the width of the counters the same
-        g.transform.localPosition = new Vector3(4.5f, 20, 3);
+        g.transform.localPosition = new Vector3(6.5f, 20, -10); 
         g.layer = LayerMask.NameToLayer("UI");
         g.GetComponent<Collider>().enabled = false; // change this to make it more scalable
 
@@ -101,8 +101,9 @@ public class TestCollectableUI : MonoBehaviour
         GameObject counterObj = new GameObject(name + "Counter");
         counterObj.layer = LayerMask.NameToLayer("UI");
 
-        counterObj.transform.localScale = Vector3.one * 5f;        
-        
+        counterObj.transform.localScale = Vector3.one * 0.04f; // 5f       
+        counterObj.transform.Rotate(Vector3.up, 180);
+
         // Add text object to the componenet 
         TextMeshPro tmp = counterObj.AddComponent<TextMeshPro>();
         tmp.autoSizeTextContainer = true;
@@ -113,8 +114,8 @@ public class TestCollectableUI : MonoBehaviour
         RectTransform rectTransform = counterObj.GetComponent<RectTransform>();
 
         rectTransform.pivot = Vector3.zero;
-        rectTransform.anchorMin = Vector2.zero;
-        rectTransform.anchorMax = Vector2.zero;
+        rectTransform.anchorMin = Vector2.zero;//new Vector2(0.5f,1f); //.zero;
+        rectTransform.anchorMax = Vector2.zero; // new Vector2(0.5f, 1f); //Vector2.zero;
         rectTransform.anchoredPosition = anchorPos;
   
 
@@ -126,7 +127,7 @@ public class TestCollectableUI : MonoBehaviour
 
         Canvas.ForceUpdateCanvases();
 
-        rectTransform.sizeDelta = Vector2.one * 10f;
+        //rectTransform.sizeDelta = Vector2.one * 10f;
 
         return counterObj;
     }
