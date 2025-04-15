@@ -5,10 +5,45 @@ using UnityEngine;
 
 namespace dungeonGenerator
 {
+    public static class NodeEnumExtensions
+    {
+        public static Vector3Int toV3I(this SplitPosition splitPosition)
+        {
+            switch (splitPosition)
+            {
+                case (SplitPosition.Left):
+                    return Vector3Int.left;
+                case (SplitPosition.Right):
+                    return Vector3Int.right;
+                case (SplitPosition.Top):
+                    return Vector3Int.forward;
+                case (SplitPosition.Bottom):
+                    return Vector3Int.back;
+                case (SplitPosition.Up):
+                    return Vector3Int.up;
+                case (SplitPosition.Down):
+                    return Vector3Int.down;
+                case (SplitPosition.Root):
+                    return Vector3Int.zero;
+                default:
+                    throw new Exception("SplitPosition does not exist");
+            }
+           
+        }
 
+        public static CorridorType toCorridorType(this SplitPosition splitPosition)
+        {
+            if (Mathf.Abs(Vector3.Dot(Vector3.left, splitPosition.toV3I())) == 1) return CorridorType.Horizontal;
+            if (Mathf.Abs(Vector3.Dot(Vector3.forward, splitPosition.toV3I())) == 1) return CorridorType.Vertical;
+            if (Mathf.Abs(Vector3.Dot(Vector3.up, splitPosition.toV3I())) == 1) return CorridorType.Perpendicular;
+            
+            return CorridorType.None;
+
+        }
+    }
     public enum SplitPosition
     {
-        Root,Top, Bottom, Left, Right, Up, Down
+        Root, Top, Bottom, Left, Right, Up, Down
     }
     public enum RoomType
     {
