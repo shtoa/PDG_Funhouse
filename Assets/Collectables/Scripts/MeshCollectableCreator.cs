@@ -91,7 +91,27 @@ public class MeshCollectableCreator : MonoBehaviour
 
             collectable.transform.SetParent(parentTransform, false);
 
-            collectable.GetComponent<Collider>().isTrigger = true;
+            Collider collider = collectable.GetComponent<Collider>();
+            collider.isTrigger = true; // set mesh collider to trigger false
+            
+           
+            if(collider is BoxCollider box)
+            {
+                box.size = box.size * 1.5f;
+            }
+
+            if(collider is SphereCollider sphereCollider)
+            {
+                sphereCollider.radius = sphereCollider.radius * 1.5f;
+            }
+
+            if(collider is CapsuleCollider capsuleCollider)
+            {
+                capsuleCollider.radius = capsuleCollider.radius * 1.5f;
+                capsuleCollider.height = capsuleCollider.height * 1.5f;
+            }
+
+
             collectable.GetComponent<MeshRenderer>().SetMaterials(mList);
             //collectable.GetComponent<MeshCollectable>().materialFadeOut = MaterialFadeOut;
 

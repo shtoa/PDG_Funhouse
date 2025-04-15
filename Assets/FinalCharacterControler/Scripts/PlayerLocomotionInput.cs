@@ -125,6 +125,19 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
         if (context.performed)
         {
             GameObject.Find("armTest_Fencing_unity").GetComponent<Animator>().SetBool("isStabbing", true);
+
+            GameObject cam = GameObject.FindGameObjectWithTag("MainCamera");
+            Ray r = new Ray(cam.transform.position-0.1f*cam.transform.forward, cam.transform.forward);
+            if (Physics.Raycast(r, out RaycastHit hitInfo, 1f))
+            {
+                Debug.Log($"HitInfo {hitInfo.transform.gameObject.name}");
+                if (hitInfo.collider.gameObject.TryGetComponent(out ICollectable interactableObj))
+                {
+                    interactableObj.Collect();
+                    Debug.Log("Collected");
+                }
+
+            }
         }
 
         else if (context.canceled)
@@ -150,5 +163,20 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
 
         }
         }
-        #endregion
+
+    public void OnBlock(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            GameObject.Find("armTest_Fencing_unity").GetComponent<Animator>().SetBool("isBlocking", true);
+        }
+
+        else if (context.canceled)
+        {
+
+            GameObject.Find("armTest_Fencing_unity").GetComponent<Animator>().SetBool("isBlocking", false);
+
+        }
     }
+    #endregion
+}

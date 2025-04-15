@@ -425,44 +425,15 @@ namespace dungeonGenerator
         }
         #endregion
 
-        #region Left-Right Generation
+        #region Lateral Corridor Generation
 
-        #region Left-Right Helper Methods
-        private List<Node> ReturnRightMostSpaces(List<Node> leftSpaces)
-        {
-
-            var sortedLeftSpaces = leftSpaces.OrderByDescending(space => space.Bounds.max.x).ToList(); // get right most children of left space
-
-            if (sortedLeftSpaces.Count == 1)
-            {
-                return sortedLeftSpaces; // if only one leftSpace available select it (usually will just join the two deepest children)
-            }
-            else // select one of the rights most LeftSpaces if there are multiple
-            {
-                int maxX = sortedLeftSpaces[0].Bounds.max.x; // get the coordinates of the right most bound
-                sortedLeftSpaces = sortedLeftSpaces.Where(space => Math.Abs(maxX - space.Bounds.max.x) < minRoomDim.x).ToList(); // deviation less than min room size to not go through rooms
-                return sortedLeftSpaces;
-            }
-
-        }
-        private List<Node> ReturnLeftMostSpaces(List<Node> rightSpaces)
-        {
-
-            var sortedRightSpaces = rightSpaces.OrderBy(space => space.Bounds.min.x).ToList(); // get right most children of left space
-
-            if (sortedRightSpaces.Count == 1)
-            {
-                return sortedRightSpaces; // if only one rightSpace available select it (usually will just join the two deepest children)
-            }
-            else // select one of the left most RightSpaces if there are multiple
-            {
-                int minX = sortedRightSpaces[0].Bounds.min.x; // get the coordinates of the right most bound
-                sortedRightSpaces = sortedRightSpaces.Where(space => Math.Abs(minX - space.Bounds.min.x) < minRoomDim.x).ToList(); // deviation less than min room size to not go through rooms
-                return sortedRightSpaces;
-            }
-
-        }
-
+        #region Lateral Helper Methods
+        /// <summary>
+        /// Returns closest aligned nodes to the bsp split position
+        /// </summary>
+        /// <param name="spaces"></param>
+        /// <param name="alignment"></param>
+        /// <returns>closest aligned nodes to split</Nove></returns>
         private List<Node> ReturnAlignedSpaces(List<Node> spaces, SplitPosition alignment)
         {
 
@@ -566,8 +537,11 @@ namespace dungeonGenerator
 
         }
 
-        #endregion
-
+        /// <summary>
+        /// Removes spaces from possible rooms list that have already been connected (useful for cyclic connections)
+        /// </summary>
+        /// <param name="Spaces"></param>
+        /// <param name="doorPosition"></param>
         private void removeConnectedSpaces(List<Node> Spaces, SplitPosition doorPosition)
         {
             for (int i = Spaces.Count() - 1; i >= 0; i--)
@@ -582,12 +556,18 @@ namespace dungeonGenerator
             }
         }
 
-        private (Node startNode, Node endNode) getLateralNeighbors(List<Node>startNodes, List<Node> endNodes)
+        /// <summary>
+        /// Gets Closest neighboring Rooms to Connect
+        /// </summary>
+        /// <param name="startNodes"></param>
+        /// <param name="endNodes"></param>
+        /// <returns></returns>
+        private (Node startNode, Node endNode) getLateralNeighbors(List<Node> startNodes, List<Node> endNodes)
         {
             Node startNode = startNodes[0];
 
-            Func<Node,Node, float> getNodeDistance = (node1,node2) => 
-                                                      Vector3.Distance(node1.Bounds.center, 
+            Func<Node, Node, float> getNodeDistance = (node1, node2) =>
+                                                      Vector3.Distance(node1.Bounds.center,
                                                                        node2.Bounds.center);
 
             Func<Node, Node, bool> isSameY = (node1, node2) => node1.Bounds.y == node2.Bounds.y;
@@ -598,32 +578,40 @@ namespace dungeonGenerator
 
             while (endNodeNeighbors.Count() == 0 && startNodes.Count() > 0)
             {
-                startNodes.Remove(startNode);
                 startNode = startNodes[Random.Range(0, startNodes.Count())];
+                startNodes.Remove(startNode);
             }
 
-            if (startNodes.Count() == 0 && endNodeNeighbors.Count() > 0)
+            if (startNodes.Count() == 0 && endNodeNeighbors.Count() == 0)
             {
                 return (null, null);
             }
 
             Node endNode = endNodeNeighbors.First();
             return (startNode, endNode);
-            
+
         }
 
-        private(Vector3Int startVoxel, Vector3Int endVoxel) getTargetVoxels(Node startSpace, Node endSpace, SplitPosition startSplit, SplitPosition endSplit)
+        /// <summary>
+        /// Generates start and end voxel positions for pathfinding
+        /// </summary>
+        /// <param name="startSpace"></param>
+        /// <param name="endSpace"></param>
+        /// <param name="startSplit"></param>
+        /// <param name="endSplit"></param>
+        /// <returns> Start and End Voxel Positions </returns>
+        private (Vector3Int startVoxel, Vector3Int endVoxel) getTargetVoxels(Node startSpace, Node endSpace, SplitPosition startSplit, SplitPosition endSplit)
         {
             // figure out relative placement
             Vector3Int connectionAxis = new Vector3Int(Mathf.Abs(startSplit.toV3I().x), Mathf.Abs(startSplit.toV3I().y), Mathf.Abs(startSplit.toV3I().z));
-            Vector3Int perpendicularAxis = new Vector3Int(1, 0, 1)-connectionAxis;
+            Vector3Int perpendicularAxis = new Vector3Int(1, 0, 1) - connectionAxis;
 
 
             // Calculate Bounds for Starting Voxels (Positions of the Doors)
-            Vector3Int startVoxel = Vector3Int.Scale(startSpace.Bounds.max,connectionAxis) 
+            Vector3Int startVoxel = Vector3Int.Scale(startSpace.Bounds.max, connectionAxis)
                                     + Vector3Int.Scale(Vector3Int.CeilToInt(startSpace.Bounds.center), perpendicularAxis)
-                                    + Vector3Int.up*startSpace.Bounds.min.y;
-            Vector3Int endVoxel = Vector3Int.Scale(endSpace.Bounds.min - Mathf.CeilToInt(corridorWidth / 2f)*Vector3Int.one, connectionAxis)
+                                    + Vector3Int.up * startSpace.Bounds.min.y;
+            Vector3Int endVoxel = Vector3Int.Scale(endSpace.Bounds.min - Mathf.CeilToInt(corridorWidth / 2f) * Vector3Int.one, connectionAxis)
                                     + Vector3Int.Scale(Vector3Int.CeilToInt(endSpace.Bounds.center), perpendicularAxis)
                                     + Vector3Int.up * endSpace.Bounds.min.y;
 
@@ -633,7 +621,16 @@ namespace dungeonGenerator
 
             return (startVoxel, endVoxel);
         }
-
+        
+        /// <summary>
+        /// If path is successsfull adds doorplacements to room and corridor to make sure openings are generated
+        /// </summary>
+        /// <param name="startVoxel"></param>
+        /// <param name="endVoxel"></param>
+        /// <param name="startSpace"></param>
+        /// <param name="endSpace"></param>
+        /// <param name="startSplit"></param>
+        /// <param name="endSplit"></param>
         private void addDoorPlacements(Vector3Int startVoxel, Vector3Int endVoxel, Node startSpace, Node endSpace, SplitPosition startSplit, SplitPosition endSplit)
         {
             // figure out relative placement
@@ -655,14 +652,13 @@ namespace dungeonGenerator
             this.addDoorPlacement(startSpace.DoorPlacements.Last());
             this.addDoorPlacement(endSpace.DoorPlacements.Last());
         }
-
-    
+        #endregion
 
         /// <summary>
         /// Generate a corridor between startNode (maxPos) and endNode (minPos)
         /// </summary>
-        /// <param name="node1"> leftNode </param>
-        /// <param name="node2"> rightNode </param>
+        /// <param name="endNode"> endNode </param>
+        /// <param name="startNode"> startNode </param>
         private void GenerateCorridorLateral (Node endNode, Node startNode)
         {
             // --- Initialize Leaves Arrays and Spaces to Connect ---
@@ -728,119 +724,13 @@ namespace dungeonGenerator
 
         }
 
-
-
-
-
         /// <summary>
-        /// Generate a corridor between leftNode and rightNode
+        /// Builds corridor between start and end voxels, adding result into corridor grid
         /// </summary>
-        /// <param name="node1"> leftNode </param>
-        /// <param name="node2"> rightNode </param>
-        private void GenerateCorridorRightLeft(Node rightNode, Node leftNode)
-        {
-            // --- Initialize Leaves Arrays and Spaces to Connect ---
-
-            Node leftSpace = null; // left space to connect
-            List<Node> leftSpaceLeaves = GraphHelper.GetLeaves(leftNode); // get all the leaves in the left space
-
-            Node rightSpace = null; // right space to connect
-            List<Node> rightSpaceLeaves = GraphHelper.GetLeaves(rightNode); // get all the leaves in the right space
-
-            // --- select (right most) LeftSpace and (left most) RightSpace to Connect ---
-
-            var sortedLeftSpaces = ReturnRightMostSpaces(leftSpaceLeaves);
-            var sortedRightSpaces = ReturnLeftMostSpaces(rightSpaceLeaves);
-
-            // --- Check already connected spaces 
-            removeConnectedSpaces(sortedRightSpaces, leftNode.SplitPosition);
-            removeConnectedSpaces(sortedLeftSpaces, rightNode.SplitPosition);
-
-            if (sortedLeftSpaces.Count() < 1 || sortedRightSpaces.Count() < 1)
-            {
-                this.CorridorType = CorridorType.None;
-                return;
-            }
-
-            // --- Find Neighbor pair in LeftSpaces and RightSpaces ---
-
-            (leftSpace,rightSpace) = getLateralNeighbors(sortedLeftSpaces, sortedRightSpaces);
-
-            if (leftSpace == null && rightSpace == null)
-            {
-                this.CorridorType = CorridorType.None;
-                return;
-            }
-
-            // --- Calculate Door Positions ---- 
-
-            (Vector3Int leftStartVoxel, Vector3Int rightEndVoxel) = getTargetVoxels(leftSpace, rightSpace, leftNode.SplitPosition, rightNode.SplitPosition);
-
-            // --- Build Corridor Between found Spaces ---
-
-            if (buildCorridorLateral(leftStartVoxel,rightEndVoxel))
-            {
-                // update available Grid
-                updateAvailableGrid();
-
-                // generate corridorBounds from corridor Grid 
-                generateCorridorFloorBounds(rightSpace.Bounds.y); // doesnt matter which one
-                calculateWallsFromCorridorGrid();
-
-                // --- Add Neighbours to the Connection List of Respective Nodes --- 
-                leftSpace.ConnectionsList.Add(rightSpace);
-                rightSpace.ConnectionsList.Add(leftSpace);
-
-                // --- Calculcate Door Placements ---
-                addDoorPlacements(leftStartVoxel, rightEndVoxel, leftSpace, rightSpace, leftNode.SplitPosition, rightNode.SplitPosition);
-
-                // --- select type of corridor ---
-                this.CorridorType = CorridorType.Horizontal;
-            }
-
-        }
-
-        #endregion
-
-        #region Top-Bottom Generation
-
-        #region Top-Bottom Helpers
-        private List<Node> ReturnBottomMostSpaces(List<Node> TopSpaces)
-        {
-
-            var sortedTopSpace = TopSpaces.OrderBy(space => space.Bounds.min.z).ToList(); // get bottom most children of top space
-
-            if (sortedTopSpace.Count == 1)
-            {
-                return sortedTopSpace; // if only one topSpace available select it (usually will just join the two deepest children)
-            }
-            else // select one of the bottom most topSpace if there are multiple
-            {
-                int minZ = sortedTopSpace[0].Bounds.min.z; // get the coordinates of the bottom most bound
-                sortedTopSpace = sortedTopSpace.Where(space => Math.Abs(minZ - space.Bounds.min.z) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
-                return sortedTopSpace;
-            }
-
-        }
-        private List<Node> ReturnTopMostSpaces(List<Node> BottomSpaces)
-        {
-
-            var sortedBottomSpace = BottomSpaces.OrderByDescending(space => space.Bounds.max.z).ToList(); // get Top most children of Bottom space
-
-            if (sortedBottomSpace.Count == 1)
-            {
-                return sortedBottomSpace; // if only one bottomSpace available select it (usually will just join the two deepest children)
-            }
-            else // select one of the top most BottomSpaces if there are multiple
-            {
-                int maxZ = sortedBottomSpace[0].Bounds.max.z; // get the coordinates of the top most bound
-                sortedBottomSpace = sortedBottomSpace.Where(space => Math.Abs(maxZ - space.Bounds.max.z) < minRoomDim.y).ToList(); // deviation less than min room size to not go through rooms
-                return sortedBottomSpace;
-            }
-
-        }
-        #endregion
-        // Return Success
+        /// <param name="startVoxel"></param>
+        /// <param name="endVoxel"></param>
+        /// <returns>status: has building path succeeded</returns>
+        /// <exception cref="Exception">path failure</exception>
         public bool buildCorridorLateral(Vector3Int startVoxel, Vector3Int endVoxel)
         {
 
@@ -848,7 +738,7 @@ namespace dungeonGenerator
             int i = 0; // prevent looping incase corridor isnt being found
 
             // build the path by building corridor grid
-            while (startPos != endVoxel && i < 100) 
+            while (startPos != endVoxel && i < 100)
             {
                 // get possible postions
                 List<Vector3Int> possiblePositions = new List<Vector3Int>();
@@ -869,8 +759,8 @@ namespace dungeonGenerator
                         Vector3Int testPos = curPos + centerOffset * perpendicularDir; // test position perpendicular to path for crossing
 
                         // check if position within grid bounds
-                        bool isPosInBounds = Vector3.Dot(perpendicularDir, testPos) > 0 
-                                             && Vector3.Dot(perpendicularDir, testPos) < this.corridorGrid.GetLength(dimension); 
+                        bool isPosInBounds = Vector3.Dot(perpendicularDir, testPos) > 0
+                                             && Vector3.Dot(perpendicularDir, testPos) < this.corridorGrid.GetLength(dimension);
 
                         // check if position within dungeon bounds then check if position is occuppied (possible using logical short-ciruiting)
                         if (isPosInBounds && this.availableVoxelGrid[testPos.x, testPos.y, testPos.z])
@@ -878,10 +768,10 @@ namespace dungeonGenerator
                             isOverlapFree = false; break;
                         }
                     }
-                   
+
                     // if all positions within path are free add to possible positions list
                     if (isOverlapFree) possiblePositions.Add(curPos);
-                    
+
                 }
 
                 if (possiblePositions.Count() < 1) throw new Exception("Path not possible"); // if no further positions available path fails
@@ -906,12 +796,14 @@ namespace dungeonGenerator
                 // ---- Update Corridor Grid ---- 
 
                 // remove points around point up to corridor height
-                for (int height = 0; height < corridorHeight; height++) {
+                for (int height = 0; height < corridorHeight; height++)
+                {
 
                     // remove closest position from available positions
-                    this.corridorGrid[closestPos.x, closestPos.y+height, closestPos.z] = true;
+                    this.corridorGrid[closestPos.x, closestPos.y + height, closestPos.z] = true;
 
-                    foreach (Vector3Int dir in pathPossibleDirections) {
+                    foreach (Vector3Int dir in pathPossibleDirections)
+                    {
                         Vector3Int resultingPos = closestPos + dir;
                         this.corridorGrid[resultingPos.x, resultingPos.y + height, resultingPos.z] = true;
                     }
@@ -925,7 +817,7 @@ namespace dungeonGenerator
 
             // ---- checks if generation has failed or not ---- 
 
-            if(startPos != endVoxel)
+            if (startPos != endVoxel)
             {
 
                 this.CorridorType = CorridorType.None;
@@ -936,90 +828,11 @@ namespace dungeonGenerator
             return true;
 
         }
-        private void GenerateCorridorTopBottom(Node topNode, Node bottomNode)
-        {
-            // --- Initialize Leaves Arrays and Spaces to Connect ---
-
-            Node topSpace = null; // left space to connect
-            List<Node> topSpaceLeaves = GraphHelper.GetLeaves(topNode); // get all the leaves in the left space
-
-            Node bottomSpace = null; // right space to connect
-            List<Node> bottomSpaceLeaves = GraphHelper.GetLeaves(bottomNode); // get all the leaves in the right space
-
-            // --- select (bottom most) TopSpace and (top most) BottomSpace to Connect ---
-
-            var sortedTopSpaces = ReturnAlignedSpaces(topSpaceLeaves, topNode.SplitPosition);//ReturnBottomMostSpaces(topSpaceLeaves);
-            var sortedBottomSpaces = ReturnAlignedSpaces(bottomSpaceLeaves, bottomNode.SplitPosition); //ReturnTopMostSpaces(bottomSpaceLeaves);
-
-            // --- Remove Already Connected Spaces ---
-
-            removeConnectedSpaces(sortedBottomSpaces, topNode.SplitPosition);
-            removeConnectedSpaces(sortedTopSpaces, bottomNode.SplitPosition);
-
-            if (sortedTopSpaces.Count() < 1 || sortedBottomSpaces.Count() < 1)
-            {
-                this.CorridorType = CorridorType.None;
-                return;
-            }
-
-            // --- Find Neighbor pair in TopSpaces and BottomSpaces ---
-
-            (topSpace, bottomSpace) = getLateralNeighbors(sortedTopSpaces, sortedBottomSpaces);
-
-            if (sortedTopSpaces.Count() == 0)
-            {
-                this.CorridorType = CorridorType.None;
-                return;
-            }
-
-            // calculate door positions
-
-            Vector3Int bottomStartVoxel = new Vector3Int((bottomSpace.Bounds.min.x + bottomSpace.Bounds.max.x) / 2, bottomSpace.Bounds.min.y, bottomSpace.Bounds.max.z);
-            this.corridorGrid[bottomStartVoxel.x, bottomStartVoxel.y, bottomStartVoxel.z] = true;
-
-            Vector3Int topEndVoxel = new Vector3Int((topSpace.Bounds.min.x + topSpace.Bounds.max.x) / 2, topSpace.Bounds.min.y, topSpace.Bounds.min.z - Mathf.CeilToInt(corridorWidth / 2f));
-            this.corridorGrid[topEndVoxel.x, topEndVoxel.y, topEndVoxel.z] = true;
-
-            topSpace.calculateDoorPlacement(new BoundsInt(
-                 topEndVoxel + Vector3Int.left,
-                 new Vector3Int(1, 1, 1)
-
-             ), SplitPosition.Top, wallThickness);
-
-            bottomSpace.calculateDoorPlacement(new BoundsInt(
-                  bottomStartVoxel + Vector3Int.left,
-                  new Vector3Int(1, 1, 1)
-
-                ), SplitPosition.Bottom, wallThickness);
-
-            this.addDoorPlacement(topSpace.DoorPlacements.Last());
-            this.addDoorPlacement(bottomSpace.DoorPlacements.Last());
-
-
-            // build corridor between found top and bottomSpace
-            if (buildCorridorLateral(bottomStartVoxel, topEndVoxel))
-            {
-                // update available Grid
-                updateAvailableGrid();
-
-                // generate corridorBounds from corridor Grid 
-                generateCorridorFloorBounds(bottomSpace.Bounds.y);
-                calculateWallsFromCorridorGrid();
-
-                // --- Add Neighbours to the Connection List of Respective Nodes --- 
-                topSpace.ConnectionsList.Add(bottomSpace);
-                bottomSpace.ConnectionsList.Add(topSpace);
-
-                // --- calculate the bounds of the door to be used in mesh generation ---
-                this.CorridorType = CorridorType.Vertical;
-            }
-        }
-      
         #endregion
 
-        #region Up-Down Generation
+        #region Perpendicular Corridor Generation 
 
-        #region Up-Down Helpers
+        #region perpendicular corridor helpers
         private List<Node> ReturnDownMostSpaces(List<Node> UpSpaces)
         {
 

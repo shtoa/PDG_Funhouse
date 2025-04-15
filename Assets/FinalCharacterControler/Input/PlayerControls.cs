@@ -89,6 +89,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Block"",
+                    ""type"": ""Button"",
+                    ""id"": ""09f00c15-49c2-4527-9f21-9af8123cdd66"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -245,6 +254,17 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""Stab"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ec0cde48-1051-4004-8394-bdeb840521a6"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Block"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -260,6 +280,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_PlayerLocomotionMap_Interact = m_PlayerLocomotionMap.FindAction("Interact", throwIfNotFound: true);
         m_PlayerLocomotionMap_ToggleMinimap = m_PlayerLocomotionMap.FindAction("ToggleMinimap", throwIfNotFound: true);
         m_PlayerLocomotionMap_Stab = m_PlayerLocomotionMap.FindAction("Stab", throwIfNotFound: true);
+        m_PlayerLocomotionMap_Block = m_PlayerLocomotionMap.FindAction("Block", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -328,6 +349,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerLocomotionMap_Interact;
     private readonly InputAction m_PlayerLocomotionMap_ToggleMinimap;
     private readonly InputAction m_PlayerLocomotionMap_Stab;
+    private readonly InputAction m_PlayerLocomotionMap_Block;
     public struct PlayerLocomotionMapActions
     {
         private @PlayerControls m_Wrapper;
@@ -339,6 +361,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         public InputAction @Interact => m_Wrapper.m_PlayerLocomotionMap_Interact;
         public InputAction @ToggleMinimap => m_Wrapper.m_PlayerLocomotionMap_ToggleMinimap;
         public InputAction @Stab => m_Wrapper.m_PlayerLocomotionMap_Stab;
+        public InputAction @Block => m_Wrapper.m_PlayerLocomotionMap_Block;
         public InputActionMap Get() { return m_Wrapper.m_PlayerLocomotionMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -369,6 +392,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Stab.started += instance.OnStab;
             @Stab.performed += instance.OnStab;
             @Stab.canceled += instance.OnStab;
+            @Block.started += instance.OnBlock;
+            @Block.performed += instance.OnBlock;
+            @Block.canceled += instance.OnBlock;
         }
 
         private void UnregisterCallbacks(IPlayerLocomotionMapActions instance)
@@ -394,6 +420,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Stab.started -= instance.OnStab;
             @Stab.performed -= instance.OnStab;
             @Stab.canceled -= instance.OnStab;
+            @Block.started -= instance.OnBlock;
+            @Block.performed -= instance.OnBlock;
+            @Block.canceled -= instance.OnBlock;
         }
 
         public void RemoveCallbacks(IPlayerLocomotionMapActions instance)
@@ -420,5 +449,6 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         void OnInteract(InputAction.CallbackContext context);
         void OnToggleMinimap(InputAction.CallbackContext context);
         void OnStab(InputAction.CallbackContext context);
+        void OnBlock(InputAction.CallbackContext context);
     }
 }
