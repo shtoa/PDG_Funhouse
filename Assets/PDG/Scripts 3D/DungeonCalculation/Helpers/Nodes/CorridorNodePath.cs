@@ -2,6 +2,7 @@
 using Codice.CM.SEIDInfo;
 using System;
 using System.CodeDom.Compiler;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -972,8 +973,6 @@ namespace dungeonGenerator
             var sortedDownSpaces = ReturnUpMostSpaces(downSpaceLeaves);
 
 
-
-
             if (sortedUpSpaces.Count() > 0)
             {
                 for (int i = sortedUpSpaces.Count() - 1; i >= 0; i--)
@@ -989,8 +988,6 @@ namespace dungeonGenerator
                     }
                 }
             }
-
-
             if (sortedDownSpaces.Count() > 0)
             {
                 for (int i = sortedDownSpaces.Count() - 1; i >= 0; i--)
@@ -1030,8 +1027,6 @@ namespace dungeonGenerator
 
             }
 
-
-
             GenerateCorridorBoundsUpDown(upSpace, downSpace);
 
             // --- Add Neighbours to the Connection List of Respective Nodes --- 
@@ -1044,7 +1039,7 @@ namespace dungeonGenerator
             ConnectionsList.Add(downSpace);
 
             // --- calculate the bounds of the door to be used in mesh generation ---
-
+            generateStairWaypoints(downSpace,upSpace);
 
             // calculate the bounds of the door for the left space and the right spaces
             upSpace.calculateHolePlacement(this.Bounds, SplitPosition.Up, wallThickness);
@@ -1063,6 +1058,570 @@ namespace dungeonGenerator
 
             this.CorridorType = CorridorType.Perpendicular;
 
+        }
+
+        private void generateStairWaypoints(Node downNode, Node upNode)
+        {
+
+            List<Node> connectedRoomsOrderedByY = new List<Node> { downNode, upNode };
+            Vector3 planeSize = new Vector3(2, 0, 2); // stair segment size
+
+            // define start and target positions 
+            var startPos = connectedRoomsOrderedByY[0].Bounds.position + planeSize * 0.5f + new Vector3(1, 0, 1); // dungeonGenerator.transform.position + // start position for plane  
+
+            var endPos = new Vector3(connectedRoomsOrderedByY[1].Bounds.position.x + planeSize.x,
+                                     connectedRoomsOrderedByY[1].Bounds.position.y,
+                                     connectedRoomsOrderedByY[1].Bounds.position.z + planeSize.x);
+
+            var preEndPos = new Vector3(connectedRoomsOrderedByY[1].Bounds.position.x + planeSize.x + 6,
+                                     connectedRoomsOrderedByY[1].Bounds.position.y - 1,
+                                     connectedRoomsOrderedByY[1].Bounds.position.z + planeSize.x);
+
+            // update taken up poisitions by the corridor
+            
+            //updateCorridorGrid(endPos-Vector3.up, new Vector3(4,0,0), true);
+            //updateCorridorGrid(endPos - Vector3.up+ new Vector3(4,-1,0), new Vector3(2, -1, 0), true);
+
+            // --- single spiral around room --- (can do different types of rooms)
+
+            // check with correct angle... 
+            float roomSpiralIncrement = 1; 
+
+            List<Vector3> planeOffsets = new List<Vector3>
+                {
+                    new Vector3(0f, roomSpiralIncrement, connectedRoomsOrderedByY[0].Bounds.size.z-planeSize.z),
+                    new Vector3(connectedRoomsOrderedByY[0].Bounds.size.x-planeSize.x, roomSpiralIncrement, 0f),
+                    new Vector3(0f, roomSpiralIncrement, -connectedRoomsOrderedByY[0].Bounds.size.z+planeSize.z),
+                    new Vector3(-connectedRoomsOrderedByY[0].Bounds.size.x+planeSize.x, roomSpiralIncrement, 0f),
+                };
+
+            var endOffset = endPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            var preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            var curPosOffset = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            // get to correct height
+
+            var maxIter = 20;
+            int i = 0;
+
+            #region get to correct y level
+            while (curPosOffset.y + startPos.y < connectedRoomsOrderedByY[0].Bounds.max.y && i < maxIter)
+            {
+                planeOffsets.Add(planeOffsets[i]);
+                curPosOffset = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+                i++;
+            }
+            #endregion
+
+            // get to correct position
+            preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            #region connect Paths
+
+            //List<Vector3> possDirections = new List<Vector3>() {
+            //    Vector3.forward*planeSize.z*2+Vector3.up*1f,
+            //    Vector3.back*planeSize.z*2+Vector3.up*1f,
+            //    Vector3.left*planeSize.x*2+Vector3.up*1f,
+            //    Vector3.right*planeSize.x*2+Vector3.up*1f,
+            //    Vector3.forward*planeSize.z*3+Vector3.up*1f,
+            //    Vector3.back*planeSize.z*3+Vector3.up*1f,
+            //    Vector3.left*planeSize.x*3+Vector3.up*1f,
+            //    Vector3.right*planeSize.x*3+Vector3.up*1f,
+            //    Vector3.forward*planeSize.z*(3+0.5f)+Vector3.up*1f,
+            //    Vector3.back*planeSize.z*(3+0.5f)+Vector3.up*1f,
+            //    Vector3.left*planeSize.x*(3+0.5f)+Vector3.up*1f,
+            //    Vector3.right*planeSize.x*(3+0.5f)+Vector3.up*1f,
+            //};
+            //var curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+
+
+            //List<Vector3> failedDirections = new List<Vector3>();
+
+            //while (i < maxIter && (((curPos.y + startPos.y) < (preEndPos.y))
+            //    || (Mathf.Abs(curPos.x+startPos.x - preEndPos.x) < 2)
+            //    || (Mathf.Abs(curPos.z + startPos.z - preEndPos.z) < 2))
+
+            //    )
+
+            //{
+            //    // check if angle is ok
+            //    Vector3 closestOffset = Vector3.zero;
+            //    foreach (var possDirection in possDirections)
+            //    {
+
+            //        curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection;
+
+            //        // check if  there is enough space between positions 
+            //        var curPosOverlapCheck = Vector3.zero;
+            //        bool isOverlapingHeight = false;
+
+            //        foreach (var offset in planeOffsets) // looping over backwards might be better
+            //        {
+            //            curPosOverlapCheck += offset;
+
+            //            //Debug.Log($"dotP: {Vector3.Dot((curPosOverlapCheck - curPos), Vector3.up)}");
+
+            //            if (Vector3.Dot((curPos - curPosOverlapCheck), Vector3.up) < 2
+            //                && (Mathf.Abs((curPos - curPosOverlapCheck).x) <= planeSize.x) && (Mathf.Abs((curPos - curPosOverlapCheck).z) <= planeSize.z)
+            //                )
+            //            {
+
+            //                Debug.Log($"Overlap: curPos {curPos}, overLapCheckPos {curPosOverlapCheck}, possDir: {possDirection}, dotP {Vector3.Dot((curPos - curPosOverlapCheck), Vector3.up)}, secondaryCheck {Vector3.Dot((curPos - curPosOverlapCheck), new Vector3(1, 0, 1))}");
+            //                isOverlapingHeight = true;
+            //                //break;
+
+            //            }
+            //        }
+
+            //        if (
+            //            Vector3.Dot((curPos - endPos), Vector3.up) < 2f
+            //            && ((curPos - endPos + startPos).x <= planeSize.x) && ((curPos - endPos + startPos).z <= planeSize.z)
+            //            )
+            //        {
+
+            //            isOverlapingHeight = true;
+            //        }
+
+
+
+            //        curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection;
+
+
+
+            //        Debug.Log($"curPos eq: {curPos.z + startPos.z == (preEndPos.z)}, curPos.z: {curPos.z + startPos.z}, preEndPos.z: {preEndPos.z}");
+
+            //        bool isWithinBounds = curPos.x + startPos.x <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x, connectedRoomsOrderedByY[0].Bounds.max.x)) //+ GameObject.Find("DungeonGen").transform.position.x)
+            //                        && curPos.x + startPos.x >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.x, connectedRoomsOrderedByY[0].Bounds.min.x)+2) //+ GameObject.Find("DungeonGen").transform.position.x)
+            //                        && curPos.z + startPos.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z, connectedRoomsOrderedByY[0].Bounds.max.z)) //+ GameObject.Find("DungeonGen").transform.position.z)
+            //                        && curPos.z + startPos.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z, connectedRoomsOrderedByY[0].Bounds.min.z)+2); //+ GameObject.Find("DungeonGen").transform.position.z) ;
+
+            //        Debug.Log($"New Pos:--- possDir{possDirection}, planeOffsetLast {planeOffsets.Last()}, projected: {Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up)}, dotProduct {Vector3.Dot(Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)), Vector3.Normalize(Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up)))}, distance {MeshHelper.ManhattanDistance3(planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection + startPos, preEndPos)}" +
+            //          $"posinBounds:  {isWithinBounds}, isOverlapingHeight {isOverlapingHeight}");
+
+
+            //        bool isDirectionBackwards = Vector3.Dot(
+            //                        Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
+            //                        Vector3.Normalize(Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up))
+            //                        ) == -1;
+            //        Vector3 curPs = curPos + startPos;
+
+
+            //        Debug.Log($"New Pos:--- {curPos}, Start Pos {startPos}");
+
+            //        bool isSpaceFree = isWithinBounds && !this.corridorGrid[Mathf.FloorToInt(curPs.x) - 1, Mathf.FloorToInt(curPs.y), Mathf.FloorToInt(curPs.z) - 1] &&
+            //        !this.corridorGrid[Mathf.FloorToInt(curPs.x) - 2, Mathf.FloorToInt(curPs.y), Mathf.FloorToInt(curPs.z) - 2] &&
+            //        !this.corridorGrid[Mathf.FloorToInt(curPs.x) - 2, Mathf.FloorToInt(curPs.y), Mathf.FloorToInt(curPs.z) - 1] &&
+            //        !this.corridorGrid[Mathf.FloorToInt(curPs.x) - 1, Mathf.FloorToInt(curPs.y), Mathf.FloorToInt(curPs.z) - 2];
+
+
+            //        if (!isDirectionBackwards && isSpaceFree && !failedDirections.Contains(possDirection))
+            //        {
+
+            //            // find closest position to preEndPos that is within the bounds of the top room
+            //            var distanceFromNewPos = MeshHelper.ManhattanDistance3(planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + possDirection + startPos, preEndPos);
+            //            var distanceFromClosestPos = MeshHelper.ManhattanDistance3(planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2) + closestOffset + startPos, preEndPos); ;
+
+
+            //            if (distanceFromNewPos > distanceFromClosestPos || closestOffset == Vector3.zero)
+            //            {
+            //                Debug.Log($"New Pos: {closestOffset}, {distanceFromClosestPos}, Best Pos {possDirection}, distance {distanceFromNewPos}, Prev Offset {planeOffsets.Last()}");
+            //                closestOffset = possDirection;
+            //            }
+            //        }
+            //        else
+            //        {
+            //            Debug.Log($"Moving on backwards");
+            //        }
+
+            //    }
+
+            //    //Debug.Log($"New Pos: ---- Closest Pos Stairs {closestOffset}");
+            //    //planeOffsets.Add(closestOffset);
+            //    //preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            //    //curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            //    //i++;
+
+            //    //Vector3 curPosition = curPos+startPos;
+
+            //    //this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 1, Mathf.FloorToInt(curPosition.y), Mathf.FloorToInt(curPosition.z) - 1] = true;
+            //    //this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 2, Mathf.FloorToInt(curPosition.y), Mathf.FloorToInt(curPosition.z) - 2] = true;
+            //    //this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 2, Mathf.FloorToInt(curPosition.y), Mathf.FloorToInt(curPosition.z) - 1] = true;
+            //    //this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 1, Mathf.FloorToInt(curPosition.y), Mathf.FloorToInt(curPosition.z) - 2] = true;
+
+
+            //    if (closestOffset != Vector3.zero)
+            //    {
+            //        Debug.Log("Not Failed Direction");
+            //        planeOffsets.Add(closestOffset);
+            //        failedDirections.Clear();
+
+
+
+
+            //        preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            //        curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+
+            //        Vector3 curPosition = curPos + startPos - planeOffsets.Last();
+
+            //        for (int x = 0; x <= Mathf.Abs(planeOffsets.Last().x); x++)
+            //        {
+            //            for (int y = 0; y <= Mathf.Abs(planeOffsets.Last().y); y++)
+            //            {
+            //                for (int z = 0; z <= Mathf.Abs(planeOffsets.Last().z); z++)
+            //                {
+
+            //                    Debug.Log($"offsetLoop: {x}{y}{z}");
+
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 1 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 1] = true;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 2 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 2] = true;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 2 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 1] = true;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 1 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 2] = true;
+
+            //                }
+
+
+            //            }
+
+
+            //        }
+            //    }
+            //    else if (failedDirections.Count() == possDirections.Count()) // 
+            //    {
+            //        Debug.Log("Moving Failed Direction");
+            //        planeOffsets.Remove(planeOffsets.Last());
+            //        failedDirections.Add(planeOffsets.Last());
+            //        curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            //        Vector3 curPosition = curPos + startPos - planeOffsets.Last();
+
+            //        for (int x = 0; x <= Mathf.Abs(planeOffsets.Last().x); x++)
+            //        {
+            //            for (int y = 0; y <= Mathf.Abs(planeOffsets.Last().y); y++)
+            //            {
+            //                for (int z = 0; z <= Mathf.Abs(planeOffsets.Last().z); z++)
+            //                {
+
+            //                    Debug.Log($"offsetLoop: {x}{y}{z}");
+
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 1 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 1] = false;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 2 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 2] = false;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 2 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 1] = false;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 1 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 2] = false;
+
+            //                }
+
+
+            //            }
+
+
+            //        }
+            //        planeOffsets.Remove(planeOffsets.Last());
+            //    }
+            //    else
+            //    {
+            //        Debug.Log($"--- Failed Direction {failedDirections.Count()} possdirs {possDirections.Count()}");
+
+            //        failedDirections.Add(planeOffsets.Last());
+
+            //        curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            //        Vector3 curPosition = curPos + startPos - planeOffsets.Last();
+
+            //        for (int x = 0; x <= Mathf.Abs(planeOffsets.Last().x); x++)
+            //        {
+            //            for (int y = 0; y <= Mathf.Abs(planeOffsets.Last().y); y++)
+            //            {
+            //                for (int z = 0; z <= Mathf.Abs(planeOffsets.Last().z); z++)
+            //                {
+
+            //                    Debug.Log($"offsetLoop: {x}{y}{z}");
+
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 1 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 1] = false;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 2 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 2] = false;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 2 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 1] = false;
+            //                    this.corridorGrid[Mathf.FloorToInt(curPosition.x) - 1 + x * Math.Sign(planeOffsets.Last().x), Mathf.FloorToInt(curPosition.y) + y * Math.Sign(planeOffsets.Last().y), Mathf.FloorToInt(curPosition.z) + z * Math.Sign(planeOffsets.Last().z) - 2] = false;
+
+            //                }
+
+
+            //            }
+
+
+            //        }
+
+
+            //        planeOffsets.Remove(planeOffsets.Last());
+            //    }
+
+            //    i++;
+
+
+            //}
+            #endregion
+
+            // loop through more positions till bounds end... 
+            List<Vector3> possDirections2 = new List<Vector3>() { 
+                Vector3.forward*(planeSize.z),
+                Vector3.back*(planeSize.z),
+                Vector3.left*(planeSize.x),
+                Vector3.right*(planeSize.x),
+                Vector3.forward*(planeSize.z+1),
+                Vector3.back*(planeSize.z+1),
+                Vector3.left*(planeSize.x+1),
+                Vector3.right*(planeSize.x+1),
+                Vector3.forward*(planeSize.z+2),
+                Vector3.back*(planeSize.z+2),
+                Vector3.left*(planeSize.x+2),
+                Vector3.right*(planeSize.x+2)
+            };
+
+
+            List<Vector3> possDirections = new List<Vector3>() {
+                Vector3.forward*planeSize.z*3f+Vector3.up*1f,
+                Vector3.back*planeSize.z*3+Vector3.up*1f,
+                Vector3.left*planeSize.x*3+Vector3.up*1f,
+                Vector3.right*planeSize.x*3+Vector3.up*1f,
+                Vector3.forward*planeSize.z*(3+0.5f)+Vector3.up*1f,
+                Vector3.back*planeSize.z*(3+0.5f)+Vector3.up*1f,
+                Vector3.left*planeSize.x*(3+0.5f)+Vector3.up*1f,
+                Vector3.right*planeSize.x*(3+0.5f)+Vector3.up*1f,
+            };
+
+            List<Vector3> curPossDirList = new List<Vector3>();
+
+            List<Vector3> failedDirections = new List<Vector3>(); // track failed directions for backtracking
+            Dictionary<int, List<Vector3>> failedDirectionsAtDepth = new Dictionary<int, List<Vector3>>();
+
+
+            var curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+
+            maxIter = i+100; // run for 100 iterations
+            int depth = 0;
+            failedDirectionsAtDepth[0] = failedDirections;
+
+            while (i < maxIter 
+                   //&&
+                   //( ((curPos.x + startPos.x != preEndPos.x) // || (Mathf.Abs(curPos.z + startPos.z - preEndPos.z) >= 4))
+                   //&& (((curPos.z + startPos.z != preEndPos.z)) //|| (Mathf.Abs(curPos.x + startPos.x - preEndPos.x) >= 4)
+                   
+                   //))
+                   && ((curPos.y + startPos.y) < (preEndPos.y))
+                   
+                   
+                   //|| (isOverlapingCorridorGrid(curPos + startPos, preEndPosOffset))
+                   //)
+
+                ){
+
+                Vector3 closestOffset = Vector3.zero; // closest position to be added to list of possible positions 
+                curPossDirList = ((curPos.y + startPos.y) < (preEndPos.y) ? possDirections: possDirections2); // choose list based on height
+        
+                foreach (var possDirection in curPossDirList)
+                {
+                    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2); // be carefull how curPos is calculated
+                    Vector3 curVoxelPos = curPos + possDirection + startPos;
+
+                    // check if new moved to position
+                    bool isWithinBounds =
+                        curVoxelPos.x <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x, connectedRoomsOrderedByY[0].Bounds.max.x))
+                        && curVoxelPos.x >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.x, connectedRoomsOrderedByY[0].Bounds.min.x) + 2)
+                        && curVoxelPos.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z, connectedRoomsOrderedByY[0].Bounds.max.z))
+                        && curVoxelPos.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z, connectedRoomsOrderedByY[0].Bounds.min.z) + 2);
+
+                    // check if direction is moving backwards back into the waypoints (prevents overlaps)
+                    bool isDirectionBackwards = Vector3.Dot(
+                                    Vector3.Normalize(Vector3.ProjectOnPlane(possDirection, Vector3.up)),
+                                    Vector3.Normalize(Vector3.ProjectOnPlane(planeOffsets.Last(), Vector3.up))
+                                    ) == -1;
+
+
+
+                    // checks if the space moving to is free to build a waypoint  // make sure doesnt overlap within path (change)
+
+                    bool isSpaceFree = isWithinBounds && !isOverlapingCorridorGrid(curPos + startPos, possDirection);
+                        //&& !this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 1, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 1]
+                        //&& !this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 2, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 2]
+                        //&& !this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 2, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 1]
+                        //&& !this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 1, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 2];
+
+                    // --- find closest position to preEndPos that is within the bounds of the top room ---
+                    if (!isDirectionBackwards && isSpaceFree && !failedDirectionsAtDepth[depth].Contains(possDirection))
+                    {
+                        // calculcate position due to the closestOffset and possibleOffset
+                        var testPos_ = curPos + possDirection + startPos;
+                        var closestPos_ = curPos + closestOffset + startPos;
+
+                        // get Manhattan distance from positions
+                        var distanceFromNewPos = MeshHelper.ManhattanDistance3(testPos_, preEndPos); 
+                        var distanceFromClosestPos = MeshHelper.ManhattanDistance3(closestPos_, preEndPos);
+
+
+                        var preEndPosOffsetTest = preEndPos - startPos - (planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2)+possDirection);
+
+                        // additional break condition (as path doesnt have to be shortest but just reachable to the pre end position)
+                        if ((testPos_.z == preEndPos.z || testPos_.x == preEndPos.x) && ((curPos.y + startPos.y) == (preEndPos.y)) 
+                            
+                            //&& !isOverlapingCorridorGrid(testPos_, preEndPosOffsetTest)
+                            )// && ((curPos.y + startPos.y) == (preEndPos.y)))
+                        {
+                            //closestOffset = possDirection;
+                            //break;
+                        }
+
+                        if (distanceFromNewPos < distanceFromClosestPos || closestOffset == Vector3.zero) //  && !isOverlapingCorridorGrid(testPos_, preEndPosOffsetTest)
+                        {
+                            closestOffset = possDirection; // update closest position
+                        }
+                    }
+                   
+                }
+
+                if (closestOffset != Vector3.zero)
+                {
+                    planeOffsets.Add(closestOffset); // add closest position as a new waypoint for stair generation
+
+                    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                    Vector3 curPosition = curPos + startPos - planeOffsets.Last();
+
+                    updateCorridorGrid(curPosition, planeOffsets.Last(), true);
+
+                    depth++;
+
+                    if (!failedDirectionsAtDepth.ContainsKey(depth))
+                    {
+                        failedDirectionsAtDepth[depth] = new List<Vector3>();
+                    }
+                }
+                else if (failedDirectionsAtDepth[depth].Count() == curPossDirList.Count() && !(depth==0)) // 
+                {
+                    planeOffsets.Remove(planeOffsets.Last());
+                    depth--;
+            
+
+                    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                    Vector3 curPosition = curPos + startPos - planeOffsets.Last();
+
+                    updateCorridorGrid(curPosition, planeOffsets.Last(), false);
+
+                    failedDirectionsAtDepth[depth].Add(planeOffsets.Last());
+
+                    planeOffsets.Remove(planeOffsets.Last());
+                    depth--;
+
+
+                }
+                else if(!(depth == 0))
+                {
+
+                    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                    Vector3 curPosition = curPos + startPos - planeOffsets.Last();
+
+                    updateCorridorGrid(curPosition, planeOffsets.Last(), false);
+             
+                    failedDirectionsAtDepth[depth].Add(planeOffsets.Last());
+
+                    planeOffsets.Remove(planeOffsets.Last());
+                   // depth--;
+
+
+                } else
+                {
+                    Debug.Log("Failed to Connect Vertical Corridor");
+                }
+
+                i++;
+
+                curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                Debug.Log($"Depth: {depth}");
+            }
+
+            #region endOffset
+            // add offset right before the end positions 
+            preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            planeOffsets.Add(preEndPosOffset);
+
+            // add the stiars end point
+            //endOffset = endPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+            //planeOffsets.Add(endOffset);
+            #endregion
+
+            // update corridorNode properties
+            this.StairPosition = startPos;
+            this.StairSize = planeSize;
+            this.StairWaypoints = planeOffsets;
+
+            //MeshHelper.VisualizeVoxelGrid(this.corridorGrid);
+        }
+
+        private void updateCorridorGrid(Vector3 startPosition, Vector3 offset, bool value)
+        {
+            for (int x = 0; x <= Mathf.Abs(offset.x); x++)
+            {
+                for (int y = 0; y <= Mathf.Abs(offset.y); y++)
+                {
+                    for (int z = 0; z <= Mathf.Abs(offset.z); z++)
+                    {
+                        this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1] = value;
+                        this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2] = value;
+                        this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1] = value;
+                        this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2] = value;
+
+                    }
+
+                }
+
+            }
+        }
+
+        private bool isOverlapingCorridorGrid(Vector3 startPosition, Vector3 offset)
+        {
+            //Debug.Log($"Is Overlapping Path {offset}");
+
+
+            Vector3Int nOff = new Vector3Int((Math.Abs(offset.x) > 0) ? 1 : 0, (Math.Abs(offset.y) > 0) ? 1 : 0, (Math.Abs(offset.z) > 0) ? 1 : 0); // to prevent duplicate checking start direction
+
+            for (int x = 2*nOff.x; x <= Mathf.Abs(offset.x); x++)
+            {
+                for (int y = 0; y <= Mathf.Abs(offset.y); y++)
+                {
+                    for (int z = 2* nOff.z; z <= Mathf.Abs(offset.z); z++) // at least as wide as offset
+                    {
+
+
+                        var curVoxelPos = startPosition + offset;
+
+                        bool isOverlapping =
+
+                        //this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 1]
+                        //&& this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 2, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 2]
+                        //&& this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 2, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 1]
+                        //&& this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 1, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 2];
+
+
+                        this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1]
+                        || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2]
+                        || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1]
+                        || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2];
+
+                        Debug.Log($"Is Overlapping Path {isOverlapping}, {offset}");
+
+                        if (isOverlapping)
+                        {
+                            //Debug.Log("Is Overlapping Path");
+                            return true;
+                        }
+                    }
+
+                }
+
+            }
+
+            return false;
         }
         private bool unboundedContains(BoundsInt bounds, Vector3Int position)
         {

@@ -118,6 +118,9 @@ namespace dungeonGenerator
         public List<DoorPlacement> DoorPlacements { get => doorPlacements; set => doorPlacements = value; }
         public CorridorType CorridorType { get => corridorType; set => corridorType = value; }
         public List<HolePlacement> HolePlacements { get => holePlacements; set => holePlacements = value; }
+        public List<Vector3> StairWaypoints { get => stairWaypoints; set => stairWaypoints = value; }
+        public Vector3 StairSize { get => stairSize; set => stairSize = value; }
+        public Vector3 StairPosition { get => stairPosition; set => stairPosition = value; }
 
         public SplitPosition SplitPosition;
         public RoomType RoomType;
@@ -125,6 +128,10 @@ namespace dungeonGenerator
 
         private List<Node> connectionsList;
         private int connectionDepthIndex = -1;
+
+        private List<Vector3> stairWaypoints;
+        private Vector3 stairSize;
+        private Vector3 stairPosition;
 
 
         // Pass in parent node to constructor

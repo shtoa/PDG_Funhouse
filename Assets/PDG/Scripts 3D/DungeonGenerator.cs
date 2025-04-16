@@ -18,33 +18,20 @@ namespace dungeonGenerator
     {
 
         //[HideInInspector]
-        public BoundsInt dungeonBounds; // TODO: Find Way to Visualize the bounds inside a mini Window
-
-        [Header("Dungeon Properties")]
 
         public int maxIterations;
 
+        [Header("Dungeon Properties")]
+        public BoundsInt dungeonBounds; // TODO: Find Way to Visualize the bounds inside a mini Window
+
         [Header("Split Properties")]
         public Vector3 splitCenterDeviation;
-
 
         [Header("Room Properties")]
         public BoundsInt roomBoundsMin;
         public Vector3Int roomOffsetMin;
 
         public Vector3Int roomPlacementRandomness;
-
-        private int corridorWidthAndWall;
-        [Header("Corridor Properties")]
-        public int corridorWidth;
-        public int corridorHeight;  
-
-        [Header("Wall Properties")]
-        public int wallThickness;
-
-        [Header("Door")]
-        public float doorThickness;
-
 
         [Header("Seed")]
         public bool seededGenerationEnabled;
@@ -53,7 +40,22 @@ namespace dungeonGenerator
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
-        
+
+
+        // [Header("Corridor Properties")]
+        [HideInInspector]
+        public int corridorWidth = 1;
+
+        [HideInInspector]
+        public int corridorHeight = 2;
+
+        [HideInInspector]
+        public int corridorWidthAndWall;
+
+        // [Header("Wall Properties")]
+        [HideInInspector]
+        public int wallThickness = 1;
+
 
         public List<Node> roomList { get; private set; }
         public GameObject startRoom { get; private set; }
