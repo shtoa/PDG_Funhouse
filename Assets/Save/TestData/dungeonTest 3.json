@@ -1,0 +1,156 @@
+{
+  "deviceInfo": {
+    "Model": "System Product Name (ASUS)",
+    "GraphicsCard": "NVIDIA GeForce RTX 4070 Ti",
+    "VRAM": 11,
+    "OS": "Windows 11  (10.0.26100) 64bit",
+    "CPU": "13th Gen Intel(R) Core(TM) i7-13700KF",
+    "Resolution": "3440 x 1440 @ 164.9Hz"
+  },
+  "dungeonConfig": {
+    "maxIterations": 10,
+    "dungeonBounds": {
+      "m_Position": { "x": 10, "y": 0, "z": 40 },
+      "m_Size": { "x": 48, "y": 11, "z": 51 }
+    },
+    "splitCenterDeviation": { "x": 0.0, "y": 0.0, "z": 0.699999988079071 },
+    "roomBoundsMin": {
+      "m_Position": { "x": 0, "y": 0, "z": 0 },
+      "m_Size": { "x": 10, "y": 10, "z": 10 }
+    },
+    "roomOffsetMin": { "x": 1, "y": 1, "z": 3 },
+    "roomPlacementRandomness": { "x": 0, "y": 0, "z": 0 },
+    "seededGenerationEnabled": true,
+    "randomSeed": -363172988,
+    "corridorWidth": 1,
+    "corridorHeight": 2,
+    "wallThickness": 1
+  },
+  "dungeonStats": {
+    "roomStats": [
+      {
+        "roomPosition": { "x": 0, "y": 0, "z": 25 },
+        "roomSize": { "x": 13, "y": 10, "z": 22 },
+        "numberOfConnection": 2,
+        "distanceFromStart": 1,
+        "roomType": "Room",
+        "corridorType": "None",
+        "roomMainSplit": "Left",
+        "doorConnections": ["Right", "Bottom"],
+        "verticalConnections": [],
+        "roomID": 5
+      },
+      {
+        "roomPosition": { "x": 25, "y": 0, "z": 27 },
+        "roomSize": { "x": 13, "y": 9, "z": 18 },
+        "numberOfConnection": 2,
+        "distanceFromStart": 2,
+        "roomType": "End",
+        "corridorType": "None",
+        "roomMainSplit": "Right",
+        "doorConnections": ["Left", "Bottom"],
+        "verticalConnections": [],
+        "roomID": 6
+      },
+      {
+        "roomPosition": { "x": 0, "y": 0, "z": 1 },
+        "roomSize": { "x": 15, "y": 10, "z": 12 },
+        "numberOfConnection": 2,
+        "distanceFromStart": 0,
+        "roomType": "Start",
+        "corridorType": "None",
+        "roomMainSplit": "Left",
+        "doorConnections": ["Right", "Top"],
+        "verticalConnections": [],
+        "roomID": 3
+      },
+      {
+        "roomPosition": { "x": 29, "y": 0, "z": 0 },
+        "roomSize": { "x": 14, "y": 9, "z": 19 },
+        "numberOfConnection": 2,
+        "distanceFromStart": 1,
+        "roomType": "Room",
+        "corridorType": "None",
+        "roomMainSplit": "Right",
+        "doorConnections": ["Left", "Top"],
+        "verticalConnections": [],
+        "roomID": 4
+      },
+      {
+        "roomPosition": { "x": 0, "y": 0, "z": 0 },
+        "roomSize": { "x": 0, "y": 0, "z": 0 },
+        "numberOfConnection": 0,
+        "distanceFromStart": -1,
+        "roomType": "Corridor",
+        "corridorType": "Horizontal",
+        "roomMainSplit": "Root",
+        "doorConnections": ["Right", "Left"],
+        "verticalConnections": [],
+        "roomID": 7
+      },
+      {
+        "roomPosition": { "x": 0, "y": 0, "z": 0 },
+        "roomSize": { "x": 0, "y": 0, "z": 0 },
+        "numberOfConnection": 0,
+        "distanceFromStart": -1,
+        "roomType": "Corridor",
+        "corridorType": "Horizontal",
+        "roomMainSplit": "Root",
+        "doorConnections": ["Right", "Left"],
+        "verticalConnections": [],
+        "roomID": 8
+      },
+      {
+        "roomPosition": { "x": 0, "y": 0, "z": 0 },
+        "roomSize": { "x": 0, "y": 0, "z": 0 },
+        "numberOfConnection": 0,
+        "distanceFromStart": -1,
+        "roomType": "Corridor",
+        "corridorType": "Vertical",
+        "roomMainSplit": "Root",
+        "doorConnections": ["Top", "Bottom"],
+        "verticalConnections": [],
+        "roomID": 9
+      },
+      {
+        "roomPosition": { "x": 0, "y": 0, "z": 0 },
+        "roomSize": { "x": 0, "y": 0, "z": 0 },
+        "numberOfConnection": 0,
+        "distanceFromStart": -1,
+        "roomType": "Corridor",
+        "corridorType": "None",
+        "roomMainSplit": "Root",
+        "doorConnections": [],
+        "verticalConnections": [],
+        "roomID": 10
+      },
+      {
+        "roomPosition": { "x": 0, "y": 0, "z": 0 },
+        "roomSize": { "x": 0, "y": 0, "z": 0 },
+        "numberOfConnection": 0,
+        "distanceFromStart": -1,
+        "roomType": "Corridor",
+        "corridorType": "Vertical",
+        "roomMainSplit": "Root",
+        "doorConnections": ["Top", "Bottom"],
+        "verticalConnections": [],
+        "roomID": 11
+      }
+    ],
+    "GenerationTime": 733,
+    "DungeonCompletionTime": 14.874820709228516
+  },
+  "trackedPerformanceData": {
+    "fps": [50, 87],
+    "triangles": [0, 210383],
+    "systemMemoryUsed": [1568, 1581],
+    "drawCallsCount": [0, 0],
+    "roomIDsVisited": [3, 4, 6, 5],
+    "timeStampsVisited": [
+      0.0, 4.396469593048096, 9.111197471618653, 13.812859535217286
+    ],
+    "timeStampsCollected": [
+      5.5720415115356449, 10.597901344299317, 14.874820709228516
+    ]
+  }
+}

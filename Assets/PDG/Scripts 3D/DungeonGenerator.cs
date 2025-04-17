@@ -170,6 +170,8 @@ namespace dungeonGenerator
 
             DungeonStatTrack.roomList = roomList;
 
+            setConfigFromTo(this, DungeonStatTrack.dungeonConfig);
+
             Debug.Log($"Generation Took {st.ElapsedMilliseconds} Milliseconds");
             DungeonStatTrack.GenerationTime = st.ElapsedMilliseconds;
         }

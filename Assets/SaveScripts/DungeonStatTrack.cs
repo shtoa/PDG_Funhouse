@@ -177,6 +177,7 @@ namespace dungeonGenerator {
         public class DungeonTestData
         {
             public DeviceInfo deviceInfo;
+            public DungeonConfig dungeonConfig;
             public DungeonStats dungeonStats;
             public TrackedPerformanceStats trackedPerformanceData;
         }
@@ -188,6 +189,7 @@ namespace dungeonGenerator {
             dungeonTestData.dungeonStats = getDungeonStats();
             dungeonTestData.deviceInfo = getDeviceInfo();
             dungeonTestData.trackedPerformanceData = getTrackPerformanceStats();
+            dungeonTestData.dungeonConfig = DungeonStatTrack.dungeonConfig;
 
             SaveManager.Save(dungeonTestData, "dungeonTest");
 
@@ -197,6 +199,8 @@ namespace dungeonGenerator {
         {
             DungeonStatTrack.trackedPerformanceStats.timeStampsCollected.Add(DungeonStatTrack.GameTime);
         }
+
+        public static DungeonConfig dungeonConfig = new DungeonConfig();
 
 
 
