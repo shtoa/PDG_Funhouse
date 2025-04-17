@@ -140,11 +140,21 @@ namespace dungeonGenerator
                 RoomStyle roomStyle = dungeonDecorator.roomStyles[Random.Range(0, dungeonDecorator.roomStyles.Count)];
                 GameObject roomObj = new GameObject(roomStyle.name+room.SplitPosition);
 
+               
+                
 
 
                 roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false);
 
+                BoxCollider roomEntryCollider = roomObj.AddComponent<BoxCollider>();
 
+                // for testing check what current room is in
+                roomEntryCollider.size = new Vector3(room.Bounds.size.x, 1f, room.Bounds.size.z);
+                roomEntryCollider.center = room.Bounds.center + new Vector3(1, 0, 1) - (room.Bounds.size.y/2)*Vector3.up;
+                roomEntryCollider.isTrigger = true;
+
+                RoomVisitChecker rc = roomObj.AddComponent<RoomVisitChecker>();
+                rc.RoomID = room.NodeID;   
 
                 if (!room.CorridorType.Equals(CorridorType.Perpendicular) && !(room.RoomType == RoomType.Corridor))
                 {

@@ -27,6 +27,9 @@ public class TestCollectableUI : MonoBehaviour
         if (GameManager.Instance.gameState == GameManager.GameState.Started)
         {
             gameTime += Time.deltaTime;
+
+            DungeonStatTrack.GameTime = gameTime;
+
             GetComponent<TextMeshPro>().text = GetFormatedTime(gameTime);
             if (!areCountersInitialized)
             {
@@ -52,6 +55,7 @@ public class TestCollectableUI : MonoBehaviour
     private void SetGameEndText()
     {
         GetComponent<TextMeshPro>().text = $"{GetFormatedTime(gameTime)} \n Well Done All Shapes Collected!";
+        DungeonStatTrack.DungeonCompletionTime = gameTime;
     }
 
     private void UpdateCounters()

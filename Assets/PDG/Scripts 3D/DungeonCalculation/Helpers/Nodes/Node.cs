@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
+using UnityEditor;
 using UnityEngine;
 
 namespace dungeonGenerator
@@ -133,6 +135,8 @@ namespace dungeonGenerator
         private Vector3 stairSize;
         private Vector3 stairPosition;
 
+        public static int curNodeID = 0;
+        public int NodeID = 0;
 
         // Pass in parent node to constructor
         public Node(Node parentNode)
@@ -150,6 +154,11 @@ namespace dungeonGenerator
             }
 
             RoomType = RoomType.None;
+
+            NodeID = curNodeID++;// Guid.NewGuid();
+
+
+
 
         }
 

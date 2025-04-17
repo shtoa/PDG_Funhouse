@@ -10,6 +10,12 @@ using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 using Random = UnityEngine.Random;
 using UnityEngine;
+using UnityEngine.Windows;
+using Unity.Loading;
+using File = System.IO.File;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
+
 namespace dungeonGenerator
 
 {
@@ -37,6 +43,10 @@ namespace dungeonGenerator
         public bool seededGenerationEnabled;
         public int randomSeed;
 
+        // add checking if name already exists
+        [Header("Config Saving")]
+        public string configName = "dungeonConfig";
+        public TextAsset dungeonConfig;
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
@@ -75,10 +85,55 @@ namespace dungeonGenerator
             {
                 GameObject.DestroyImmediate(transform.GetChild(i).gameObject);
             }
+
+            Node.curNodeID = 0;
+        }
+
+        public void SaveDungeon()
+        {
+            DungeonConfig dungeonConfigSave = new DungeonConfig();
+
+            setConfigFromTo(this, dungeonConfigSave); // copies config from 
+            SaveManager.Save(dungeonConfigSave, configName);
+        }
+
+        public void LoadDungeon()
+        {
+            DungeonConfig dungeonConfigLoad = SaveManager.Load(dungeonConfig);
+            setConfigFromTo(dungeonConfigLoad, this);
+        }
+
+        public void GetInfo()
+        {
+            DungeonStatTrack.getDeviceInfo();     
+        }
+
+        private void setConfigFromTo(object from, object to)
+        {
+
+            foreach (var field in typeof(DungeonConfig).GetFields())
+            {
+                var sourceField = from.GetType().GetField(field.Name);
+                var targetField = to.GetType().GetField(field.Name);
+
+                //Debug.Log(field.Name);
+                //Debug.Log(sourceField.Name);
+
+                if (sourceField != null) //  && sourceProp.CanRead && sourceProp.CanWrite
+                {
+                    var value = sourceField.GetValue(from);
+                    targetField.SetValue(to, value);
+                }
+
+            }
         }
 
         private void GenerateDungeon()
         {
+
+            Stopwatch st = new Stopwatch();
+            st.Start();
+
             DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
 
             if (!seededGenerationEnabled)
@@ -110,6 +165,13 @@ namespace dungeonGenerator
             roomGenerator.GenerateRooms(roomList);
 
             checkDungeonConnections(roomList);
+
+            st.Stop();
+
+            DungeonStatTrack.roomList = roomList;
+
+            Debug.Log($"Generation Took {st.ElapsedMilliseconds} Milliseconds");
+            DungeonStatTrack.GenerationTime = st.ElapsedMilliseconds;
         }
 
         private void checkDungeonConnections(List<Node> roomList)

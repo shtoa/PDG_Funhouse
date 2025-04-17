@@ -43,6 +43,26 @@ namespace dungeonGenerator
             {
                 myTarget.DeleteDungeon();
             }
+
+            if (GUILayout.Button("Save Dungeon"))
+            {
+                myTarget.SaveDungeon();
+            }
+
+            if (GUILayout.Button("Load Dungeon"))
+            {
+                if (dungeonGenerator.dungeonConfig != null)
+                {
+                    myTarget.LoadDungeon();
+                }
+            }
+
+            if (GUILayout.Button("GetInfo"))
+            {
+
+                myTarget.GetInfo();
+                
+            }
         }
 
         private void OnSceneGUI()

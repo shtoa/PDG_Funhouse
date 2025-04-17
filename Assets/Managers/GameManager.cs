@@ -52,6 +52,7 @@ public class GameManager : MonoBehaviour
     public Dictionary<CollectableType, int> numCollected = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
     public Dictionary<CollectableType, int> total = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
 
+    public bool isTestDataCollected = false;
     public void OnAfterAssemblyReload()
     {
 
@@ -69,6 +70,14 @@ public class GameManager : MonoBehaviour
         //total = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
 
         gameState = GameState.PreStart;
+        isTestDataCollected = false;
+    }
+
+    private void Start()
+    {
+        StartCoroutine(DungeonStatTrack.updateTrackPerformanceStats());
+        DungeonStatTrack.DungeonCompletionTime = -1;
+        DungeonStatTrack.GameTime = 0;
     }
 
     private void Update()
@@ -81,18 +90,30 @@ public class GameManager : MonoBehaviour
             {
                 // need to do this after UI update
                 GameManager.instance.gameState = GameManager.GameState.Ended;
+
+                if (!isTestDataCollected && DungeonStatTrack.DungeonCompletionTime != -1)
+                {
+                    DungeonStatTrack.saveDungeonTestData();
+                    isTestDataCollected = true;
+                }
             }
+
+
         }
     }
 
     private void OnEnable()
     {
         MeshCollectable.OnMeshCollected += IncrementItemsCollected;
+        MeshCollectable.OnMeshCollected += DungeonStatTrack.addCollectedTime;
+        DungeonStatTrack.trackPerformanceStats();
     }
 
     private void OnDisable()
     {
         MeshCollectable.OnMeshCollected -= IncrementItemsCollected;
+        MeshCollectable.OnMeshCollected -= DungeonStatTrack.addCollectedTime;
+        DungeonStatTrack.disposeTrackersPerformanceStats();
     }
 
     public void IncrementItemsCollected(CollectableType t)
