@@ -57,11 +57,11 @@ namespace dungeonGenerator
                 }
             }
 
-            if (GUILayout.Button("GetInfo"))
+            if (GUILayout.Button("Get Room Data"))
             {
 
-                myTarget.GetInfo();
-                
+                myTarget.TestDungeonGeneration(myTarget.testCount);
+
             }
         }
 

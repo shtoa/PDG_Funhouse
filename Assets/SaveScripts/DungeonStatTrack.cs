@@ -27,10 +27,16 @@ namespace dungeonGenerator {
             public List<string> verticalConnections;
             public int roomID;
         }
-        public static List<RoomStats> getRoomStats()
+
+        public static List<Node> roomList;
+        public static List<RoomStats> getRoomStats() // internal version 
+        {
+            return getRoomStats(DungeonStatTrack.roomList);
+        }
+        public static List<RoomStats> getRoomStats(List<Node> roomList)
         {
             List<RoomStats> roomStatsList = new List<RoomStats>();
-            foreach(var room in DungeonStatTrack.roomList)
+            foreach(var room in roomList)
             {
                 RoomStats roomStats = new RoomStats();
 
@@ -181,8 +187,6 @@ namespace dungeonGenerator {
             public DungeonStats dungeonStats;
             public TrackedPerformanceStats trackedPerformanceData;
         }
-
-        public static List<Node> roomList;
         public static void saveDungeonTestData()
         {
             DungeonTestData dungeonTestData = new DungeonTestData();

@@ -15,6 +15,7 @@ using Unity.Loading;
 using File = System.IO.File;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using static dungeonGenerator.DungeonGenerator;
 
 namespace dungeonGenerator
 
@@ -50,6 +51,9 @@ namespace dungeonGenerator
 
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
+
+        [Header("Testing")]
+        public int testCount = 1;
 
 
         // [Header("Corridor Properties")]
@@ -126,6 +130,61 @@ namespace dungeonGenerator
                 }
 
             }
+        }
+        [System.Serializable]
+        public class TestDungeonGenerationWrapper
+        {
+            public List<AllRoomStatsWrapper> allRoomStats = new List<AllRoomStatsWrapper>();
+        }
+        [System.Serializable]
+        public class AllRoomStatsWrapper
+        {
+            public List<DungeonStatTrack.RoomStats> roomStats = new List<DungeonStatTrack.RoomStats>();
+        }
+
+
+        public void TestDungeonGeneration(int testCount)
+        {
+            TestDungeonGenerationWrapper testStats = new TestDungeonGenerationWrapper();
+            var curTest = 1;
+            while (testCount >= curTest) {
+
+                AllRoomStatsWrapper allRoomStats = new AllRoomStatsWrapper();
+
+                DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
+
+                if (!seededGenerationEnabled)
+                {
+                    randomSeed = Random.Range(int.MinValue, int.MaxValue);
+                }
+
+                Random.InitState(randomSeed); // set generation seed
+
+                // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
+                roomList = calculator.CalculateDungeon(maxIterations,
+                                                       roomBoundsMin,
+                                                       splitCenterDeviation,
+                                                       corridorWidthAndWall,
+                                                       wallThickness,
+                                                       roomOffsetMin,
+                                                       corridorHeight);
+
+                InitializeStartAndEnd(calculator.RoomSpaces);
+                curTest++;
+
+                allRoomStats.roomStats = DungeonStatTrack.getRoomStats(roomList);
+                testStats.allRoomStats.Add(allRoomStats);
+                Debug.Log($"Running Test {testCount}");
+
+
+                EditorUtility.DisplayProgressBar("Testing Dungeon Generation", $"Doing Test: {curTest}", (float)curTest/(float)testCount);
+            }
+            EditorUtility.ClearProgressBar();   
+
+
+            SaveManager.Save(testStats, "allRoomStats");
+
+
         }
 
         private void GenerateDungeon()

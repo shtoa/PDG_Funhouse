@@ -5,6 +5,11 @@ using System.IO;
 using UnityEditorInternal;
 using UnityEditor;
 using static dungeonGenerator.DungeonStatTrack;
+using System;
+using static dungeonGenerator.DungeonGenerator;
+using dungeonGenerator;
+using System.Text;
+using UnityEditor.ShaderGraph.Serialization;
 
 public static class SaveManager
 {
@@ -68,5 +73,24 @@ public static class SaveManager
         }
 
         return dungeonConfig;
+    }
+
+    internal static void Save(TestDungeonGenerationWrapper dungeonTestGeneration, string filename)
+    {
+        string dir = Application.dataPath + "/Save/MultiGenerationTest/";
+
+        if (!Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+
+      
+        string dungeonConfigJSON = JsonUtility.ToJson(dungeonTestGeneration);
+           
+        
+  
+        File.WriteAllText(AssetDatabase.GenerateUniqueAssetPath(dir + filename + ".json"), dungeonConfigJSON);
+
+        Debug.Log($"file written to: {dir + filename + ".json"}");
     }
 }
