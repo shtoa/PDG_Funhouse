@@ -31,9 +31,8 @@ public static class SaveManager
 
     }
 
-    public static void Save(DungeonTestData dungeonTestData, string filename)
+    public static void Save(DungeonTestData dungeonTestData, string dir, string filename)
     {
-        string dir = Application.dataPath + "/Save/TestData/";
 
         if (!Directory.Exists(dir))
         {

@@ -91,9 +91,20 @@ public class GameManager : MonoBehaviour
                 // need to do this after UI update
                 GameManager.instance.gameState = GameManager.GameState.Ended;
 
-                if (!isTestDataCollected && DungeonStatTrack.DungeonCompletionTime != -1)
+                // !isTestDataCollected && 
+                if (DungeonStatTrack.DungeonCompletionTime != -1)
                 {
-                    DungeonStatTrack.saveDungeonTestData();
+                    PlayTestEnvironment playTestEnv;
+                    if (GameObject.Find("DungeonGen").TryGetComponent<PlayTestEnvironment>(out playTestEnv)) {
+
+                        GameManager.instance.gameState = GameManager.GameState.PreStart;
+
+                        if (!playTestEnv.Next())
+                        {
+                            UnityEditor.EditorApplication.ExitPlaymode();
+                        } 
+                    }
+                    
                     isTestDataCollected = true;
                 }
             }

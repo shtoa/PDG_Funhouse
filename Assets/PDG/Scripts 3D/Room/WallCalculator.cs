@@ -62,13 +62,14 @@ namespace dungeonGenerator
         }
 
         // max 32 bits max height 32 
+
+        
         public UInt32[] getWallIntArray(int sizeX, int sizeY) // generateBased on width
         {
             UInt32[] wallArray = new UInt32[sizeX];
 
             for (int column = 0; column < wallArray.GetLength(0); column++)
             {
-
                 wallArray[column] = (UInt32)(UInt32.MaxValue >> (32 - sizeY));
                 Debug.Log($"WallArrayVal: {wallArray[column]}");
             }
@@ -423,7 +424,7 @@ namespace dungeonGenerator
                         {
                             if (width + column < wallBlocks.GetLength(0)-1)
                             {
-                                wallBlocks[column + width] = ~mask & wallBlocks[column + width];
+                                wallBlocks[column + width] = ~mask & wallBlocks[column + width]; // remove blocks from wall blocks
                                 width++;
                                 Debug.Log($"Width Contained {wallBlocks[column]}");
 

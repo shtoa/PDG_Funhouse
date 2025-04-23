@@ -56,7 +56,7 @@ namespace dungeonGenerator
 
 
         public void connectSpaces(Queue<SpaceNode> spacesToCheck, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight
-              , bool[,,] availableVoxelGrid, List<Node> corridorList, float splitChance)
+              , bool[,,] availableVoxelGrid, List<Node> corridorList, float connectionChance)
         {
             // join the children of the spaces together based on the bsp graph
             while (spacesToCheck.Count > 0)
@@ -67,7 +67,7 @@ namespace dungeonGenerator
                 {
                     continue;
                 }
-                else if (spaceToCheck.ChildrenNodeList.Count > 1 && (Random.value < splitChance)) // check if there are two children to join
+                else if (spaceToCheck.ChildrenNodeList.Count > 1 && (Random.value < connectionChance)) // check if there are two children to join
                 {
                     CreateCorridor((SpaceNode)spaceToCheck.ChildrenNodeList[0], (SpaceNode)spaceToCheck.ChildrenNodeList[1], corridorList, corridorWidth, wallThickness, minRoomDim, corridorHeight,
                         availableVoxelGrid);

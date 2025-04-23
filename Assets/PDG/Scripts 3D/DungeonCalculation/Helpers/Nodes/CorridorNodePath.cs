@@ -261,9 +261,11 @@ namespace dungeonGenerator
                         }
 
                         //Debug.Log($"FINAL SEGMENT: width: {width}, height: {height}");
-                        BoundsInt floorBounds = new BoundsInt(new Vector3Int(x + minPos.x, minPos.y, z + minPos.z), new Vector3Int(width, corridorHeight, height));
-                        Debug.Log("THe Wall Segment BOunds" + floorBounds.ToString());
-                        CorridorWallBoundsList.Add(floorBounds);
+                        BoundsInt wallBounds = new BoundsInt(new Vector3Int(x + minPos.x, minPos.y, z + minPos.z), 
+                                                             new Vector3Int(width, corridorHeight, height)
+                                                             );
+                        Debug.Log("THe Wall Segment BOunds" + wallBounds.ToString());
+                        CorridorWallBoundsList.Add(wallBounds);
 
                     }
                 }
@@ -459,7 +461,7 @@ namespace dungeonGenerator
                 int pos = Mathf.Abs((int)Vector3.Dot(alignment.toV3I(), (isStartNode ? sortedSpaces[0].Bounds.max : sortedSpaces[0].Bounds.min)));
 
                 //sortedSpaces[0].Bounds.max.x; // get the coordinates of the right most bound
-                sortedSpaces = sortedSpaces.Where(space => Math.Abs(pos - posCompareNode(space)) < posCompareV3I(this.minRoomDim)).ToList(); // deviation less than min room size to not go through rooms
+                sortedSpaces = sortedSpaces.Where(space => Math.Abs(pos - posCompareNode(space)) < 2*posCompareV3I(this.minRoomDim)).ToList(); // deviation less than 2x min room size to not go through rooms
                 return sortedSpaces;
             }
 
@@ -579,6 +581,7 @@ namespace dungeonGenerator
 
             while (endNodeNeighbors.Count() == 0 && startNodes.Count() > 0)
             {
+
                 startNode = startNodes[Random.Range(0, startNodes.Count())];
                 startNodes.Remove(startNode);
             }
@@ -617,8 +620,24 @@ namespace dungeonGenerator
                                     + Vector3Int.up * endSpace.Bounds.min.y;
 
             // update grid
-            this.corridorGrid[startVoxel.x, startVoxel.y, startVoxel.z] = true;
-            this.corridorGrid[endVoxel.x, endVoxel.y, endVoxel.z] = true;
+
+            // remove points around point up to corridor height
+            foreach(var voxelPos in new Vector3Int[] { startVoxel+connectionAxis, endVoxel }) { 
+            for (int height = 0; height < corridorHeight; height++)
+            {
+
+                // remove closest position from available positions
+                this.corridorGrid[voxelPos.x, voxelPos.y + height, voxelPos.z] = true;
+
+                foreach (Vector3Int dir in possibleDir)
+                {
+                    Vector3Int resultingPos = voxelPos + dir;
+                    this.corridorGrid[resultingPos.x, resultingPos.y + height, resultingPos.z] = true;
+                }
+            }
+            }
+            //this.corridorGrid[startVoxel.x, startVoxel.y, startVoxel.z] = true;
+            //this.corridorGrid[endVoxel.x, endVoxel.y, endVoxel.z] = true;
 
             return (startVoxel, endVoxel);
         }
@@ -776,7 +795,7 @@ namespace dungeonGenerator
 
                 }
 
-                if (possiblePositions.Count() < 1) throw new Exception("Path not possible"); // if no further positions available path fails
+                if (possiblePositions.Count() < 1) return false; // throw new Exception("Path not possible"); // if no further positions available path fails
 
                 // ---- find closest position to the exit door ---- 
 
@@ -804,7 +823,7 @@ namespace dungeonGenerator
                     // remove closest position from available positions
                     this.corridorGrid[closestPos.x, closestPos.y + height, closestPos.z] = true;
 
-                    foreach (Vector3Int dir in pathPossibleDirections)
+                    foreach (Vector3Int dir in possibleDir)
                     {
                         Vector3Int resultingPos = closestPos + dir;
                         this.corridorGrid[resultingPos.x, resultingPos.y + height, resultingPos.z] = true;
@@ -1056,6 +1075,8 @@ namespace dungeonGenerator
                 this.Bounds.size - new Vector3Int(this.wallThickness, 0, this.wallThickness) * 2
              ); // make walls flush 
 
+            // update available Grid
+            updateAvailableGrid();
 
             this.CorridorType = CorridorType.Perpendicular;
 
@@ -1086,14 +1107,17 @@ namespace dungeonGenerator
             // --- single spiral around room --- (can do different types of rooms)
 
             // check with correct angle... 
-            float roomSpiralIncrement = 1; 
+            float roomSpiralIncrement = 1;
+
+
+            var isWidthSmaller = connectedRoomsOrderedByY[0].Bounds.size.z > connectedRoomsOrderedByY[0].Bounds.size.x; //
 
             List<Vector3> planeOffsets = new List<Vector3>
                 {
-                    new Vector3(0f, roomSpiralIncrement, connectedRoomsOrderedByY[0].Bounds.size.z-planeSize.z),
-                    new Vector3(connectedRoomsOrderedByY[0].Bounds.size.x-planeSize.x, roomSpiralIncrement, 0f),
-                    new Vector3(0f, roomSpiralIncrement, -connectedRoomsOrderedByY[0].Bounds.size.z+planeSize.z),
-                    new Vector3(-connectedRoomsOrderedByY[0].Bounds.size.x+planeSize.x, roomSpiralIncrement, 0f),
+                    new Vector3(0f, roomSpiralIncrement, minRoomDim.z-planeSize.z), // connectedRoomsOrderedByY[0].Bounds.size
+                    new Vector3(planeSize.x, 0, 0f), // connectedRoomsOrderedByY[0].Bounds.size.x
+                    new Vector3(0f, roomSpiralIncrement, -minRoomDim.z+planeSize.z),
+                    new Vector3(-planeSize.x, 0, 0f), // -connectedRoomsOrderedByY[0].Bounds.size.x+
                 };
 
             var endOffset = endPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
@@ -1460,7 +1484,7 @@ namespace dungeonGenerator
 
                     // checks if the space moving to is free to build a waypoint  // make sure doesnt overlap within path (change)
 
-                    bool isSpaceFree = isWithinBounds && !isOverlapingCorridorGrid(curPos + startPos, possDirection);
+                    bool isSpaceFree = isWithinBounds && !isOverlapingCorridorGrid(curPos + startPos, possDirection) && !isOverlapingAvailableGrid(curPos + startPos, possDirection);
                         //&& !this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 1, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 1]
                         //&& !this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 2, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 2]
                         //&& !this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 2, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 1]
@@ -1706,6 +1730,52 @@ namespace dungeonGenerator
                         || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2]
                         || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1]
                         || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2];
+
+                        Debug.Log($"Is Overlapping Path {isOverlapping}, {offset}");
+
+                        if (isOverlapping)
+                        {
+                            //Debug.Log("Is Overlapping Path");
+                            return true;
+                        }
+                    }
+
+                }
+
+            }
+
+            return false;
+        }
+
+        private bool isOverlapingAvailableGrid(Vector3 startPosition, Vector3 offset)
+        {
+            //Debug.Log($"Is Overlapping Path {offset}");
+
+
+            Vector3Int nOff = new Vector3Int((Math.Abs(offset.x) > 0) ? 1 : 0, (Math.Abs(offset.y) > 0) ? 1 : 0, (Math.Abs(offset.z) > 0) ? 1 : 0); // to prevent duplicate checking start direction
+
+            for (int x = 2 * nOff.x; x <= Mathf.Abs(offset.x); x++)
+            {
+                for (int y = 0; y <= Mathf.Abs(offset.y); y++)
+                {
+                    for (int z = 2 * nOff.z; z <= Mathf.Abs(offset.z); z++) // at least as wide as offset
+                    {
+
+
+                        var curVoxelPos = startPosition + offset;
+
+                        bool isOverlapping =
+
+                        //this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 1]
+                        //&& this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 2, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 2]
+                        //&& this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 2, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 1]
+                        //&& this.corridorGrid[Mathf.FloorToInt(curVoxelPos.x) - 1, Mathf.FloorToInt(curVoxelPos.y), Mathf.FloorToInt(curVoxelPos.z) - 2];
+
+
+                        this.availableVoxelGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1]
+                        || this.availableVoxelGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2]
+                        || this.availableVoxelGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1]
+                        || this.availableVoxelGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2];
 
                         Debug.Log($"Is Overlapping Path {isOverlapping}, {offset}");
 

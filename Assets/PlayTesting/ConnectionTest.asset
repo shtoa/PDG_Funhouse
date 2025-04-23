@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47879dc0993de7841bdda987adf0979e, type: 3}
+  m_Name: ConnectionTest
+  m_EditorClassIdentifier: 
+  testName: Test1
+  dungeonConfigs:
+  - {fileID: 4900000, guid: ad7da96b2ea48184395033cce0f0f511, type: 3}
+  - {fileID: 4900000, guid: 9749d5140256c5642be8870b29ff8819, type: 3}

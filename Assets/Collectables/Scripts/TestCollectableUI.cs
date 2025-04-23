@@ -23,6 +23,11 @@ public class TestCollectableUI : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.Instance.gameState == GameManager.GameState.PreStart)
+        {
+            gameTime = 0;
+            GetComponent<TextMeshPro>().text = string.Empty;
+        }
 
         if (GameManager.Instance.gameState == GameManager.GameState.Started)
         {

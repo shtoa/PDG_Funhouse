@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Numerics;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,66 +13,79 @@ namespace dungeonGenerator
     {
         public static GameObject CreatePlane(Vector3Int size, int uvUnit, bool isInverted = false)
         {
-
             // from code monkey
 
             Vector3 bottomLeftV = new Vector3(-size.x / 2f, 0, -size.z / 2f);
             Vector3 bottomRightV = new Vector3(size.x / 2f, 0, -size.z / 2f);
-            Vector3 topLeftV = new Vector3(-size.x/2f, 0, size.z/2f);
-            Vector3 topRightV = new Vector3(size.x/2f, 0, size.z/2f);
+            Vector3 topLeftV = new Vector3(-size.x / 2f, 0, size.z / 2f);
+            Vector3 topRightV = new Vector3(size.x / 2f, 0, size.z / 2f);
 
-            Vector3[] vertices = new Vector3[]
-            {
-            topLeftV,
-            topRightV,
-            bottomLeftV,
-            bottomRightV
-            };
+            Vector3[] points = new Vector3[] { bottomLeftV, bottomRightV, topLeftV, topRightV };
 
-            // likely wrong double check
-            Vector2[] uvs = new Vector2[vertices.Length];
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                uvs[i] = new Vector2(vertices[i].x, vertices[i].z) * 0.5f;
-            }
+            return CreatePlaneFromPoints(points, uvUnit);
 
-            int[] triangles;
+      
 
-            if (!isInverted)
-            {
-                triangles = new int[]
-                {
-                    0,1,2,
-                    2,1,3
-                };
-            } else
-            {
-                triangles = new int[]
-             {
-                    0,2,1,
-                    1,2,3
-             };
-            }
+            //Vector3[] vertices = new Vector3[]
+            //{
+            //topLeftV,
+            //topRightV,
+            //bottomLeftV,
+            //bottomRightV
+            //};
 
-            Mesh plane = new Mesh();
-            plane.vertices = vertices;
-            plane.triangles = triangles;
-            plane.uv = uvs;
-            plane.RecalculateNormals();
-            plane.RecalculateBounds();
+            //// likely wrong double check
+            //Vector2[] uvs = new Vector2[vertices.Length];
+            //for (int i = 0; i < vertices.Length; i++)
+            //{
+            //    uvs[i] = new Vector2(vertices[i].x, vertices[i].z) * 0.5f;
+            //}
 
-            GameObject planeObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
-            planeObject.GetComponent<MeshFilter>().mesh = plane;
-            planeObject.GetComponent<MeshCollider>().sharedMesh = plane;
+            //int[] triangles;
 
-            return planeObject;
+            //if (!isInverted)
+            //{
+            //    triangles = new int[]
+            //    {
+            //        0,1,2,
+            //        2,1,3
+            //    };
+            //} else
+            //{
+            //    triangles = new int[]
+            // {
+            //        0,2,1,
+            //        1,2,3
+            // };
+            //}
+
+            //Mesh plane = new Mesh();
+            //plane.vertices = vertices;
+            //plane.triangles = triangles;
+            //plane.uv = uvs;
+            //plane.RecalculateNormals();
+            //plane.RecalculateBounds();
+
+            //// add slight offset
+            //for (int i = 0; i < vertices.Length; i++)
+            //{
+            //    vertices[i] = vertices[i] - plane.normals[0] * 0.001f; // same normals since flat
+            //}
+
+            //plane.vertices = vertices;
+
+            //GameObject planeObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
+            //planeObject.GetComponent<MeshFilter>().mesh = plane;
+            //planeObject.GetComponent<MeshCollider>().sharedMesh = plane;
+
+            //return planeObject;
 
 
 
 
         }
         // change to use templates ... 
-        public static GameObject CreatePlaneFromPoints(Vector3[] points, int uvUnit, bool isInverted = false)
+        public static GameObject CreatePlaneFromPoints(Vector3[] points, int uvUnit, bool isInverted = false, bool isVertical = false)
         {
 
             // from code monkey
@@ -81,6 +95,9 @@ namespace dungeonGenerator
             Vector3 topLeftV = points[2];
             Vector3 topRightV = points[3];
 
+
+            Vector3 normalAxis = Vector3.Normalize(Vector3.Cross(topLeftV, bottomRightV));
+
             Vector3[] vertices = new Vector3[]
             {
             topLeftV,
@@ -88,31 +105,59 @@ namespace dungeonGenerator
             bottomLeftV,
             bottomRightV,
 
-            // for double sided mesh
-            topLeftV-0.0001f*Vector3.up,
-            topRightV-0.0001f*Vector3.up,
-            bottomLeftV-0.0001f*Vector3.up,
-            bottomRightV-0.0001f*Vector3.up,
+
+            //// for double sided mesh
+            topLeftV, //-0.001f*normalAxis,
+            topRightV, //-0.001f*normalAxis,
+            bottomLeftV, //-0.001f*normalAxis,
+            bottomRightV, //-0.001f*normalAxis, // needs to use normal
             };
 
             // likely wrong double check
             Vector2[] uvs = new Vector2[vertices.Length];
-            for (int i = 0; i < vertices.Length; i++)
+
+            if (!isVertical)
             {
-                uvs[i] = new Vector2(vertices[i].x, vertices[i].z) * 0.5f;
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    uvs[i] = new Vector2(vertices[i].x, vertices[i].z) * 0.5f;
+                }
             }
+            else
+            {
+                if (vertices.All(vertex => vertex.x == vertices[0].x))
+                {
+                    for (int i = 0; i < vertices.Length; i++)
+                    {
+                        uvs[i] = new Vector2(vertices[i].z, vertices[i].y) * 0.5f;
+                    }
+                } else
+                {
+                    for (int i = 0; i < vertices.Length; i++)
+                    {
+                        uvs[i] = new Vector2(vertices[i].x, vertices[i].y) * 0.5f;
+                    }
+                }
+            }
+           
 
             int[] triangles;
 
-            if (!isInverted)
+            if (true)
             {
                 triangles = new int[]
                 {
-                    0,1,2,
-                    2,1,3,
-                    // if double sided
-                    5, 6, 4,
+                    0, 2, 1,
+                    2, 3, 1,
+
+                    // backside
+                    4, 5, 6,
                     5, 7, 6
+                    //// if double sided
+                    //4, 5, 6, 
+                    //6, 5, 7 
+                    //5, 6, 4,
+                    //5, 7, 6
 
                 };
             }
@@ -124,9 +169,13 @@ namespace dungeonGenerator
                     1,2,3,
 
 
-                    // if double sided
-                    5, 6, 4,
-                    5, 7, 6
+                    //// if double sided
+                    4, 6, 5, 
+                    5, 6, 7 
+
+
+                    //5, 6, 4,
+                    //5, 7, 6
              };
             }
 
@@ -143,14 +192,27 @@ namespace dungeonGenerator
 
             //plane.SetNormals(normals);    
        
+          
+
+            // add slight offset
+            //for(int i = 0; i< vertices.Length; i++)
+            //{
+            //    vertices[i] = vertices[i] - normalAxis*0.001f; // same normals since flat
+            //}
+
             plane.RecalculateBounds();
             plane.RecalculateTangents();
             plane.RecalculateNormals();
 
 
+
+            plane.vertices = vertices;
+
             GameObject planeObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
             planeObject.GetComponent<MeshFilter>().mesh = plane;
+            planeObject.GetComponent<MeshCollider>().sharedMesh = null;
             planeObject.GetComponent<MeshCollider>().sharedMesh = plane;
+
 
             return planeObject;
 

@@ -55,6 +55,9 @@ namespace dungeonGenerator
         [Header("Testing")]
         public int testCount = 1;
 
+        [SerializeField]
+        List<TextAsset> dungeonTestConfigs;
+
 
         // [Header("Corridor Properties")]
         [HideInInspector]

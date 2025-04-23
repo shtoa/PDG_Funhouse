@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using dungeonGenerator;
 using System.Linq;
+using System;
 
 namespace dungeonGenerator
 {
@@ -66,6 +67,7 @@ namespace dungeonGenerator
         public static void GenerateStairs(Transform transform, Vector3 startPos, Material stairsMaterial, Vector3 planeSize, List<Vector3> planeOffsets)
         {
             Vector3 curOffset = Vector3.zero;
+            Vector3 prevOffset = Vector3.zero;
 
             GameObject plane = MeshHelper.CreatePlane(Vector3Int.CeilToInt(planeSize), 2, false);
             plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
@@ -77,15 +79,166 @@ namespace dungeonGenerator
                 if (Mathf.Abs(planeOffset.x) > planeSize.x || Mathf.Abs(planeOffset.z) > planeSize.z)
                 {
                     StairsGenerator.ConnectPlatforms(transform, startPos, stairsMaterial, curOffset, planeSize, curOffset + planeOffset);
+                    StairsGenerator.AddConnectionWalls(transform, startPos, stairsMaterial, curOffset, planeSize, curOffset + planeOffset);
+                    StairsGenerator.AddPlatformWalls(transform, startPos, stairsMaterial, curOffset, planeSize, curOffset + planeOffset, -1 * prevOffset);
                 }
 
                 curOffset += planeOffset;
+
+
+
+                // create single wall 
+                if (prevOffset != Vector3.zero)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+
+                        var plane2offset = curOffset;
+                        var plane1position = curOffset - planeOffset;
+
+
+                        Vector3 offsetDirection = Mathf.Abs(plane2offset.x - plane1position.x) > Mathf.Abs(plane2offset.z - plane1position.z) ?
+                                         Mathf.Sign(plane2offset.x - plane1position.x) * Vector3.right :
+                                         Mathf.Sign(plane2offset.z - plane1position.z) * Vector3.forward;
+
+                        Vector3 offsetDirection2 = Mathf.Abs(prevOffset.x) > Mathf.Abs(prevOffset.z) ?
+                                    Mathf.Sign(prevOffset.x) * Vector3.right :
+                                    Mathf.Sign(prevOffset.z) * Vector3.forward;
+
+
+                        if (offsetDirection != Quaternion.AngleAxis(90 * i, Vector3.up) * Vector3.forward &&
+                            -offsetDirection2 != Quaternion.AngleAxis(90 * i, Vector3.up) * Vector3.forward
+
+                            )
+                        {
+                            plane = MeshHelper.CreatePlane(new Vector3Int(2, 0, 1), 2, true);
+                            plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
+                            plane.transform.localPosition = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.001f;
+                            plane.transform.localRotation = Quaternion.Euler(-90f, 0f, 0);
+
+                            plane.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
+                            plane.transform.SetParent(transform);
+                        }
+                    }
+                }
 
                 plane = MeshHelper.CreatePlane(Vector3Int.CeilToInt(planeSize), 2, false);
                 plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
                 plane.transform.localPosition = startPos + curOffset;
                 plane.transform.SetParent(transform);
+
+                prevOffset = planeOffset;
             }
+        }
+
+        private static void AddPlatformWalls(Transform transform, Vector3 startPos, Material stairsMaterial, Vector3 plane1position, Vector3 planeSize, Vector3 plane2offset, Vector3 prevOffset)
+        {
+           
+        }
+
+        private static void AddConnectionWalls(Transform transform, Vector3 startPos, Material stairsMaterial, Vector3 plane1position, Vector3 planeSize, Vector3 plane2offset)
+        {
+
+
+
+            Vector3 offsetDirection = Mathf.Abs(plane2offset.x - plane1position.x) > Mathf.Abs(plane2offset.z - plane1position.z) ?
+                                      Mathf.Sign(plane2offset.x - plane1position.x) * Vector3.right :
+                                      Mathf.Sign(plane2offset.z - plane1position.z) * Vector3.forward;
+
+            Debug.Log($"offset direction: {offsetDirection}");
+
+            // figure out which vertices are needed
+
+
+            // Left Wall Connection
+
+            Vector3 bottomLeftV = plane1position
+            + Vector3.Scale(offsetDirection, planeSize / 2)
+            + Vector3.Scale(new Vector3(1, 0, 1)
+                              - new Vector3(Mathf.Abs(offsetDirection.x),
+                                            Mathf.Abs(offsetDirection.y),
+                                            Mathf.Abs(offsetDirection.z)
+                                            ),
+                              planeSize / 2);
+
+
+            Vector3 bottomRightV = plane1position + new Vector3(plane2offset.x,
+                                            plane2offset.y,
+                                            plane2offset.z) - (plane1position
+                                  + Vector3.Scale(offsetDirection, planeSize / 2)
+                                  + Vector3.Scale(new Vector3(1, 0, 1)
+                                                    - new Vector3(Mathf.Abs(offsetDirection.x),
+                                                                  Mathf.Abs(offsetDirection.y),
+                                                                  Mathf.Abs(offsetDirection.z)
+                                                                  ),
+                                                    -planeSize / 2));
+
+
+            Vector3 topRightV = bottomLeftV + new Vector3(0, 1f, 0);
+
+            Vector3 topLeftV = bottomRightV + new Vector3(0,1f,0);
+
+        
+
+            Vector3[] vertices = new Vector3[]
+            {
+            topRightV,
+            topLeftV,
+            bottomLeftV,
+            bottomRightV
+            };
+
+            GameObject stairsPlane = MeshHelper.CreatePlaneFromPoints(vertices, 2, offsetDirection.x > 0 || offsetDirection.z < 0, true);
+            stairsPlane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
+
+            stairsPlane.transform.localPosition = startPos + stairsPlane.GetComponent<MeshFilter>().sharedMesh.normals[0]*0.001f;
+            stairsPlane.transform.SetParent(transform);
+
+
+
+            // Right Wall Connection 
+
+            bottomLeftV = plane1position
+            + Vector3.Scale(offsetDirection, planeSize / 2)
+            + Vector3.Scale(new Vector3(1, 0, 1)
+                              - new Vector3(Mathf.Abs(offsetDirection.x),
+                                            Mathf.Abs(offsetDirection.y),
+                                            Mathf.Abs(offsetDirection.z)
+                                            ),
+                              -planeSize / 2);
+
+
+            bottomRightV = plane1position + new Vector3(plane2offset.x,
+                                            plane2offset.y,
+                                            plane2offset.z) - (plane1position
+                                  + Vector3.Scale(offsetDirection, planeSize / 2)
+                                  + Vector3.Scale(new Vector3(1, 0, 1)
+                                                    - new Vector3(Mathf.Abs(offsetDirection.x),
+                                                                  Mathf.Abs(offsetDirection.y),
+                                                                  Mathf.Abs(offsetDirection.z)
+                                                                  ),
+                                                    planeSize / 2));
+
+
+            topRightV = bottomLeftV + new Vector3(0, 1f, 0);
+
+            topLeftV = bottomRightV + new Vector3(0, 1f, 0);
+
+
+
+            vertices = new Vector3[]
+            {
+            topRightV,
+            topLeftV,
+            bottomLeftV,
+            bottomRightV
+            };
+
+            stairsPlane = MeshHelper.CreatePlaneFromPoints(vertices, 2, offsetDirection.x > 0 || offsetDirection.z < 0, true);
+            stairsPlane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
+
+            stairsPlane.transform.localPosition = startPos + stairsPlane.GetComponent<MeshFilter>().sharedMesh.normals[0] * 0.001f;
+            stairsPlane.transform.SetParent(transform);
         }
 
 

@@ -187,7 +187,7 @@ namespace dungeonGenerator {
             public DungeonStats dungeonStats;
             public TrackedPerformanceStats trackedPerformanceData;
         }
-        public static void saveDungeonTestData()
+        public static void saveDungeonTestData(string dir, string filename)
         {
             DungeonTestData dungeonTestData = new DungeonTestData();
             dungeonTestData.dungeonStats = getDungeonStats();
@@ -195,7 +195,7 @@ namespace dungeonGenerator {
             dungeonTestData.trackedPerformanceData = getTrackPerformanceStats();
             dungeonTestData.dungeonConfig = DungeonStatTrack.dungeonConfig;
 
-            SaveManager.Save(dungeonTestData, "dungeonTest");
+            SaveManager.Save(dungeonTestData, dir, filename);
 
         }
 
