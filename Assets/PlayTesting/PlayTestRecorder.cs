@@ -26,10 +26,10 @@ public static class PlayTestRecorder
         videoRecorder.EncoderSettings = new CoreEncoderSettings
         {
             Codec = CoreEncoderSettings.OutputCodec.MP4,
-            EncodingProfile = CoreEncoderSettings.H264EncodingProfile.High
-        };
+            TargetBitRate = 4000,
+            GopSize = 240
 
-        
+        };
 
         videoRecorder.ImageInputSettings = new GameViewInputSettings
         {
@@ -40,6 +40,7 @@ public static class PlayTestRecorder
         videoRecorder.CaptureAudio = false;
 
         videoRecorder.OutputFile = dir+filename;
+        
 
         controllerSettings.AddRecorderSettings(videoRecorder);
         controllerSettings.SetRecordModeToManual();

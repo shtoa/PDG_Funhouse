@@ -4,6 +4,7 @@ using UnityEngine;
 using dungeonGenerator;
 using System.Linq;
 using System;
+using UnityEngine.ProBuilder;
 
 namespace dungeonGenerator
 {
@@ -81,6 +82,11 @@ namespace dungeonGenerator
                     StairsGenerator.ConnectPlatforms(transform, startPos, stairsMaterial, curOffset, planeSize, curOffset + planeOffset);
                     StairsGenerator.AddConnectionWalls(transform, startPos, stairsMaterial, curOffset, planeSize, curOffset + planeOffset);
                     StairsGenerator.AddPlatformWalls(transform, startPos, stairsMaterial, curOffset, planeSize, curOffset + planeOffset, -1 * prevOffset);
+
+
+
+                    // add ceiling 
+                    StairsGenerator.ConnectPlatforms(transform, startPos + Vector3.up * 0.999f, stairsMaterial, curOffset, planeSize, curOffset + planeOffset);
                 }
 
                 curOffset += planeOffset;
@@ -111,21 +117,77 @@ namespace dungeonGenerator
 
                             )
                         {
-                            plane = MeshHelper.CreatePlane(new Vector3Int(2, 0, 1), 2, true);
+                            plane = MeshHelper.CreatePlane(new Vector3Int(2, 0, 1), 2);
+                            plane.transform.Rotate(-90f, 0f, 0);// = Quaternion.Euler(-90f, 0f, 0);
+
+                            //Debug.Log($"meshFitlerVert {plane.GetComponent<MeshFilter>().sharedMesh.vertices[0]}");
+
+                            //var rot = Quaternion.Euler(-90f, 0f, 0);
+                            //var rot2 = Quaternion.Euler(0f, 90f * i, 0);
+
+                            //Vector3[] planeVertices = new Vector3[plane.GetComponent<MeshFilter>().sharedMesh.vertices.Length];
+
+
+                            //var pivot = new Vector3(2, 0, 0); //startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.001f;
+
+                            //for (int j = 0; j < planeVertices.Length; j++)
+                            //{
+                            //    planeVertices[j] = rot*plane.GetComponent<MeshFilter>().sharedMesh.vertices[j];
+                            //    planeVertices[j] = rot2 * (planeVertices[j]);
+                            //}
+                            //Mesh mesh = new Mesh();
+                            //mesh = plane.GetComponent<MeshFilter>().sharedMesh;
+
+                            //mesh.vertices = planeVertices;
+                            //mesh.RecalculateTangents();
+                            //mesh.RecalculateNormals();
+
+                            //plane.GetComponent<MeshFilter>().sharedMesh = null;
+
+                            //plane.GetComponent<MeshFilter>().sharedMesh = mesh;
+
+
+
+
+
                             plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
+
+
                             plane.transform.localPosition = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.001f;
-                            plane.transform.localRotation = Quaternion.Euler(-90f, 0f, 0);
+
+
 
                             plane.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
+
+
+                            // add light
+                            GameObject light = GameObject.Instantiate(GameObject.Find("DungeonGen").GetComponent<DungeonDecorator>().lightMesh);
+                            light.transform.Rotate(0f, 0f, 90f);
+                            light.transform.localPosition = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.15f;
+                            light.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
+                            light.transform.SetParent(transform);
+
                             plane.transform.SetParent(transform);
                         }
                     }
                 }
 
+                // bottomPlane
+
                 plane = MeshHelper.CreatePlane(Vector3Int.CeilToInt(planeSize), 2, false);
                 plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
                 plane.transform.localPosition = startPos + curOffset;
                 plane.transform.SetParent(transform);
+
+
+                if (planeOffset != planeOffsets.Last())
+                {
+                    plane = MeshHelper.CreatePlane(Vector3Int.CeilToInt(planeSize), 2, false);
+                    plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
+                    plane.transform.localPosition = startPos + curOffset + Vector3.up * 0.999f;
+                    plane.transform.SetParent(transform);
+                }
+
 
                 prevOffset = planeOffset;
             }

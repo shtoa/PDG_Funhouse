@@ -101,6 +101,8 @@ public class PlayTestEnvironment : MonoBehaviour
         if (recordPlayTestVideo)  PlayTestRecorder.StopRecording();
 
 
+        DungeonStatTrack.disposeTrackersPerformanceStats();
+        DungeonStatTrack.trackPerformanceStats();
 
 
         if (currentConfigIndex < PlayTests[currentPlayTestIndex].dungeonConfigs.Count-1)

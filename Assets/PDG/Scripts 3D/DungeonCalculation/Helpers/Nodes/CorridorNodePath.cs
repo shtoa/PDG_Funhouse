@@ -437,7 +437,7 @@ namespace dungeonGenerator
         /// <param name="spaces"></param>
         /// <param name="alignment"></param>
         /// <returns>closest aligned nodes to split</Nove></returns>
-        private List<Node> ReturnAlignedSpaces(List<Node> spaces, SplitPosition alignment)
+        private List<Node> ReturnAlignedSpaces(List<Node> spaces, SplitPosition alignment, bool isRestrictedY = true)
         {
 
             bool isStartNode = alignment.toV3I().x < 0 || alignment.toV3I().y < 0 || alignment.toV3I().z < 0;
@@ -452,18 +452,20 @@ namespace dungeonGenerator
 
             var sortedSpaces = spaces.OrderByDescending(space => (isStartNode ? 1 : -1) * posCompareNode(space)).ToList(); // get right most children of left space
 
-            if (sortedSpaces.Count == 1)
-            {
-                return sortedSpaces; // if only one leftSpace available select it (usually will just join the two deepest children)
-            }
-            else // select one of the rights most LeftSpaces if there are multiple
-            {
-                int pos = Mathf.Abs((int)Vector3.Dot(alignment.toV3I(), (isStartNode ? sortedSpaces[0].Bounds.max : sortedSpaces[0].Bounds.min)));
+            return sortedSpaces;
 
-                //sortedSpaces[0].Bounds.max.x; // get the coordinates of the right most bound
-                sortedSpaces = sortedSpaces.Where(space => Math.Abs(pos - posCompareNode(space)) < 2*posCompareV3I(this.minRoomDim)).ToList(); // deviation less than 2x min room size to not go through rooms
-                return sortedSpaces;
-            }
+            //if (sortedSpaces.Count == 1)
+            //{
+            //    return sortedSpaces; // if only one leftSpace available select it (usually will just join the two deepest children)
+            //}
+            //else // select one of the rights most LeftSpaces if there are multiple
+            //{
+            //    int pos = Mathf.Abs((int)Vector3.Dot(alignment.toV3I(), (isStartNode ? sortedSpaces[0].Bounds.max : sortedSpaces[0].Bounds.min)));
+
+            //    //sortedSpaces[0].Bounds.max.x; // get the coordinates of the right most bound
+            //    sortedSpaces = sortedSpaces.Where(space => Math.Abs(pos - posCompareNode(space)) < 2*posCompareV3I(this.minRoomDim)).ToList(); // deviation less than 2x min room size to not go through rooms
+            //    return sortedSpaces;
+            //}
 
         }
 
@@ -1089,7 +1091,7 @@ namespace dungeonGenerator
             Vector3 planeSize = new Vector3(2, 0, 2); // stair segment size
 
             // define start and target positions 
-            var startPos = connectedRoomsOrderedByY[0].Bounds.position + planeSize * 0.5f + new Vector3(1, 0, 1); // dungeonGenerator.transform.position + // start position for plane  
+            var startPos = connectedRoomsOrderedByY[0].Bounds.position + planeSize * 0.5f + new Vector3(1, 0, 1) + new Vector3(1f,0,1f); // added slight 1,0,1 offset
 
             var endPos = new Vector3(connectedRoomsOrderedByY[1].Bounds.position.x + planeSize.x,
                                      connectedRoomsOrderedByY[1].Bounds.position.y,
@@ -1100,23 +1102,23 @@ namespace dungeonGenerator
                                      connectedRoomsOrderedByY[1].Bounds.position.z + planeSize.x);
 
             // update taken up poisitions by the corridor
-            
+
             //updateCorridorGrid(endPos-Vector3.up, new Vector3(4,0,0), true);
             //updateCorridorGrid(endPos - Vector3.up+ new Vector3(4,-1,0), new Vector3(2, -1, 0), true);
 
             // --- single spiral around room --- (can do different types of rooms)
 
             // check with correct angle... 
-            float roomSpiralIncrement = 1;
+            float roomSpiralIncrement = 1f; //Mathf.Tan(2 * Mathf.PI / 24) * (minRoomDim.z - planeSize.z); // also make it be a multiple of the height
 
 
             var isWidthSmaller = connectedRoomsOrderedByY[0].Bounds.size.z > connectedRoomsOrderedByY[0].Bounds.size.x; //
 
             List<Vector3> planeOffsets = new List<Vector3>
                 {
-                    new Vector3(0f, roomSpiralIncrement, minRoomDim.z-planeSize.z), // connectedRoomsOrderedByY[0].Bounds.size
+                    new Vector3(0f, roomSpiralIncrement, 8f-planeSize.z), // connectedRoomsOrderedByY[0].Bounds.size
                     new Vector3(planeSize.x, 0, 0f), // connectedRoomsOrderedByY[0].Bounds.size.x
-                    new Vector3(0f, roomSpiralIncrement, -minRoomDim.z+planeSize.z),
+                    new Vector3(0f, roomSpiralIncrement, -8f+planeSize.z),
                     new Vector3(-planeSize.x, 0, 0f), // -connectedRoomsOrderedByY[0].Bounds.size.x+
                 };
 
@@ -1127,7 +1129,7 @@ namespace dungeonGenerator
 
             // get to correct height
 
-            var maxIter = 20;
+            var maxIter = 100;
             int i = 0;
 
             #region get to correct y level
@@ -1400,7 +1402,7 @@ namespace dungeonGenerator
                 Vector3.forward*(planeSize.z+2),
                 Vector3.back*(planeSize.z+2),
                 Vector3.left*(planeSize.x+2),
-                Vector3.right*(planeSize.x+2)
+                Vector3.right*(planeSize.x+2),
             };
 
 
@@ -1413,6 +1415,7 @@ namespace dungeonGenerator
                 Vector3.back*planeSize.z*(3+0.5f)+Vector3.up*1f,
                 Vector3.left*planeSize.x*(3+0.5f)+Vector3.up*1f,
                 Vector3.right*planeSize.x*(3+0.5f)+Vector3.up*1f,
+
             };
 
             List<Vector3> curPossDirList = new List<Vector3>();
@@ -1432,9 +1435,9 @@ namespace dungeonGenerator
             Vector3 curVoxelPos3 = curPos + startPos;
 
             bool isWithinTopBounds =
-                curVoxelPos3.x <= Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x)
+                curVoxelPos3.x <= Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x+1)
                 && curVoxelPos3.x >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.x + 2))
-                && curVoxelPos3.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z))
+                && curVoxelPos3.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z+1))
                 && curVoxelPos3.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z) + 2);
 
 
@@ -1453,6 +1456,8 @@ namespace dungeonGenerator
 
                    || !isWithinTopBounds
 
+                   || Vector3.Distance(connectedRoomsOrderedByY[1].Bounds.min + new Vector3(1, 0, 1), curPos + startPos) < 4 // prevents from forming at entrance
+
                 //|| (isOverlapingCorridorGrid(curPos + startPos, preEndPosOffset))
                 //)
 
@@ -1469,9 +1474,9 @@ namespace dungeonGenerator
 
                     // check if new moved to position
                     bool isWithinBounds =
-                        curVoxelPos.x <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x, connectedRoomsOrderedByY[0].Bounds.max.x))
+                        curVoxelPos.x <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x, connectedRoomsOrderedByY[0].Bounds.max.x)+1)
                         && curVoxelPos.x >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.x, connectedRoomsOrderedByY[0].Bounds.min.x) + 2)
-                        && curVoxelPos.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z, connectedRoomsOrderedByY[0].Bounds.max.z))
+                        && curVoxelPos.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z, connectedRoomsOrderedByY[0].Bounds.max.z)+1)
                         && curVoxelPos.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z, connectedRoomsOrderedByY[0].Bounds.min.z) + 2);
 
                     // check if direction is moving backwards back into the waypoints (prevents overlaps)
@@ -1522,6 +1527,8 @@ namespace dungeonGenerator
                    
                 }
 
+                Debug.Log($"ClosestOffset {closestOffset}");
+
                 if (closestOffset != Vector3.zero)
                 {
                     planeOffsets.Add(closestOffset); // add closest position as a new waypoint for stair generation
@@ -1538,39 +1545,40 @@ namespace dungeonGenerator
                         failedDirectionsAtDepth[depth] = new List<Vector3>();
                     }
                 }
-                else if (failedDirectionsAtDepth[depth].Count() == curPossDirList.Count() && !(depth==0)) // 
-                {
-                    planeOffsets.Remove(planeOffsets.Last());
-                    depth--;
+                //else if (failedDirectionsAtDepth[depth].Count() == curPossDirList.Count() && !(depth==0)) // 
+                //{
+                //    planeOffsets.Remove(planeOffsets.Last());
+                //    depth--;
             
 
-                    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
-                    Vector3 curPosition = curPos + startPos - planeOffsets.Last();
+                //    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                //    Vector3 curPosition = curPos + startPos - planeOffsets.Last();
 
-                    updateCorridorGrid(curPosition, planeOffsets.Last(), false);
+                //    updateCorridorGrid(curPosition, planeOffsets.Last(), false);
 
-                    failedDirectionsAtDepth[depth].Add(planeOffsets.Last());
+                //    failedDirectionsAtDepth[depth].Add(planeOffsets.Last());
 
-                    planeOffsets.Remove(planeOffsets.Last());
-                    depth--;
+                //    planeOffsets.Remove(planeOffsets.Last());
+                //    depth--;
 
 
-                }
-                else if(!(depth == 0))
-                {
+                //}
+                //else if(!(depth == 0))
+                //{
 
-                    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
-                    Vector3 curPosition = curPos + startPos - planeOffsets.Last();
+                //    curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
+                //    Vector3 curPosition = curPos + startPos - planeOffsets.Last();
 
-                    updateCorridorGrid(curPosition, planeOffsets.Last(), false);
+                //    updateCorridorGrid(curPosition, planeOffsets.Last(), false);
              
-                    failedDirectionsAtDepth[depth].Add(planeOffsets.Last());
+                //    failedDirectionsAtDepth[depth].Add(planeOffsets.Last());
 
-                    planeOffsets.Remove(planeOffsets.Last());
-                   // depth--;
+                //    planeOffsets.Remove(planeOffsets.Last());
+                //   // depth--;
 
 
-                } else
+                //} 
+                else
                 {
                     Debug.Log("Failed to Connect Vertical Corridor");
                 }
@@ -1579,9 +1587,9 @@ namespace dungeonGenerator
 
                 Vector3 curVoxelPos5 = startPos + planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
                 isWithinTopBounds =
-                   curVoxelPos5.x <= Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x)
+                   curVoxelPos5.x <= Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.x + 1)
                    && curVoxelPos5.x >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.x + 2))
-                   && curVoxelPos5.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z))
+                   && curVoxelPos5.z <= (Mathf.Max(connectedRoomsOrderedByY[1].Bounds.max.z)+1)
                    && curVoxelPos5.z >= (Mathf.Min(connectedRoomsOrderedByY[1].Bounds.min.z) + 2);
 
                 curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
@@ -1610,7 +1618,8 @@ namespace dungeonGenerator
             bool isFound = false; 
                 
 
-            while (i < maxIter && endOffset == Vector3.zero)
+            while (i < maxIter && (endOffset == Vector3.zero 
+                ))
             {
                 foreach (var dir in pathPossibleDirections)
                 {
@@ -1631,7 +1640,12 @@ namespace dungeonGenerator
 
                     Debug.Log($"TestPos --- : {isDirectionBackwards}, {testEndOffset}, {planeOffsets.Last()}, {curVoxelPos2}");
 
-                    if (isWithinBounds && !isOverlapingCorridorGrid(startPos + planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2), testEndOffset) && !isDirectionBackwards)
+                    if (isWithinBounds && !isOverlapingCorridorGrid(startPos + planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2), testEndOffset) && !isDirectionBackwards
+
+
+                       &&  Vector3.Distance(connectedRoomsOrderedByY[1].Bounds.min + new Vector3(1, 0, 1), testEndOffset + startPos + planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2)) > 4
+                       // && Vector3.Distance(connectedRoomsOrderedByY[1].Bounds.min + new Vector3(1, 0, 1), startPos + endOffset + planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2)) > 20
+                        )
                     {
                         endOffset = testEndOffset;
                         isFound = true;
@@ -1728,16 +1742,12 @@ namespace dungeonGenerator
 
                         this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1]
                         || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2]
-                        || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1]
-                        || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2];
+                        || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 1 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 1]
+                        || this.corridorGrid[Mathf.FloorToInt(startPosition.x) - 2 + x * Math.Sign(offset.x), Mathf.FloorToInt(startPosition.y) + y * Math.Sign(offset.y), Mathf.FloorToInt(startPosition.z) + z * Math.Sign(offset.z) - 2];
 
                         Debug.Log($"Is Overlapping Path {isOverlapping}, {offset}");
 
-                        if (isOverlapping)
-                        {
-                            //Debug.Log("Is Overlapping Path");
-                            return true;
-                        }
+                        return isOverlapping;
                     }
 
                 }

@@ -125,7 +125,6 @@ namespace dungeonGenerator {
         public static ProfilerRecorder triangleCountProfiler;
         public static ProfilerRecorder systemMemoryUsedProfiler;
         public static ProfilerRecorder mainThreadTimeProfiler;
-        public static ProfilerRecorder drawCallsCountProfiler;
 
         [System.Serializable]
         public class TrackedPerformanceStats
@@ -133,7 +132,6 @@ namespace dungeonGenerator {
             public List<int> fps = new List<int>();
             public List<long> triangles = new List<long>();
             public List<long> systemMemoryUsed = new List<long>();
-            public List<long> drawCallsCount = new List<long>();
             public List<int> roomIDsVisited = new List<int>();
             public List<float> timeStampsVisited = new List<float>();
             public List<float> timeStampsCollected = new List<float>();
@@ -147,7 +145,6 @@ namespace dungeonGenerator {
 
             triangleCountProfiler = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Triangles Count");
             systemMemoryUsedProfiler = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "System Used Memory");
-            drawCallsCountProfiler = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Draw Calls Count");
 
         }
 
@@ -158,7 +155,6 @@ namespace dungeonGenerator {
                 
                 trackedPerformanceStats.triangles.Add(triangleCountProfiler.LastValue);
                 trackedPerformanceStats.systemMemoryUsed.Add(systemMemoryUsedProfiler.LastValue/(1024*1024));
-                trackedPerformanceStats.drawCallsCount.Add(drawCallsCountProfiler.LastValue/(1024*1024));
                 
                 trackedPerformanceStats.fps.Add((int)(1f / Time.unscaledDeltaTime));
 
@@ -171,7 +167,6 @@ namespace dungeonGenerator {
 
             triangleCountProfiler.Dispose();
             systemMemoryUsedProfiler.Dispose();
-            drawCallsCountProfiler.Dispose();
 
         }
         public static TrackedPerformanceStats getTrackPerformanceStats()

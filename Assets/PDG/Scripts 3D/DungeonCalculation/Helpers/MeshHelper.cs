@@ -11,7 +11,7 @@ namespace dungeonGenerator
 {
     public static class MeshHelper
     {
-        public static GameObject CreatePlane(Vector3Int size, int uvUnit, bool isInverted = false)
+        public static GameObject CreatePlane(Vector3Int size, int uvUnit, bool isInverted = false, bool isVertical = false)
         {
             // from code monkey
 
@@ -22,7 +22,7 @@ namespace dungeonGenerator
 
             Vector3[] points = new Vector3[] { bottomLeftV, bottomRightV, topLeftV, topRightV };
 
-            return CreatePlaneFromPoints(points, uvUnit);
+            return CreatePlaneFromPoints(points, uvUnit, isInverted, isVertical);
 
       
 
@@ -206,17 +206,23 @@ namespace dungeonGenerator
 
 
 
-            plane.vertices = vertices;
+            //plane.vertices = vertices;
 
             GameObject planeObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
-            planeObject.GetComponent<MeshFilter>().mesh = plane;
+   
             planeObject.GetComponent<MeshCollider>().sharedMesh = null;
             planeObject.GetComponent<MeshCollider>().sharedMesh = plane;
+            planeObject.GetComponent<MeshFilter>().sharedMesh = null;
+            planeObject.GetComponent<MeshFilter>().sharedMesh = plane;
+            // planeObject.AddComponent<DebugNormals>().mesh = plane;
+
+
+
 
 
             return planeObject;
 
-
+           
 
 
         }
@@ -336,7 +342,7 @@ namespace dungeonGenerator
 
 
             GameObject planeObject = new GameObject("HoledFloor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
-            planeObject.GetComponent<MeshFilter>().mesh = plane;
+            planeObject.GetComponent<MeshFilter>().sharedMesh = plane;
             planeObject.GetComponent<MeshCollider>().sharedMesh = plane;
 
             return planeObject;
@@ -466,7 +472,7 @@ namespace dungeonGenerator
        
 
             GameObject cuboidObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
-            cuboidObject.GetComponent<MeshFilter>().mesh = cuboid;
+            cuboidObject.GetComponent<MeshFilter>().sharedMesh = cuboid;
             cuboidObject.GetComponent<MeshCollider>().sharedMesh = cuboid;
 
             return cuboidObject;
