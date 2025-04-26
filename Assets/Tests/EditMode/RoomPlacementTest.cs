@@ -27,9 +27,11 @@ public class RoomPlacementTest
 
     }
 
-    public static IEnumerable<(Vector2Int, Vector2Int, float)> RoomPlacementInitializeCases()
+    public static IEnumerable<(Vector3Int, Vector3Int, float)> RoomPlacementInitializeCases()
     {
-        yield return (new Vector2Int(1, 10), new Vector2Int(1, 1), 0.5f);
+        yield return (new Vector3Int(10, 10, 20), new Vector3Int(1, 1, 2), 1f);
+        yield return (new Vector3Int(10, 5, 20), new Vector3Int(4, 3, 2), 1f);
+        yield return (new Vector3Int(10, 10, 20), new Vector3Int(1, 1, 2), 1f);
     }
 
     #endregion

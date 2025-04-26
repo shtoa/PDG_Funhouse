@@ -17,7 +17,7 @@ namespace dungeonGenerator
 
         private List<Node> roomSpaces;
 
-        public void assignVoxelGrid(bool[,,] voxelGrid)
+        internal static void assignVoxelGrid(bool[,,] voxelGrid)
         {
             for(int x = 0; x < voxelGrid.GetLength(0); x++)
             {
@@ -125,7 +125,6 @@ namespace dungeonGenerator
 
             var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid);
 
-
             //visualizeVoxelGrid(availableVoxelGrid);
 
 
@@ -135,7 +134,7 @@ namespace dungeonGenerator
             return new List<Node>(rooms).Concat(corridorList).ToList(); // .Concat(corridorList)
         }
 
-        private void removeRoomsFromVoxelGrid(bool[,,] availableVoxelGrid, List<SpaceNode> rooms)
+        internal static void removeRoomsFromVoxelGrid(bool[,,] availableVoxelGrid, List<SpaceNode> rooms)
         {
 
             foreach(var room in rooms)

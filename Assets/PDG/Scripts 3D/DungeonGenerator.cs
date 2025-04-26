@@ -115,7 +115,7 @@ namespace dungeonGenerator
             DungeonStatTrack.getDeviceInfo();     
         }
 
-        private void setConfigFromTo(object from, object to)
+        public void setConfigFromTo(object from, object to)
         {
 
             foreach (var field in typeof(DungeonConfig).GetFields())

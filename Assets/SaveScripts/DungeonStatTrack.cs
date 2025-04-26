@@ -158,7 +158,7 @@ namespace dungeonGenerator {
                 
                 trackedPerformanceStats.fps.Add((int)(1f / Time.unscaledDeltaTime));
 
-                yield return new WaitForSeconds(10);
+                yield return new WaitForSeconds(1); // do it for 1 second 
             }
         }
 

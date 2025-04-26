@@ -1450,13 +1450,13 @@ namespace dungeonGenerator
 
                    //))
              
-                   && (((curPos.y + startPos.y) < (preEndPos.y))
+                   && ((((curPos.y + startPos.y) < (preEndPos.y))
 
                    || Vector3.Distance(curPos + startPos, preEndPos) > 4f)
 
                    || !isWithinTopBounds
 
-                   || Vector3.Distance(connectedRoomsOrderedByY[1].Bounds.min + new Vector3(1, 0, 1), curPos + startPos) < 4 // prevents from forming at entrance
+                   || Vector3.Distance(connectedRoomsOrderedByY[1].Bounds.min + new Vector3(1, 0, 1), curPos + startPos) < 4) // prevents from forming at entrance
 
                 //|| (isOverlapingCorridorGrid(curPos + startPos, preEndPosOffset))
                 //)

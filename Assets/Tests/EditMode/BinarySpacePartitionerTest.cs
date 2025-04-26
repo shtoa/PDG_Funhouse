@@ -13,17 +13,17 @@ public class BinarySpacePartitionerTest
     #region BinarySpacePartitionerInitialization
     
     [Test]
-    [TestCase(10,10)]
-    [TestCase(5, 15)]
-    [TestCase(21, 3)]
+    [TestCase(10,10,5)]
+    [TestCase(5, 15, 4)]
+    [TestCase(21, 3, 10)]
     public void BinarySpacePartitionerInitializationTest(int dungeonWidth, int dungeonHeight, int dungeonLength)
     {
         // Check if initialzied correctly
 
-        BinarySpacePartitioner testPartitioner = new BinarySpacePartitioner(dungeonWidth, dungeonHeight, dungeonLength);
+        BinarySpacePartitioner testPartitioner = new BinarySpacePartitioner(dungeonWidth, dungeonLength, dungeonHeight);
         
         Assert.IsTrue(testPartitioner.RootNode.Bounds.position.Equals(Vector3Int.zero), "RootNode Position");
-        Assert.IsTrue(testPartitioner.RootNode.Bounds.size.Equals(new Vector3Int(dungeonWidth,0,dungeonLength)), "RootNode Size");
+        Assert.IsTrue(testPartitioner.RootNode.Bounds.size.Equals(new Vector3Int(dungeonWidth, dungeonHeight, dungeonLength)), "RootNode Size");
 
     }
 
@@ -142,6 +142,67 @@ public class BinarySpacePartitionerTest
            new BoundsInt(
                new Vector3Int(30, 0, -5),
                new Vector3Int(20, 0, 4)
+               ), null, 0, 0), 14);
+    }
+
+    #endregion
+
+    #region SplitPerpendicular
+    [Test]
+    [TestCaseSource(nameof(SplitPerpendicularCase))]
+
+    // Test
+    public void SplitPerpendicularTest((SpaceNode spaceToSplit, int vSplitPosition) testData)
+    {
+        SpaceNode testNode = testData.spaceToSplit;
+
+        SpaceNode upNode = null;
+        SpaceNode downNode = null;
+
+        int vSplitPosition = testData.vSplitPosition;
+
+        (downNode, upNode) = BinarySpacePartitioner.SplitPerpendicular(testNode, vSplitPosition);
+
+        // check if Nodes Returned are Null
+
+        Assert.IsNotNull(upNode, "leftNode not null");
+        Assert.IsNotNull(downNode, "rightNode not null");
+
+        // --- leftNode Checks ---
+
+        Assert.IsTrue(upNode.Bounds.position.Equals(testNode.Bounds.position + new Vector3Int(0, vSplitPosition, 0)), "upNode position");
+        Assert.IsTrue(upNode.Bounds.size.Equals(new Vector3Int(testNode.Bounds.size.x, testNode.Bounds.size.y - vSplitPosition, testNode.Bounds.size.z)), "upNode Size");
+        Assert.IsTrue(upNode.Parent.Equals(testNode), "upNode Parent");
+        Assert.IsTrue(upNode.TreeLayerIndex.Equals(testNode.TreeLayerIndex + 1), "upNode layerIndex");
+        Assert.IsTrue(upNode.SplitPosition.Equals(SplitPosition.Up), "upNode splitPosition");
+
+        // --- rightNode Checks ---
+
+        Assert.IsTrue(downNode.Bounds.position.Equals(testNode.Bounds.position), "downNode position");
+        Assert.IsTrue(downNode.Bounds.size.Equals(new Vector3Int(testNode.Bounds.size.x, vSplitPosition, testNode.Bounds.size.z)), "downNode Size");
+        Assert.IsTrue(downNode.Parent.Equals(testNode), "downNode Parent");
+        Assert.IsTrue(downNode.TreeLayerIndex.Equals(testNode.TreeLayerIndex + 1), "downNode layerIndex");
+        Assert.IsTrue(downNode.SplitPosition.Equals(SplitPosition.Down), "downNode splitPosition");
+
+    }
+
+    // Test Case
+    public static IEnumerable<(SpaceNode, int)> SplitPerpendicularCase()
+    {
+        yield return (new SpaceNode(
+            new BoundsInt(
+                new Vector3Int(0, 0, 0),
+                new Vector3Int(10, 10, 10)
+                ), null, 0, 0), 2);
+        yield return (new SpaceNode(
+           new BoundsInt(
+               new Vector3Int(-10, 0, 5),
+               new Vector3Int(20, 20, 10)
+               ), null, 0, 0), 5);
+        yield return (new SpaceNode(
+           new BoundsInt(
+               new Vector3Int(30, 0, -5),
+               new Vector3Int(20, 10, 4)
                ), null, 0, 0), 14);
     }
 
@@ -315,6 +376,7 @@ public class BinarySpacePartitionerTest
 
         int sizeX = testNode.Bounds.size.x;
         int sizeZ = testNode.Bounds.size.z;
+        int sizeY = testNode.Bounds.size.y;
 
 
         if (sizeX > 2 * minSpaceDim.x)
@@ -333,10 +395,19 @@ public class BinarySpacePartitionerTest
             Assert.False(testAxis.z, "not splitable along z");
         }
 
+        if (sizeY > 2 * minSpaceDim.z)
+        {
+            Assert.True(testAxis.y, "splitable along z");
+        }
+        else
+        {
+            Assert.False(testAxis.y, "not splitable along z");
+        }
+
     }
 
     // Test Case
-    public static IEnumerable<(SpaceNode spaceToSplit, Vector2Int minSpaceDim)> GetSplitableAxisCases()
+    public static IEnumerable<(SpaceNode spaceToSplit, Vector3Int minSpaceDim)> GetSplitableAxisCases()
     {
 
         yield return (new SpaceNode(
@@ -348,7 +419,7 @@ public class BinarySpacePartitionerTest
                             0,
                             0
                         ),
-                        new Vector2Int(2, 2));
+                        new Vector3Int(2, 2, 2));
         yield return (new SpaceNode(
                                 new BoundsInt(
                                     new Vector3Int(0, 0, 0),
@@ -358,7 +429,7 @@ public class BinarySpacePartitionerTest
                                 0,
                                 0
                             ),
-                            new Vector2Int(2, 1));
+                            new Vector3Int(2, 1, 1));
         yield return (new SpaceNode(
                             new BoundsInt(
                                 new Vector3Int(0, 0, 0),
@@ -368,7 +439,7 @@ public class BinarySpacePartitionerTest
                             0,
                             0
                         ),
-                        new Vector2Int(2, 3));
+                        new Vector3Int(2, 3, 4));
     }
     #endregion
 

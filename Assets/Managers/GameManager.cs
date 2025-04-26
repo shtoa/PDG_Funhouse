@@ -47,6 +47,8 @@ public class GameManager : MonoBehaviour
         Ended,
     }
 
+    public bool isPlayTestingEnabled = false;
+
     public GameState gameState = GameState.PreStart;
 
     public Dictionary<CollectableType, int> numCollected = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
@@ -92,7 +94,7 @@ public class GameManager : MonoBehaviour
                 GameManager.instance.gameState = GameManager.GameState.Ended;
 
                 // !isTestDataCollected && 
-                if (DungeonStatTrack.DungeonCompletionTime != -1)
+                if (DungeonStatTrack.DungeonCompletionTime != -1 && isPlayTestingEnabled)
                 {
                     PlayTestEnvironment playTestEnv;
                     if (GameObject.Find("DungeonGen").TryGetComponent<PlayTestEnvironment>(out playTestEnv)) {
