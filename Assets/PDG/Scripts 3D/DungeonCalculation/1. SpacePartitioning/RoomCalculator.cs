@@ -63,7 +63,7 @@ namespace dungeonGenerator
                 var minSize = new Vector3Int(minRoomBounds.x, minRoomBounds.z, minRoomBounds.y);
 
                 // randomize Size 
-                var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), Random.Range(minSize.y, maxSize.y), Random.Range(minSize.z, maxSize.z));
+                var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), Random.Range(minSize.y, Mathf.Min(32,maxSize.y)), Random.Range(minSize.z, maxSize.z));
 
                 // randomize Position
                 var deltaSize = size - minSize;

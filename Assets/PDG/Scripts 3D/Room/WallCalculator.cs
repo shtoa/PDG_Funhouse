@@ -62,8 +62,8 @@ namespace dungeonGenerator
         }
 
         // max 32 bits max height 32 
-
         
+
         public UInt32[] getWallIntArray(int sizeX, int sizeY) // generateBased on width
         {
             UInt32[] wallArray = new UInt32[sizeX];
@@ -80,6 +80,8 @@ namespace dungeonGenerator
         public void removeBlock(UInt32[] wallArray , int xLoc, int yLoc)
         {
             wallArray[xLoc] = (UInt32)(wallArray[xLoc] & ~(1 << yLoc));
+
+          
             //return wallArray;
         }
 

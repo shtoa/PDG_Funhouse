@@ -148,45 +148,52 @@ namespace dungeonGenerator
 
         public void TestDungeonGeneration(int testCount)
         {
-            TestDungeonGenerationWrapper testStats = new TestDungeonGenerationWrapper();
-            var curTest = 1;
-            while (testCount >= curTest) {
+            foreach (TextAsset config in dungeonTestConfigs) {
 
-                AllRoomStatsWrapper allRoomStats = new AllRoomStatsWrapper();
 
-                DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
+                DungeonConfig testDungeonConfig = SaveManager.Load(config);
 
-                if (!seededGenerationEnabled)
-                {
-                    randomSeed = Random.Range(int.MinValue, int.MaxValue);
+                setConfigFromTo(testDungeonConfig, this);
+
+                TestDungeonGenerationWrapper testStats = new TestDungeonGenerationWrapper();
+                var curTest = 1;
+                while (testCount >= curTest) {
+
+                    AllRoomStatsWrapper allRoomStats = new AllRoomStatsWrapper();
+
+                    DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
+
+                    if (!seededGenerationEnabled)
+                    {
+                        randomSeed = Random.Range(int.MinValue, int.MaxValue);
+                    }
+
+                    Random.InitState(randomSeed); // set generation seed
+
+                    // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
+                    roomList = calculator.CalculateDungeon(maxIterations,
+                                                           roomBoundsMin,
+                                                           splitCenterDeviation,
+                                                           corridorWidthAndWall,
+                                                           wallThickness,
+                                                           roomOffsetMin,
+                                                           corridorHeight);
+
+                    InitializeStartAndEnd(calculator.RoomSpaces);
+                    curTest++;
+
+                    allRoomStats.roomStats = DungeonStatTrack.getRoomStats(roomList);
+                    testStats.allRoomStats.Add(allRoomStats);
+                    Debug.Log($"Running Test {testCount}");
+
+
+                    EditorUtility.DisplayProgressBar("Testing Dungeon Generation", $"Doing Test: {curTest}", (float)curTest / (float)testCount);
                 }
-
-                Random.InitState(randomSeed); // set generation seed
-
-                // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
-                roomList = calculator.CalculateDungeon(maxIterations,
-                                                       roomBoundsMin,
-                                                       splitCenterDeviation,
-                                                       corridorWidthAndWall,
-                                                       wallThickness,
-                                                       roomOffsetMin,
-                                                       corridorHeight);
-
-                InitializeStartAndEnd(calculator.RoomSpaces);
-                curTest++;
-
-                allRoomStats.roomStats = DungeonStatTrack.getRoomStats(roomList);
-                testStats.allRoomStats.Add(allRoomStats);
-                Debug.Log($"Running Test {testCount}");
+                EditorUtility.ClearProgressBar();
 
 
-                EditorUtility.DisplayProgressBar("Testing Dungeon Generation", $"Doing Test: {curTest}", (float)curTest/(float)testCount);
+                SaveManager.Save(testStats, $"allRoomStats_{config.name}");
             }
-            EditorUtility.ClearProgressBar();   
-
-
-            SaveManager.Save(testStats, "allRoomStats");
-
 
         }
 
@@ -223,8 +230,9 @@ namespace dungeonGenerator
 
             InitializeStartAndEnd(calculator.RoomSpaces);
 
-            RoomGenerator roomGenerator = new RoomGenerator(roomList, this.gameObject);
-            roomGenerator.GenerateRooms(roomList);
+            DungeonDecorator decorator = GetComponent<DungeonDecorator>();
+            decorator.roomGenerator = new RoomGenerator(roomList, this.gameObject);
+            decorator.roomGenerator.GenerateRooms(roomList);
 
             checkDungeonConnections(roomList);
 
@@ -362,7 +370,7 @@ namespace dungeonGenerator
             roomBoundsMin = new BoundsInt(Vector3Int.zero,
                 new Vector3Int(
                     Mathf.Clamp(roomBoundsMin.size.x, 3, dungeonBounds.size.x), // minimum dungeon size is set to 3 as otherwise corridor positioning looks weird 
-                    Mathf.Clamp(roomBoundsMin.size.y, 1, dungeonBounds.size.y),
+                    Mathf.Clamp(roomBoundsMin.size.y, 6, Math.Min(dungeonBounds.size.y, 32)), // due to voxel remesher working on 32 int blocks
                     Mathf.Clamp(roomBoundsMin.size.z, 3, dungeonBounds.size.z)
                 )
             );

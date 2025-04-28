@@ -1,3 +1,4 @@
+using dungeonGenerator;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Animations.Rigging;
@@ -44,6 +45,8 @@ public class DungeonDecorator : MonoBehaviour
 
     [Header("LightMesh")]
     public GameObject lightMesh;
+
+    public RoomGenerator roomGenerator;
 
 
 }
