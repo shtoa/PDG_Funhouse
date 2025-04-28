@@ -80,9 +80,6 @@ public class GameManager : MonoBehaviour
         StartCoroutine(DungeonStatTrack.updateTrackPerformanceStats());
         DungeonStatTrack.DungeonCompletionTime = -1;
         DungeonStatTrack.GameTime = 0;
-
-        string dir = Application.dataPath + "/Save/";
-        DungeonStatTrack.saveDungeonTestData(dir, "serializationTest");
     }
 
     private void Update()
@@ -97,7 +94,7 @@ public class GameManager : MonoBehaviour
                 GameManager.instance.gameState = GameManager.GameState.Ended;
 
                 // !isTestDataCollected && 
-                if (DungeonStatTrack.DungeonCompletionTime != -1) //  && isPlayTestingEnabled
+                if (DungeonStatTrack.DungeonCompletionTime != -1 && isPlayTestingEnabled) //  && isPlayTestingEnabled
                 {
                     PlayTestEnvironment playTestEnv;
                     if (GameObject.Find("DungeonGen").TryGetComponent<PlayTestEnvironment>(out playTestEnv)) {
