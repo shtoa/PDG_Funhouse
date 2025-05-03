@@ -21,6 +21,7 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
 
     public bool SprintToggledOn { get; private set; }
     public bool JumpPressed { get; private set; }
+    public bool IsSliding { get; private set; }
 
 
 
@@ -118,7 +119,7 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
         
         }
     }
-
+    public bool performedStab = false;
     public void OnStab(InputAction.CallbackContext context)
     {
 
@@ -138,11 +139,13 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
                 }
 
             }
+
+            performedStab = true;
         }
 
         else if (context.canceled)
         {
-
+            performedStab = false;
             GameObject.Find("armTest_Fencing_unity").GetComponent<Animator>().SetBool("isStabbing", false);
 
         }
@@ -176,6 +179,17 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomo
 
             GameObject.Find("armTest_Fencing_unity").GetComponent<Animator>().SetBool("isBlocking", false);
 
+        }
+    }
+
+    public void OnSlide(InputAction.CallbackContext context)
+    {
+       
+
+        IsSliding = true;
+        if (context.canceled)
+        {
+            IsSliding = false;
         }
     }
     #endregion

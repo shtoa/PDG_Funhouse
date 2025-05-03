@@ -63,14 +63,26 @@ namespace dungeonGenerator
                 var minSize = new Vector3Int(minRoomBounds.x, minRoomBounds.z, minRoomBounds.y);
 
                 // randomize Size 
-                var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), Random.Range(minSize.y, Mathf.Min(32,maxSize.y)), Random.Range(minSize.z, maxSize.z));
+                //var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), Random.Range(minSize.y, Mathf.Min(32,maxSize.y)), Random.Range(minSize.z, maxSize.z));
+
+
+
+                Debug.Log($"MaxSize values: {maxSize.x},{maxSize.y},{maxSize.z}");
+                var size = new Vector3Int(new System.Random().Next(minSize.x, maxSize.x), new System.Random().Next(minSize.y, (Mathf.Min(32, maxSize.y))), new System.Random().Next(minSize.z, maxSize.z));
+
 
                 // randomize Position
                 var deltaSize = size - minSize;
                 Debug.Log(deltaSize);
 
 
-                var position = roomSpace.Bounds.position + new Vector3Int(Random.Range(0, roomSpace.Bounds.size.x - size.x), 0, Random.Range(0, roomSpace.Bounds.size.z - size.z));
+                //var position = roomSpace.Bounds.position + new Vector3Int(Random.Range(0, roomSpace.Bounds.size.x - size.x), 0, Random.Range(0, roomSpace.Bounds.size.z - size.z));
+
+
+           
+                var position = roomSpace.Bounds.position + new Vector3Int(new System.Random().Next(0, (roomSpace.Bounds.size.x - size.x)), 0, new System.Random().Next(0, roomSpace.Bounds.size.z - size.z));
+   
+
 
 
                 // Vector3Int.up*roomSpace.Bounds.position.y + Vector3Int.CeilToInt( new Vector3(roomSpace.Bounds.center.x, 0, roomSpace.Bounds.center.z) - new Vector3(size.x / 2f, 0, size.z / 2f)),

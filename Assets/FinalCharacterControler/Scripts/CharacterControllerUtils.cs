@@ -4,15 +4,15 @@ using UnityEngine;
 
 public static class CharacterControllerUtils {
 
-    public static Vector3 GetNormalWithSphereCase(CharacterController characterController, LayerMask layerMask = default)
+    public static Vector3 GetNormalWithSphereCase(CapsuleCollider capsuleCollider, LayerMask layerMask = default)
     {
         
         Vector3 normal = Vector3.zero;
-        Vector3 center = characterController.transform.position + characterController.center;
-        float distance = characterController.height / 2f + characterController.stepOffset + 0.01f;
+        Vector3 center = capsuleCollider.transform.position + capsuleCollider.center;
+        float distance = capsuleCollider.height / 2f; // + characterController.stepOffset + 0.01f;
 
         RaycastHit hit;
-        if(Physics.SphereCast(center, characterController.radius, Vector3.down, out hit, distance, layerMask))
+        if(Physics.SphereCast(center, capsuleCollider.radius, Vector3.down, out hit, distance, layerMask))
         {
             normal = hit.normal;
         }

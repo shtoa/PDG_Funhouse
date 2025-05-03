@@ -19,7 +19,15 @@ public class TestCollectableUI : MonoBehaviour
 
     private bool areCountersInitialized = false;
     private float gameTime = 0;
-    
+
+    public GameObject Donor;
+    public GameObject Syringe;
+    private void Start()
+    {
+        UpdateSyringeTracker();
+        donorFill = 1f;
+        syringeFill = 0f;
+    }
 
     private void Update()
     {
@@ -46,16 +54,33 @@ public class TestCollectableUI : MonoBehaviour
             else
             {
                 UpdateCounters();
+                UpdateSyringeTracker();
             }
         }
         else if (GameManager.Instance.gameState == GameManager.GameState.Ended)
 
         {
             UpdateCounters();
+            UpdateSyringeTracker();
             SetGameEndText();
         }
 
     }
+
+    private float donorFill;
+    private float syringeFill;
+
+    private void UpdateSyringeTracker()
+    {
+        var curCollectedRatio = (float)GameManager.Instance.numCollected.Values.Sum() / (float)GameManager.Instance.total.Values.Sum();
+
+        donorFill = Mathf.Lerp(donorFill, 1f - curCollectedRatio, 0.05f);
+        syringeFill = Mathf.Lerp(syringeFill, curCollectedRatio, 0.05f);
+
+        Donor.GetComponent<MeshRenderer>().sharedMaterial.SetFloat("_Fill", donorFill);
+        Syringe.GetComponent<MeshRenderer>().sharedMaterial.SetFloat("_Fill", syringeFill);
+    }
+
 
     private void SetGameEndText()
     {

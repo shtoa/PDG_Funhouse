@@ -1,11 +1,15 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Pool;
 using static dungeonGenerator.RoomGenerator;
+using static UnityEditor.Recorder.OutputPath;
 using static UnityEngine.UI.CanvasScaler;
 using Random = UnityEngine.Random;
 
@@ -14,67 +18,68 @@ namespace dungeonGenerator
 {
 
     // FIX ME: Move into separate class
-    public class WallBounds
-    {
-        public List<BoundsInt> left;
-        public List<BoundsInt> right;
-        public List<BoundsInt> top;
-        public List<BoundsInt> bottom;
+    //public class WallBounds
+    //{
 
-        public WallBounds()
-        {
-            left = new List<BoundsInt>();
-            right = new List<BoundsInt>();
-            top = new List<BoundsInt>();
-            bottom = new List<BoundsInt>();
-        }
+    //    public List<BoundsInt> left;
+    //    public List<BoundsInt> right;
+    //    public List<BoundsInt> top;
+    //    public List<BoundsInt> bottom;
 
-        public List<BoundsInt> getWalls()
-        {
-            List<BoundsInt> walls = new List<BoundsInt>();
-            walls.AddRange(left);
-            walls.AddRange(right);
-            walls.AddRange(top);
-            walls.AddRange(bottom);
+    //    public WallBounds()
+    //    {
+    //        left = new List<BoundsInt>();
+    //        right = new List<BoundsInt>();
+    //        top = new List<BoundsInt>();
+    //        bottom = new List<BoundsInt>();
+    //    }
 
-            return walls;
-        }
-        // FIX ME: Make method clearer
-        public void removeWall(BoundsInt wall)
-        {
+    //    public List<BoundsInt> getWalls()
+    //    {
+    //        List<BoundsInt> walls = new List<BoundsInt>();
+    //        walls.AddRange(left);
+    //        walls.AddRange(right);
+    //        walls.AddRange(top);
+    //        walls.AddRange(bottom);
 
-            if (left.Contains(wall))
-            {
-                left.Remove(wall);
-            }
+    //        return walls;
+    //    }
+    //    // FIX ME: Make method clearer
+    //    public void removeWall(BoundsInt wall)
+    //    {
 
-
-            if (right.Contains(wall))
-            {
-                right.Remove(wall);
-            }
+    //        if (left.Contains(wall))
+    //        {
+    //            left.Remove(wall);
+    //        }
 
 
-            if (top.Contains(wall))
-            {
-                top.Remove(wall);
-            }
+    //        if (right.Contains(wall))
+    //        {
+    //            right.Remove(wall);
+    //        }
 
 
-            if (bottom.Contains(wall))
-            {
-                bottom.Remove(wall);
-            }
+    //        if (top.Contains(wall))
+    //        {
+    //            top.Remove(wall);
+    //        }
 
-        }
 
-    }
+    //        if (bottom.Contains(wall))
+    //        {
+    //            bottom.Remove(wall);
+    //        }
+
+    //    }
+
+    //}
     public class RoomGenerator
     {
         private int wallThickness;
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
-       
+
         private Material wallMaterial;
         private Material floorMaterial;
         private int wallHeight;
@@ -110,16 +115,246 @@ namespace dungeonGenerator
             this.wallThickness = dungeonGenerator.wallThickness;
             this.wallHeight = dungeonGenerator.dungeonBounds.y; // FIX ME: Possibly change to a wallHeight variable
             this.corridorWidth = dungeonGenerator.corridorWidth;
-    
+
+        }
+        public List<Task> CalculateRoomWalls(List<Node> roomList)
+        {
+            List<Task> tasks = new List<Task>();
+            // calculate walls async for all rooms 
+
+            foreach (var room in roomList)
+            {
+                if (room.RoomType != RoomType.Corridor)
+                {
+                    tasks.Add(calculateWallsAsync(room));
+                }
+            }
+
+            // Task.WhenAll(tasks);
+            return tasks;
+        }
+
+        public void SetupRoomParents()
+        {
+            dungeonGenerator.DeleteDungeon();
+            foreach (RoomType roomType in Enum.GetValues(typeof(RoomType)))
+            {
+                if (roomType != RoomType.None)
+                {
+                    var roomHolder = new GameObject(roomType.ToString());
+                    roomHolder.transform.SetParent(dungeonGenerator.transform);
+                    roomHolder.transform.position = dungeonGenerator.transform.position;
+                }
+            }
+
+        }
+
+        public int currentBatchIndex;
+
+        public IEnumerator GenerateRoomsBatch(List<Node> roomList, int roomBatchSize, TaskCompletionSource<bool> roomCompleted, float delay) // 
+        {
+
+            int batchCounter = 0;
+      
+
+            // perform per room
+            foreach (var room in roomList)
+            {
+
+                RoomStyle roomStyle = dungeonDecorator.roomStyles[Random.Range(0, dungeonDecorator.roomStyles.Count)];
+                GameObject roomObj = new GameObject(roomStyle.name + room.SplitPosition);
+
+                roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false); // Find(room.RoomType.ToString())
+
+
+                if (room.RoomType != RoomType.Corridor)
+                {
+
+
+                    BoxCollider roomEntryCollider = roomObj.AddComponent<BoxCollider>();
+
+                    // for testing check what current room is in
+                    roomEntryCollider.size = new Vector3(room.Bounds.size.x, 1f, room.Bounds.size.z);
+                    roomEntryCollider.center = room.Bounds.center + new Vector3(1, 0, 1) - (room.Bounds.size.y / 2) * Vector3.up;
+                    roomEntryCollider.isTrigger = true;
+
+                    RoomVisitChecker rc = roomObj.AddComponent<RoomVisitChecker>();
+                    rc.RoomID = room.NodeID;
+                }
+
+                if (!room.CorridorType.Equals(CorridorType.Perpendicular) && !(room.RoomType == RoomType.Corridor))
+                {
+                    //DrawCeiling(room, roomStyle, roomObj);
+
+
+
+                    DrawFloor(room, roomStyle, roomObj);
+                }
+
+                if (room.RoomType.Equals(RoomType.Corridor))
+                {
+
+
+                    foreach (BoundsInt bound in room.CorridorBoundsList)
+                    {
+
+                        Debug.Log($"THE NEW CORRIDOR FLOOR SIZE {bound.size}");
+
+                        GameObject floor = MeshHelper.CreatePlane(bound.size, 1, false);
+                        floor.transform.tag = "Floor";
+                        floor.transform.SetParent(roomObj.transform, false);
+
+                        // FIX ME: CHECK THIS TRANSFORMATION
+                        floor.transform.localPosition = (bound.center - new Vector3(0, bound.size.y / 2f, 0)) + new Vector3(1, 0, 1) * wallThickness + Vector3.up * 0.001f; ; // CHECK ME: May be wrong
+                        floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+
+
+
+
+                    }
+
+                }
+
+                if (room.RoomType != RoomType.Corridor)
+                {
+                    drawWallsAsync(room, roomStyle, roomObj);
+
+                    // draw lights and windows
+                    DrawObject(roomObj, room.WindowPlacements, dungeonDecorator.windowMesh, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool);
+                    //DrawObject(roomObj, room.LightPlacements, dungeonDecorator.lightMesh);
+
+                }
+                else
+                {
+                    if (room.CorridorType == CorridorType.Perpendicular)
+                    {
+                        DrawWalls(room, roomStyle, roomObj);
+                    }
+                    else
+                    {
+
+
+                        GameObject wallHolder = new GameObject("wallHolder");
+                        wallHolder.transform.SetParent(roomObj.transform, false);
+
+                        foreach (BoundsInt wallBound in room.CorridorWallBoundsList)
+                        {
+                            GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool.Get().gameObject;
+                            wall.transform.localScale = wallBound.size;
+
+                            wall.name = "Wall";
+                            wall.layer = LayerMask.NameToLayer("Wall");
+                            wall.transform.SetParent(wallHolder.transform, false);
+
+                            if (room.CorridorType.Equals(CorridorType.Perpendicular))
+                            {
+                                wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+                            }
+
+
+
+                            wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+                            wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+                        }
+                    }
+                }
+
+                if (!room.RoomType.Equals(RoomType.Corridor))
+                {
+
+                    GameObject cornerObj = GameObject.Instantiate(dungeonDecorator.cornerObject, roomObj.transform, false);
+                    cornerObj.layer = LayerMask.NameToLayer("Wall");
+                    //cornerObj.AddComponent<MeshRenderer>();
+                    cornerObj.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+                    cornerObj.transform.localScale = new Vector3(
+                                cornerObj.transform.localScale.x,
+                                cornerObj.transform.localScale.y,
+                                cornerObj.transform.localScale.z * room.Bounds.size.y
+
+                        );
+                    cornerObj.AddComponent<MeshCollider>();
+
+                    // topLeftCorner
+                    GameObject topLeftCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                    topLeftCorner.transform.localEulerAngles = new Vector3(90, 180, 0);
+                    topLeftCorner.transform.localPosition = room.Bounds.size.z * Vector3.forward + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+
+                    // topRightCorner
+                    GameObject topRightCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                    topRightCorner.transform.localEulerAngles = new Vector3(90, -90, 0);
+                    topRightCorner.transform.localPosition = room.Bounds.size.z * Vector3.forward + room.Bounds.size.x * Vector3.right + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+
+                    // bottomLeftCorner
+                    GameObject bottomLeftCornerObj = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                    bottomLeftCornerObj.transform.localEulerAngles = new Vector3(90, 90, 0);
+                    bottomLeftCornerObj.transform.localPosition = room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+                    // bottomRightCorner
+                    GameObject bottomRightCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                    bottomRightCorner.transform.localEulerAngles = new Vector3(90, 0, 0);
+                    bottomRightCorner.transform.localPosition = room.Bounds.size.x * Vector3.right + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+                    GameObject.DestroyImmediate(cornerObj);
+                }
+                batchCounter++;
+                if (batchCounter > roomBatchSize)
+                {
+                    batchCounter = 0;
+                    yield return new WaitForSeconds(delay);
+                }
+
+            }
+            roomCompleted.SetResult(true);
+            Debug.Log("CompletedDungeon");
+            
+
+
+
         }
 
 
-        public void GenerateRooms(List<Node> roomList)
+
+        public async void GenerateRooms(List<Node> roomList)
         {
+            List<Task> tasks = new List<Task>();
+            // calculate walls async for all rooms 
+
+            foreach (var room in roomList)
+            {
+                if (room.RoomType != RoomType.Corridor)
+                {
+                    tasks.Add(calculateWallsAsync(room));
+                }
+            }
+
+
+            await Task.WhenAll(tasks);
+
+
+            //dungeonGenerator.WallSpawner.GetComponent<WallSpawner>().newInstances();
+            //dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>().newInstances();
+            dungeonGenerator.DeleteDungeon();
+
+
+            //for (int i = dungeonGenerator.transform.childCount - 1; i >= 0; i--)
+            //{
+            //    dungeonGenerator.transform.GetChild(i).name = dungeonGenerator.transform.GetChild(i).name + "toDelete";
+            //    dungeonGenerator.transform.GetChild(i).tag = "toDelete";
+
+            //}
+
+
 
             // Room roomStyle = dungeonDecorator.rooms[Random.Range(0, dungeonDecorator.rooms.Count)];
 
             // create gameObjects for organization
+
+
+
+            int maxFloorIndex = roomList.Max((room) => room.FloorIndex).Yield().First();
+
             foreach (RoomType roomType in Enum.GetValues(typeof(RoomType)))
             {
                 if (roomType != RoomType.None)
@@ -131,16 +366,14 @@ namespace dungeonGenerator
             }
 
 
-            int maxFloorIndex = roomList.Max((room) => room.FloorIndex).Yield().First();
-
-            // create floors
+            // perform per room
             foreach (var room in roomList)
-            {
+                {
 
                 RoomStyle roomStyle = dungeonDecorator.roomStyles[Random.Range(0, dungeonDecorator.roomStyles.Count)];
                 GameObject roomObj = new GameObject(roomStyle.name+room.SplitPosition);
 
-                roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false);
+                roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false); // Find(room.RoomType.ToString())
 
 
                 if (room.RoomType != RoomType.Corridor)
@@ -161,6 +394,9 @@ namespace dungeonGenerator
                 if (!room.CorridorType.Equals(CorridorType.Perpendicular) && !(room.RoomType == RoomType.Corridor))
                 {
                     //DrawCeiling(room, roomStyle, roomObj);
+
+
+
                     DrawFloor(room, roomStyle, roomObj);
                 }
 
@@ -190,7 +426,12 @@ namespace dungeonGenerator
 
                 if (room.RoomType != RoomType.Corridor)
                 {
-                    DrawWalls(room, roomStyle, roomObj);
+                    drawWallsAsync(room, roomStyle, roomObj);
+                    
+                    // draw lights and windows
+                   DrawObject(roomObj, room.WindowPlacements, dungeonDecorator.windowMesh, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool);
+                   //DrawObject(roomObj, room.LightPlacements, dungeonDecorator.lightMesh);
+
                 } else
                 {
                     if (room.CorridorType == CorridorType.Perpendicular)
@@ -206,8 +447,11 @@ namespace dungeonGenerator
 
                         foreach (BoundsInt wallBound in room.CorridorWallBoundsList)
                         {
-                            GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
+                            GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool.Get().gameObject;                           
+                            wall.transform.localScale = wallBound.size;
+
                             wall.name = "Wall";
+                            wall.layer = LayerMask.NameToLayer("Wall");
                             wall.transform.SetParent(wallHolder.transform, false);
 
                             if (room.CorridorType.Equals(CorridorType.Perpendicular))
@@ -266,6 +510,7 @@ namespace dungeonGenerator
                 {
 
                     GameObject cornerObj = GameObject.Instantiate(dungeonDecorator.cornerObject, roomObj.transform, false);
+                    cornerObj.layer = LayerMask.NameToLayer("Wall");
                     //cornerObj.AddComponent<MeshRenderer>();
                     cornerObj.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
                     cornerObj.transform.localScale = new Vector3(
@@ -274,6 +519,7 @@ namespace dungeonGenerator
                                 cornerObj.transform.localScale.z * room.Bounds.size.y
 
                         );
+                    cornerObj.AddComponent<MeshCollider>();
 
                     // topLeftCorner
                     GameObject topLeftCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
@@ -446,6 +692,10 @@ namespace dungeonGenerator
             //    //DrawDoors(doorBound, roomStyle);
             //}
 
+            
+            
+            //dungeonGenerator.DeletePreviousDungeon();
+            
 
         }
 
@@ -498,6 +748,76 @@ namespace dungeonGenerator
             #endregion
         }
 
+        private async Task calculateWallsAsync(Node room)
+        {
+            WallCalculator wallCalculator = new WallCalculator(dungeonGenerator, dungeonDecorator);
+            WallBounds wallBounds = await Task.Run(() => {
+                return wallCalculator.CalculateWalls(room, wallThickness);
+
+            });
+
+         
+
+            room.roomWallBounds = wallBounds;
+
+
+        }
+
+        private void drawWallsAsync(Node room, RoomStyle roomStyle, GameObject roomObj)
+        {
+            //WallCalculator wallCalculator = new WallCalculator(dungeonGenerator, dungeonDecorator);
+            //WallBounds wallBounds = wallCalculator.CalculateWalls(room, wallThickness);
+
+            //WallBounds wallBounds =  await Task.Run(() => {
+            //        return wallCalculator.CalculateWalls(room, wallThickness);
+
+            //    });
+
+
+            WallBounds wallBounds = room.roomWallBounds;
+          
+
+            GameObject wallHolder = new GameObject("wallHolder");
+            wallHolder.transform.SetParent(roomObj.transform, false);
+
+            Debug.Log($"The room type is {room.CorridorType}");
+
+            if (room.CorridorType.Equals(CorridorType.Perpendicular))
+            {
+
+                HandlePerpendicularWalls(wallBounds, room, roomStyle, roomObj);
+                // if else removed if ladders generated... 
+            }
+            else
+            {
+
+                foreach (var wallBound in wallBounds.getWalls())
+                {
+
+                    GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool.Get().gameObject;
+                    wall.transform.localScale = wallBound.size;
+
+                    wall.name = "Wall";
+                    wall.layer = LayerMask.NameToLayer("Wall");
+
+                    wall.transform.SetParent(wallHolder.transform, false);
+
+                    if (room.CorridorType.Equals(CorridorType.Perpendicular))
+                    {
+                        wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+                    }
+
+
+
+                    wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+                    wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+
+
+                }
+            }
+
+        }
+
         public void DrawWalls(Node room, RoomStyle roomStyle, GameObject roomObj)
         {
 
@@ -520,8 +840,12 @@ namespace dungeonGenerator
                 foreach (var wallBound in wallBounds.getWalls())
                 {
 
-                    GameObject wall = MeshHelper.CreateCuboid(wallBound.size, 1);
+                    GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool.Get().gameObject;
+                    wall.transform.localScale = wallBound.size;
+
                     wall.name = "Wall";
+                    wall.layer = LayerMask.NameToLayer("Wall");
+               
                     wall.transform.SetParent(wallHolder.transform, false);
 
                     if (room.CorridorType.Equals(CorridorType.Perpendicular))
@@ -691,13 +1015,45 @@ namespace dungeonGenerator
             GameObject ceiling = getCeilingMesh(room);
 
             ceiling.transform.SetParent(roomObj.transform, false);
-
             ceiling.transform.localPosition = room.Bounds.center + Vector3.up * room.Bounds.size.y/2 + new Vector3(1, 0, 1) * wallThickness - Vector3.up*0.01f; // added Z offset
-
             ceiling.GetComponent<MeshRenderer>().material = ceilingMaterial;
 
      
+
         }
+
+        public void DrawWindows(Node room, GameObject roomObj)
+        {
+            foreach(var Placement in room.WindowPlacements)
+            {
+                GameObject window = GameObject.Instantiate(dungeonDecorator.windowMesh, roomObj.gameObject.transform);
+
+                Debug.Log($"Placement: {Placement.Item1}");
+
+                window.transform.localPosition = Placement.Item1;
+                window.transform.localEulerAngles = Placement.Item2;
+
+            }
+        }
+
+
+        public void DrawObject(GameObject roomObj, List<(Vector3, Vector3Int)> objectTransformList, GameObject mesh, ObjectPool<WindowAsset> gameObjPool)
+        {
+            foreach (var Placement in objectTransformList)
+            {
+                GameObject window = gameObjPool.Get().gameObject;///GameObject.Instantiate(mesh, roomObj.gameObject.transform);
+                window.transform.parent = roomObj.transform;
+
+                Debug.Log($"Placement: {Placement.Item1}");
+
+                window.transform.localPosition = Placement.Item1;
+                window.transform.localEulerAngles = Placement.Item2;
+
+            }
+        }
+
+
+        
     }
 
 }

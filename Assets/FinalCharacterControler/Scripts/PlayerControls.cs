@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using tutorialGenerator;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,6 +13,7 @@ public class PlayerController : MonoBehaviour
     #region Class Variables
     [Header("Componenets")]
     [SerializeField] private CharacterController _characterController;
+    [SerializeField] private Rigidbody _rigidbody;
     [SerializeField] private Camera _playerCamera;
     [SerializeField] private GameObject _cameraFollower;
     public float RotationMismatch { get; private set; } = 0f;
@@ -52,6 +54,9 @@ public class PlayerController : MonoBehaviour
     [Header("Environmental Details")]
     [SerializeField] public LayerMask _groundLayers;
 
+
+    [SerializeField] public Transform orientation;
+
     private bool _jumpedLastFrame = false;
 
 
@@ -66,6 +71,8 @@ public class PlayerController : MonoBehaviour
     private GameObject colliderSphere;
 
     public bool isClimbing = false; // FIX ME: REFACTOR
+    public bool isSliding = false;
+    private float _cameraPositionY;
 
     #endregion
 
@@ -85,6 +92,7 @@ public class PlayerController : MonoBehaviour
         addColliderSphere();
         _antiBump = sprintSpeed;
         _stepOffset = _characterController.stepOffset;
+        _cameraPositionY = _playerCamera.transform.position.y;
 
     }
     #endregion
@@ -106,8 +114,9 @@ public class PlayerController : MonoBehaviour
 
         _playerState.SetPlayerMovementState(lateralState);
 
+     
 
-        if ((!isGrounded || _jumpedLastFrame) && _characterController.velocity.y > 0f)
+        if ((!isGrounded || _jumpedLastFrame) && _rigidbody.velocity.y > 0f) // _characterController
         {
 
             _playerState.SetPlayerMovementState(PlayerMovementState.Jump);
@@ -115,14 +124,14 @@ public class PlayerController : MonoBehaviour
             _characterController.stepOffset = 0;
 
         }
-        else if ((!isGrounded || _jumpedLastFrame) && _characterController.velocity.y <= 0f)
+        else if ((!isGrounded || _jumpedLastFrame) && _rigidbody.velocity.y < 0f)
         {
 
             _playerState.SetPlayerMovementState(PlayerMovementState.Fall);
             _jumpedLastFrame = false;
             _characterController.stepOffset = 0;
 
-        } 
+        }
         else
         {
             _characterController.stepOffset = _stepOffset;
@@ -135,15 +144,166 @@ public class PlayerController : MonoBehaviour
         }
 
 
+        if ((_playerLocomotionInput.IsSliding && isGrounded) || (_lastMovementState == PlayerMovementState.Slide && _playerLocomotionInput.IsSliding))
+        {
+            _playerState.SetPlayerMovementState(PlayerMovementState.Slide);
+        }
 
     }
 
     private void Update()
     {
+        Movement();
+        WallRun();
+
+    }
+
+
+    public LayerMask WallMask;
+    public float wallRunForce, maxWallRunTime, maxWallSpeed;
+    bool isWallRight, isWallLeft;
+    bool isWallRunning;
+    public float maxWallRunCameraTilt, wallRunCameraTilt;
+    public float playerHeight = 0.5f;
+    private Vector3 slideDirection = new Vector3(0,0,0);
+
+    // https://www.youtube.com/watch?v=Ryi9JxbMCFM&list=PLh9SS5jRVLAleXEcDTWxBF39UjyrFc6Nb&index=2&ab_channel=Dave%2FGameDevelopment
+    private void WallRun()
+    {
+        CheckForWall();
+        WallRunInput();
+    }
+
+    private void WallRunInput()
+    {
+        bool isGrounded = _playerState.InGroundedState();
+        if (_playerLocomotionInput.MovementInput.x > 0f && isWallRight && !isGrounded)
+        {
+            StartWallRun();
+        } else if (_playerLocomotionInput.MovementInput.x < 0f && isWallLeft && !isGrounded) 
+        {
+            StartWallRun();
+        }
+    }
+
+    private void StartWallRun()
+    {
+        _rigidbody.useGravity = false;
+        isWallRunning = true;
+
+        if(_rigidbody.velocity.magnitude < maxWallSpeed)
+        {
+            //Debug.Log("ADDING SPEED");
+
+            Vector3 laterFWD = new Vector3(orientation.forward.x, 0, orientation.forward.z);
+            laterFWD.Normalize();
+       
+
+
+            _rigidbody.AddForce(laterFWD * wallRunForce);
+
+            if (isWallRight)
+            {
+                _rigidbody.AddForce(new Vector3(orientation.right.x, 0, orientation.right.z) * wallRunForce/5f);
+
+            } else
+            {
+                _rigidbody.AddForce(-new Vector3(orientation.right.x,0, orientation.right.z) * wallRunForce/5f);
+            }
+        } 
+    }
+
+    private void StopWallRun()
+    {
+        _rigidbody.useGravity = true;
+        isWallRunning = false;
+    }
+
+    private void CheckForWall()
+    {
+        isWallRight = Physics.Raycast(transform.position, orientation.right, 0.2f,WallMask);
+        isWallLeft = Physics.Raycast(transform.position, -orientation.right, 0.2f,WallMask);
+
+        if (!isWallRight && !isWallLeft) {
+
+            StopWallRun();
+        }
+
+    }
+
+    private void Movement()
+    {
         UpdateMovementState();
-        HandleVerticalMovement();
+        // HandleVerticalMovement();
+        SpeedControl();
         HandleLateralMovement();
 
+        checkJump();
+
+        HandleDrag();
+    }
+
+    public void SpeedControl()
+    {
+        _rigidbody.velocity = Vector3.ClampMagnitude(new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z), 7f)+Vector3.up* Math.Min(_rigidbody.velocity.y,8f);
+       
+    }
+
+    private void HandleDrag()
+    {
+        bool isGrounded = _playerState.InGroundedState(); 
+        if (isGrounded)
+        {
+            _rigidbody.drag = 5;
+        } else
+        {
+           _rigidbody.drag = 0;
+        }
+    }
+
+    //private void Update()
+    //{
+
+    //}
+    public bool hasLaunchedForward = false;
+
+    public void checkJump()
+    {
+        bool isGrounded = _playerState.InGroundedState();
+        if (_playerLocomotionInput.JumpPressed && isGrounded && !isWallRunning)
+        {
+            _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
+            _rigidbody.AddForce(Vector3.up*14f, ForceMode.Impulse);
+
+            hasLaunchedForward = false;
+
+
+
+        } else if (!isGrounded){
+            if (_playerLocomotionInput.performedStab && !hasLaunchedForward)
+            {
+                Vector3 laterFWD = new Vector3(orientation.forward.x, 0, orientation.forward.z);
+                laterFWD.Normalize();
+                _rigidbody.AddForce(laterFWD * 1000f*4f, ForceMode.Force);
+                hasLaunchedForward = true;
+            }
+            //_rigidbody.AddForce(-Vector3.up * 30f, ForceMode.Force);
+            if (isWallRunning && _playerLocomotionInput.JumpPressed)
+            {
+                if (isWallLeft && _playerLocomotionInput.MovementInput.x > 0)
+                {
+                    _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
+                    _rigidbody.AddForce(Vector3.up * 5f + _playerCamera.transform.right * 10f, ForceMode.Impulse); //  + _playerCamera.transform.right*10f
+                } 
+                else if (isWallRight && _playerLocomotionInput.MovementInput.x < 0)
+                {
+                    _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
+                    _rigidbody.AddForce(Vector3.up * 5f - _playerCamera.transform.right * 10f, ForceMode.Impulse); //- _playerCamera.transform.right*10f
+                }
+
+
+            }
+        }
     }
 
     public void HandleVerticalMovement()
@@ -214,12 +374,14 @@ public class PlayerController : MonoBehaviour
 
         Vector3 movementDirection = cameraForward * _playerLocomotionInput.MovementInput.y + cameraSide * _playerLocomotionInput.MovementInput.x;
 
-        Vector3 movementDelta = movementDirection * lateralAcceleration * Time.deltaTime;
-        Vector3 newVelocity = _characterController.velocity + movementDelta;
+
+        // movementDirection.y += _verticalVelocity;
+        // Vector3 movementDelta = movementDirection * lateralAcceleration * Time.deltaTime;
+        // Vector3 newVelocity = _rigidbody.velocity + movementDelta;
 
 
-        Vector3 currentDrag = newVelocity.normalized * drag * Time.deltaTime;
-        newVelocity = (newVelocity.magnitude > drag * Time.deltaTime) ? newVelocity - currentDrag : Vector3.zero;
+        // Vector3 currentDrag = newVelocity.normalized * drag * Time.deltaTime;
+        // newVelocity = (newVelocity.magnitude > drag * Time.deltaTime) ? newVelocity - currentDrag : Vector3.zero;
 
 
         //float movementPenalty = 1f;
@@ -234,19 +396,53 @@ public class PlayerController : MonoBehaviour
 
         //}
 
-        newVelocity = Vector3.ClampMagnitude(new Vector3(newVelocity.x,0,newVelocity.z), clampLateralMagnitude);
-        newVelocity.y += _verticalVelocity;
+        //newVelocity = Vector3.ClampMagnitude(new Vector3(newVelocity.x,0,newVelocity.z), clampLateralMagnitude);
+        //newVelocity.y += _verticalVelocity;
 
-        newVelocity = (!isGrounded && !isClimbing) ? HandleSteepWalls(newVelocity) : newVelocity;
+        //newVelocity = (!isGrounded && !isClimbing) ? HandleSteepWalls(newVelocity) : newVelocity;
 
 
-        _characterController.Move(newVelocity * Time.deltaTime);
+        //_characterController.Move(newVelocity * Time.deltaTime);
+
+
+        if (_playerState.CurrentPlayerMovementState == PlayerMovementState.Slide)
+        {
+            if (slideDirection.Equals(Vector3.zero)) {
+                slideDirection = cameraForward;
+            }
+            _rigidbody.AddForce(slideDirection * 1000f *  Time.deltaTime, ForceMode.Impulse);
+            _rigidbody.AddForce(-Vector3.up * 1000f * Time.deltaTime, ForceMode.Impulse);
+            GetComponent<CapsuleCollider>().enabled = false;
+            GetComponent<SphereCollider>().enabled = true;
+
+        }
+        else
+        {
+            if (!GetComponent<CapsuleCollider>().enabled)
+            {
+                GetComponent<CapsuleCollider>().enabled = true;
+                GetComponent<SphereCollider>().enabled = false;
+                _rigidbody.AddForce(Vector3.up * 500f * Time.deltaTime, ForceMode.Impulse);
+                _rigidbody.position = new Vector3(_rigidbody.position.x, _rigidbody.position.y + 0.5f, _rigidbody.position.z);
+            }
+
+            //}
+            slideDirection = Vector3.zero;
+            if (isGrounded) _rigidbody.AddForce(movementDirection * 1000f * 5f * Time.deltaTime, ForceMode.Force);
+            else if (!isWallRunning)
+            {
+                _rigidbody.AddForce(movementDirection * 1000f * 1.2f * Time.deltaTime, ForceMode.Force);
+
+            }
+        }
+
+        //Debug.Log(_rigidbody.velocity);
 
     }
 
     private Vector3 HandleSteepWalls(Vector3 velocity)
     {
-        Vector3 normal = CharacterControllerUtils.GetNormalWithSphereCase(_characterController, _groundLayers);
+        Vector3 normal = CharacterControllerUtils.GetNormalWithSphereCase(GetComponent<CapsuleCollider>(), _groundLayers);
         float angle = Vector3.Angle(normal, Vector3.up);
         bool validAngle = angle <= _characterController.slopeLimit;
 
@@ -308,6 +504,23 @@ public class PlayerController : MonoBehaviour
 
 
         RotationMismatch = sign * Vector3.Angle(transform.forward, camForward);
+
+        
+        if (isWallRunning && Mathf.Abs(wallRunCameraTilt) <= 20f)
+        {
+            if (isWallLeft)
+            {
+                wallRunCameraTilt -= 1f;
+            } else if (isWallRight)
+            {
+                wallRunCameraTilt += 1f;
+            }
+        } else if (!isWallRunning && wallRunCameraTilt != 0)
+        {
+            wallRunCameraTilt -= Mathf.Sign(wallRunCameraTilt)*1f;
+        }
+
+        _playerCamera.transform.rotation = Quaternion.Euler(_camRotation.y, _camRotation.x, wallRunCameraTilt);
     }
 
     private void UpdateIdleRotation(float rotationTolerance)
@@ -342,7 +555,7 @@ public class PlayerController : MonoBehaviour
     #region State Checks
     private bool IsMovingLaterally()
     {
-        Vector3 lateralVelocity = new Vector3(_characterController.velocity.x, 0f, _characterController.velocity.y);
+        Vector3 lateralVelocity = new Vector3(_rigidbody.velocity.x, 0f, _rigidbody.velocity.y);
         return lateralVelocity.magnitude > movingThreshold;
     }
 
@@ -350,7 +563,7 @@ public class PlayerController : MonoBehaviour
 
     {
 
-        bool grounded = _playerState.InGroundedState() ? IsGroundedWhileGrounded() : IsGroundedWhileAirborne();
+        bool grounded = IsGroundedWhileGrounded(); //_playerState.InGroundedState() ? IsGroundedWhileGrounded() : IsGroundedWhileAirborne();
         return grounded;
     }
 
@@ -358,17 +571,17 @@ public class PlayerController : MonoBehaviour
 
     {
 
-        Vector3 normal = CharacterControllerUtils.GetNormalWithSphereCase(_characterController, _groundLayers);
+        Vector3 normal = CharacterControllerUtils.GetNormalWithSphereCase(GetComponent<CapsuleCollider>(), _groundLayers);
         float angle = Vector3.Angle(normal, Vector3.up);
         bool validAngle = angle <= _characterController.slopeLimit;
 
-        return _characterController.isGrounded && validAngle;
+        return _characterController.isGrounded; //&& validAngle;
     }
 
     private bool IsGroundedWhileGrounded()
     {
-        Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - _characterController.radius, transform.position.z);
-        bool grounded = Physics.CheckSphere(spherePosition, _characterController.radius, _groundLayers, QueryTriggerInteraction.Ignore); // _groundLayers, QueryTriggerInteraction.Ignore
+        Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GetComponent<CapsuleCollider>().radius, transform.position.z);
+        bool grounded = Physics.CheckSphere(spherePosition, GetComponent<CapsuleCollider>().radius, _groundLayers, QueryTriggerInteraction.Ignore); // _groundLayers, QueryTriggerInteraction.Ignore
         return grounded;
     }
     #endregion

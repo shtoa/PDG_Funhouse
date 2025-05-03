@@ -20,9 +20,9 @@ TagManager:
   - Dungeon
   - MovingLight
   - Hands
-  - 
-  - 
-  - 
+  - Wall
+  - UI_Text
+  - UI_Ortho
   - 
   - 
   - 

@@ -471,10 +471,8 @@ namespace dungeonGenerator
             cuboid.RecalculateTangents();
        
 
-            GameObject cuboidObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
+            GameObject cuboidObject = new GameObject("Floor", typeof(MeshFilter), typeof(MeshRenderer), typeof(BoxCollider));
             cuboidObject.GetComponent<MeshFilter>().sharedMesh = cuboid;
-            cuboidObject.GetComponent<MeshCollider>().sharedMesh = cuboid;
-
             return cuboidObject;
         }
         public static BoundsInt planeIntersectBounds(BoundsInt plane1, BoundsInt plane2)

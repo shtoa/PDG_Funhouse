@@ -161,11 +161,11 @@ namespace dungeonGenerator
 
 
                             // add light
-                            GameObject light = GameObject.Instantiate(GameObject.Find("DungeonGen").GetComponent<DungeonDecorator>().lightMesh);
-                            light.transform.Rotate(0f, 0f, 90f);
-                            light.transform.localPosition = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.15f;
-                            light.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
-                            light.transform.SetParent(transform);
+                            //GameObject light = GameObject.Instantiate(GameObject.Find("DungeonGen").GetComponent<DungeonDecorator>().lightMesh);
+                            //light.transform.Rotate(0f, 0f, 90f);
+                            //light.transform.localPosition = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.15f;
+                            //light.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
+                            //light.transform.SetParent(transform);
 
                             plane.transform.SetParent(transform);
                         }

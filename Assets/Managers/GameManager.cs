@@ -131,6 +131,7 @@ public class GameManager : MonoBehaviour
 
     public void IncrementItemsCollected(CollectableType t)
     {
+        Debug.Log("Collected");
         numCollected[t]++;
     }
 

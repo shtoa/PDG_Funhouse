@@ -16,6 +16,9 @@ using File = System.IO.File;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using static dungeonGenerator.DungeonGenerator;
+using System.Threading.Tasks;
+using UnityEngine.Pool;
+using tutorialGenerator;
 
 namespace dungeonGenerator
 
@@ -59,6 +62,11 @@ namespace dungeonGenerator
         List<TextAsset> dungeonTestConfigs;
 
 
+        [SerializeField]
+        public GameObject WindowSpawner;
+        public GameObject WallSpawner;
+
+
         // [Header("Corridor Properties")]
         [HideInInspector]
         public int corridorWidth = 1;
@@ -86,11 +94,33 @@ namespace dungeonGenerator
             GenerateDungeon();
         }
 
+        // private List<WindowAsset> allWindows = new List<WindowAsset>();
         public void DeleteDungeon()
         {
+            // loop over room objects return all spawned assets
+            WindowSpawner.GetComponent<WindowSpawner>().ResetPrevInstances();
+            WallSpawner.GetComponent<WallSpawner>().ResetPrevInstances();
+            // destroy room objects
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 GameObject.DestroyImmediate(transform.GetChild(i).gameObject);
+            }
+
+            Node.curNodeID = 0;
+        }
+
+        public void DeletePreviousDungeon()
+        {
+            // loop over room objects return all spawned assets
+            WindowSpawner.GetComponent<WindowSpawner>().ResetPrevInstances();
+            WallSpawner.GetComponent<WallSpawner>().ResetPrevInstances();
+            // destroy room objects
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                if (transform.GetChild(i).tag == "toDelete")
+                {
+                    GameObject.DestroyImmediate(transform.GetChild(i).gameObject);
+                }
             }
 
             Node.curNodeID = 0;
@@ -302,6 +332,12 @@ namespace dungeonGenerator
             
         }
 
+
+        public int maxIterationGeneration = 40;
+        public int currentGenerationI = 0;
+
+       
+
         void loadDungeonConfig()
         {
             string savePath = Application.dataPath + "/Save/DungeonConfig.txt";
@@ -328,6 +364,90 @@ namespace dungeonGenerator
         {
             loadDungeonConfig();
             GameManager.Instance.total = total;
+
+
+            currentGenerationI = 0;
+            maxIterationGeneration = 0;
+            Debug.unityLogger.logEnabled = false;
+            StartCoroutine("GenerateDungeonAuto");
+        }
+        IEnumerator GenerateDungeonAuto()
+        {
+            currentGenerationI = 0;
+            while (maxIterationGeneration > currentGenerationI)
+            {
+                var dungeonGenerated = new TaskCompletionSource<bool>();
+                GenerateAsync(dungeonGenerated);
+
+                yield return new WaitUntil(()=>dungeonGenerated.Task.IsCompleted);
+
+                maxIterations = new System.Random().Next(20, 30);
+
+
+                //roomBoundsMin = new BoundsInt(
+                //    roomBoundsMin.position,
+                //    new Vector3Int(new System.Random().Next(10, 20),
+                //                new System.Random().Next(6, 15),
+                //                new System.Random().Next(10, 20)
+                //    )
+                //    );
+                //splitCenterDeviation = new Vector3((float)new System.Random().NextDouble(),
+                //                (float)new System.Random().NextDouble(),
+                //                (float)new System.Random().NextDouble()
+                //    );
+                dungeonBounds = new BoundsInt(
+                    roomBoundsMin.position,
+                    new Vector3Int(new System.Random().Next(10 * roomBoundsMin.size.x, 10 * roomBoundsMin.size.x),
+                                new System.Random().Next(10 * roomBoundsMin.size.y, 10 * roomBoundsMin.size.y),
+                                new System.Random().Next(10 * roomBoundsMin.size.z, 10 * roomBoundsMin.size.z)
+                    )
+                    );
+
+                currentGenerationI++;
+                Debug.Log($"currentGenerationI {currentGenerationI}");
+
+                //Debug.unityLogger.logEnabled = false;
+
+                yield return new WaitForSeconds(1f);
+
+            }
+        }
+
+
+        private async void GenerateAsync(TaskCompletionSource<bool> dungeonGenerated)
+        {
+           
+            DungeonDecorator decorator = GetComponent<DungeonDecorator>();
+            decorator.roomGenerator = new RoomGenerator(roomList, this.gameObject);
+            DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
+            var result = await Task.Run(() =>
+            {
+             
+                roomList = calculator.CalculateDungeon(maxIterations,
+                                             roomBoundsMin,
+                                             splitCenterDeviation,
+                                             corridorWidthAndWall,
+                                             wallThickness,
+                                             roomOffsetMin,
+                                             corridorHeight);
+
+                return roomList;
+            });
+         
+            InitializeStartAndEnd(calculator.RoomSpaces);
+            await Task.WhenAll(decorator.roomGenerator.CalculateRoomWalls(result));
+            decorator.roomGenerator.SetupRoomParents();
+
+            var roomsComplete = new TaskCompletionSource<bool>();
+            StartCoroutine(decorator.roomGenerator.GenerateRoomsBatch(result, 1, roomsComplete, 0.1f));
+
+
+         
+
+            await roomsComplete.Task;
+
+            dungeonGenerated.SetResult(true); 
+
         }
 
         /// <summary>

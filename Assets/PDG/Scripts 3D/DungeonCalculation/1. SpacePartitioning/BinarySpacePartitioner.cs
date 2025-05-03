@@ -79,7 +79,7 @@ namespace dungeonGenerator
 
                 float splitStopThreshold = 0.0f;
                 int splitStopDepth = 5;
-                var hasSplitStopped = (splitStopThreshold < Random.value && spaceToSplit.TreeLayerIndex > splitStopDepth);
+                //var hasSplitStopped = (splitStopThreshold < Random.value && spaceToSplit.TreeLayerIndex > splitStopDepth);
 
 
                 if (
@@ -165,7 +165,7 @@ namespace dungeonGenerator
                 // TODO: Add random splitting / more control
                 // spaceToSplit.SplitPosition.Equals(SplitPosition.Left) || spaceToSplit.SplitPosition.Equals(SplitPosition.Right)
 
-                var splitValHeight = Random.value;
+                var splitValHeight = new System.Random().NextDouble(); // Random.value;
 
                 Debug.Log($"<color=#00FF14> SPLIT PROBABILITY B4 {(spaceWidth * spaceLength)} </color>");
 
@@ -180,7 +180,7 @@ namespace dungeonGenerator
                 
                 } else {
 
-                    var splitVal = Random.value;
+                    var splitVal = new System.Random().NextDouble(); // Random.value;
 
                     if (splitVal < 0.5)
                     {
@@ -197,7 +197,7 @@ namespace dungeonGenerator
 
             } else if (splitableAxis.x && splitableAxis.z)
             {
-                var splitVal = Random.value;
+                var splitVal = new System.Random().NextDouble(); // Random.value;
 
                 if (splitVal < 0.5)
                 {
@@ -247,8 +247,12 @@ namespace dungeonGenerator
             }
 
 
-            int splitPosition = (int)Random.Range(center - centerDeviation * splitCenterDeviationPercent,
-                                                   center + centerDeviation * splitCenterDeviationPercent);
+            //int splitPosition = (int)Random.Range(center - centerDeviation * splitCenterDeviationPercent,
+            //                                       center + centerDeviation * splitCenterDeviationPercent);
+
+
+            int splitPosition = new System.Random().Next((int)(center - centerDeviation * splitCenterDeviationPercent), (int)(center + centerDeviation * splitCenterDeviationPercent));
+                                        
 
             return splitPosition;
         }

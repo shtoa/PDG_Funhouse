@@ -584,7 +584,7 @@ namespace dungeonGenerator
             while (endNodeNeighbors.Count() == 0 && startNodes.Count() > 0)
             {
 
-                startNode = startNodes[Random.Range(0, startNodes.Count())];
+                startNode = startNodes[new System.Random().Next(0, startNodes.Count())]; //[Random.Range(0, startNodes.Count())];
                 startNodes.Remove(startNode);
             }
 
@@ -920,7 +920,7 @@ namespace dungeonGenerator
             Node downSpace = null;
             Node upSpace = null;
 
-            upSpace = sortedUpSpace[Random.Range(0, sortedUpSpace.Count())]; // pick a left space from candidates
+            upSpace = sortedUpSpace[new System.Random().Next(0, sortedUpSpace.Count())]; // pick a left space from candidates // Random.Range(0, sortedUpSpace.Count())
             var neighborsInDownSpaceList = ReturnPossibleNeighborsDownSpace(upSpace, sortedDownSpace); // get possible neighbors in rightSpace
 
             if (neighborsInDownSpaceList.Count() > 0)
@@ -943,7 +943,7 @@ namespace dungeonGenerator
                     if (neighborsInDownSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
                     {
                         upSpace = newUpSpace;
-                        downSpace = neighborsInDownSpaceList[Random.Range(0, neighborsInDownSpaceList.Count())];
+                        downSpace = neighborsInDownSpaceList[new System.Random().Next(0, neighborsInDownSpaceList.Count())]; //Random.Range(0, neighborsInDownSpaceList.Count())];
                         break;
                     }
                 }

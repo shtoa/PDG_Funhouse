@@ -12,6 +12,7 @@ public enum PlayerMovementState
     Fall = 5,
     Strafe = 6,
     Climb = 7,
+    Slide = 8,
 }
 
 public class PlayerState : MonoBehaviour
@@ -35,6 +36,7 @@ public class PlayerState : MonoBehaviour
                movementState == PlayerMovementState.Walk ||
                movementState == PlayerMovementState.Run ||
                movementState == PlayerMovementState.Sprint;
+               //|| movementState == PlayerMovementState.Slide;
     }
   
 }

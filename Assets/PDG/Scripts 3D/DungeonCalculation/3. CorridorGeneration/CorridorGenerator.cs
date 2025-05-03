@@ -66,8 +66,8 @@ namespace dungeonGenerator
                 if (spaceToCheck.ChildrenNodeList.Count == 0 || spaceToCheck.ChildrenNodeList.Count == 1) // cant join the children together so continue the loop
                 {
                     continue;
-                }
-                else if (spaceToCheck.ChildrenNodeList.Count > 1 && (Random.value < connectionChance)) // check if there are two children to join
+                } // Random.value
+                else if (spaceToCheck.ChildrenNodeList.Count > 1 && (new System.Random().NextDouble() < connectionChance)) // check if there are two children to join
                 {
                     CreateCorridor((SpaceNode)spaceToCheck.ChildrenNodeList[0], (SpaceNode)spaceToCheck.ChildrenNodeList[1], corridorList, corridorWidth, wallThickness, minRoomDim, corridorHeight,
                         availableVoxelGrid);

@@ -43,6 +43,64 @@ namespace dungeonGenerator
 
         }
     }
+
+    public class WallBounds
+    {
+
+        public List<BoundsInt> left;
+        public List<BoundsInt> right;
+        public List<BoundsInt> top;
+        public List<BoundsInt> bottom;
+
+        public WallBounds()
+        {
+            left = new List<BoundsInt>();
+            right = new List<BoundsInt>();
+            top = new List<BoundsInt>();
+            bottom = new List<BoundsInt>();
+        }
+
+        public List<BoundsInt> getWalls()
+        {
+            List<BoundsInt> walls = new List<BoundsInt>();
+            walls.AddRange(left);
+            walls.AddRange(right);
+            walls.AddRange(top);
+            walls.AddRange(bottom);
+
+            return walls;
+        }
+        // FIX ME: Make method clearer
+        public void removeWall(BoundsInt wall)
+        {
+
+            if (left.Contains(wall))
+            {
+                left.Remove(wall);
+            }
+
+
+            if (right.Contains(wall))
+            {
+                right.Remove(wall);
+            }
+
+
+            if (top.Contains(wall))
+            {
+                top.Remove(wall);
+            }
+
+
+            if (bottom.Contains(wall))
+            {
+                bottom.Remove(wall);
+            }
+
+        }
+
+    }
+
     public enum SplitPosition
     {
         Root, Top, Bottom, Left, Right, Up, Down
@@ -115,6 +173,9 @@ namespace dungeonGenerator
         public List<Node> ConnectionsList { get => connectionsList; set => connectionsList = value; }
         public int ConnectionDepthIndex { get => connectionDepthIndex; set => connectionDepthIndex = value; }
 
+        public List<(Vector3, Vector3Int)> WindowPlacements = new List<(Vector3,Vector3Int)>();
+        public List<(Vector3, Vector3Int)> LightPlacements = new List<(Vector3, Vector3Int)>();
+
         List<DoorPlacement> doorPlacements = new List<DoorPlacement>();
         List<HolePlacement> holePlacements = new List<HolePlacement>();
         public List<DoorPlacement> DoorPlacements { get => doorPlacements; set => doorPlacements = value; }
@@ -137,6 +198,8 @@ namespace dungeonGenerator
 
         public static int curNodeID = 0;
         public int NodeID = 0;
+        public WallBounds roomWallBounds = new WallBounds();
+
 
         // Pass in parent node to constructor
         public Node(Node parentNode)
