@@ -55,7 +55,7 @@ namespace dungeonGenerator
             Partitions the rootNode till the maxIterations have been exceeded or no more partitions are possible.
         </summary> */
 
-        public List<SpaceNode> PartitionSpace(int maxIterations, Vector3Int minSpaceDim, Vector3 splitCenterDeviationPercent)
+        public List<SpaceNode> PartitionSpace(int maxIterations, Vector3Int minSpaceDim, Vector3 splitCenterDeviationPercent, System.Random randomGenerator)
         {
       
             spacesToSplit = new Queue<SpaceNode>(); // initialize queue of spaces to split
@@ -87,7 +87,7 @@ namespace dungeonGenerator
                     && !hasStoppedSplitting(spaceToSplit, splitStopDepth, splitStopThreshold)
                 ) // only split space if possible to split
                 {
-                    var splitSpaces = SplitSpace(spaceToSplit, minSpaceDim, splitCenterDeviationPercent); // split the space
+                    var splitSpaces = SplitSpace(spaceToSplit, minSpaceDim, splitCenterDeviationPercent, randomGenerator); // split the space
                     AddSplitSpaces(spacesToSplit, allSpaces, splitSpaces);
                 }
 
@@ -118,27 +118,14 @@ namespace dungeonGenerator
         }
 
         #region Splitting Helper Methods
-
+        // FIXME : CAN CONVERT INTO A FLAG
         internal static bool3 GetSplitableAxis(BoundsInt spaceToSplit, Vector3Int minSpaceDim)
         {
             bool3 splitableAxis = new bool3(false, false, false);
 
-            if(spaceToSplit.size.x > 2 * minSpaceDim.x)
-            {
-                splitableAxis.x = true;
-            }
-
-            if(spaceToSplit.size.z > 2 * minSpaceDim.y)
-            {
-                splitableAxis.z = true; 
-            }
-
-            // TODO: For 3D BSP Implementation
-
-            if (spaceToSplit.size.y > 2 * minSpaceDim.z)
-            {
-                splitableAxis.y = true;
-            }
+            splitableAxis.x = spaceToSplit.size.x > 2 * minSpaceDim.x;
+            splitableAxis.y = spaceToSplit.size.y > 2 * minSpaceDim.y;
+            splitableAxis.z = spaceToSplit.size.z > 2 * minSpaceDim.z;
 
             return splitableAxis;
         }
@@ -147,7 +134,7 @@ namespace dungeonGenerator
             Split the space based on their current width and height
         </summary> */
 
-        internal static (SpaceNode, SpaceNode) SplitSpace(SpaceNode spaceToSplit, Vector3Int minSpaceDim, Vector3 splitCenterDeviationPercent)
+        internal static (SpaceNode, SpaceNode) SplitSpace(SpaceNode spaceToSplit, Vector3Int minSpaceDim, Vector3 splitCenterDeviationPercent, System.Random randomGenerator)
         {
             // get the width and height of the spaceToSplit 
             Debug.Log(minSpaceDim);
@@ -160,12 +147,12 @@ namespace dungeonGenerator
             var spaceHeight = spaceToSplit.Bounds.size.y;
 
             // check if both width and height are large enough to split
-            if (splitableAxis.x && splitableAxis.z && splitableAxis.y)
+            if (splitableAxis.x && splitableAxis.y && splitableAxis.z)
             {
                 // TODO: Add random splitting / more control
                 // spaceToSplit.SplitPosition.Equals(SplitPosition.Left) || spaceToSplit.SplitPosition.Equals(SplitPosition.Right)
 
-                var splitValHeight = new System.Random().NextDouble(); // Random.value;
+                var splitValHeight = randomGenerator.NextDouble(); // Random.value;
 
                 Debug.Log($"<color=#00FF14> SPLIT PROBABILITY B4 {(spaceWidth * spaceLength)} </color>");
 
@@ -176,53 +163,53 @@ namespace dungeonGenerator
 
                     //Debug.Log($"<color=#00FF14> SPLIT WITH PROBABILITY {(1 - (minSpaceDim.x * minSpaceDim.y) / (spaceWidth * spaceLength))} </color>");
                     Debug.Log("SPLIT ALONG UP...DOWN");
-                    return SplitPerpendicular(spaceToSplit, GetSplitPosition(spaceHeight, minSpaceDim.z, splitCenterDeviationPercent.z)); // TO DO: Develop with Random Positioning
+                    return SplitPerpendicular(spaceToSplit, GetSplitPosition(spaceHeight, minSpaceDim.y, splitCenterDeviationPercent.y, randomGenerator)); // TO DO: Develop with Random Positioning
                 
                 } else {
 
-                    var splitVal = new System.Random().NextDouble(); // Random.value;
+                    var splitVal = randomGenerator.NextDouble(); // Random.value;
 
                     if (splitVal < 0.5)
                     {
-                        return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.y, splitCenterDeviationPercent.y));
+                        return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.z, splitCenterDeviationPercent.z, randomGenerator));
                     }
 
                     else
                     {
 
-                        return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x));
+                        return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x, randomGenerator));
                     }
                 }
 
 
             } else if (splitableAxis.x && splitableAxis.z)
             {
-                var splitVal = new System.Random().NextDouble(); // Random.value;
+                var splitVal = randomGenerator.NextDouble(); // Random.value;
 
                 if (splitVal < 0.5)
                 {
-                    return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.y, splitCenterDeviationPercent.y));
+                    return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.z, splitCenterDeviationPercent.z, randomGenerator));
                 }
 
                 else
                 {
 
-                    return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x));
+                    return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x, randomGenerator));
                 }
             }
             else if (splitableAxis.x) // if only width is large enough to split, split vertically
             {
-                return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x));
+                return SplitVertically(spaceToSplit, GetSplitPosition(spaceWidth, minSpaceDim.x, splitCenterDeviationPercent.x, randomGenerator));
             }
             else if (splitableAxis.z)  // if only height is large enough to split, split horizontally
             {
-                return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.y, splitCenterDeviationPercent.y));
+                return SplitHorizontally(spaceToSplit, GetSplitPosition(spaceLength, minSpaceDim.z, splitCenterDeviationPercent.z, randomGenerator));
 
             }
             else if (splitableAxis.y)
             {
                 Debug.Log("SPLIT ALONG UPDOWN");
-                return SplitPerpendicular(spaceToSplit, GetSplitPosition(spaceHeight, minSpaceDim.z, splitCenterDeviationPercent.z));
+                return SplitPerpendicular(spaceToSplit, GetSplitPosition(spaceHeight, minSpaceDim.y, splitCenterDeviationPercent.y, randomGenerator));
             }
             else
             {
@@ -231,7 +218,7 @@ namespace dungeonGenerator
 
         }
 
-        internal static int GetSplitPosition(int size, int minSize, float splitCenterDeviationPercent)
+        internal static int GetSplitPosition(int size, int minSize, float splitCenterDeviationPercent, System.Random randomGenerator)
         {
 
             int center = size / 2;
@@ -249,10 +236,10 @@ namespace dungeonGenerator
 
             //int splitPosition = (int)Random.Range(center - centerDeviation * splitCenterDeviationPercent,
             //                                       center + centerDeviation * splitCenterDeviationPercent);
+          
 
-
-            int splitPosition = new System.Random().Next((int)(center - centerDeviation * splitCenterDeviationPercent), (int)(center + centerDeviation * splitCenterDeviationPercent));
-                                        
+            int splitPosition = randomGenerator.Next((int)(center - centerDeviation * splitCenterDeviationPercent), (int)(center + centerDeviation * splitCenterDeviationPercent));
+          
 
             return splitPosition;
         }

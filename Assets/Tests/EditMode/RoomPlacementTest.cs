@@ -44,7 +44,7 @@ public class RoomPlacementTest
         var roomCalculator = testData.roomCalculator;
         var spaces = testData.spaces;
 
-        var placedRooms = roomCalculator.PlaceRoomsInSpaces(spaces);
+        var placedRooms = roomCalculator.PlaceRoomsInSpaces(spaces,new System.Random(10));
 
         foreach (var room in placedRooms)
         {
@@ -84,7 +84,7 @@ public class RoomPlacementTest
         roomList.Add((Node)(new SpaceNode(
                 new BoundsInt(
                     Vector3Int.zero,
-                    new Vector3Int(40, 0, 40)
+                    new Vector3Int(40, 40, 40)
                 ), null, 0, 0)));
 
         return roomList;

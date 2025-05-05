@@ -232,14 +232,14 @@ public class BinarySpacePartitionerTest
             // https://stackoverflow.com/a/50829971
 
             Assert.That(() => 
-                  BinarySpacePartitioner.GetSplitPosition(size, minSize, splitCenterDeviationPercent),
+                  BinarySpacePartitioner.GetSplitPosition(size, minSize, splitCenterDeviationPercent, new System.Random(10)),
                   Throws.TypeOf<Exception>());
 
         }
         else
         {
             // Goal is to produce a split that contains a room of min size (test the behaviour)
-            int splitPos = BinarySpacePartitioner.GetSplitPosition(size, minSize, splitCenterDeviationPercent);
+            int splitPos = BinarySpacePartitioner.GetSplitPosition(size, minSize, splitCenterDeviationPercent, new System.Random(10));
 
             Assert.IsNotNull(splitPos, "splitPos not null");
             Assert.GreaterOrEqual(splitPos, minSize);
@@ -279,18 +279,18 @@ public class BinarySpacePartitionerTest
 
         if (sizeX > 2*minSpaceDim.x && sizeZ > 2 * minSpaceDim.y)
         {
-            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation);
+            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation, new System.Random(10));
         }
         else if (sizeX > 2 * minSpaceDim.x)
         {
-            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation);
+            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation, new System.Random(10));
 
             Assert.True(node1.SplitPosition.Equals(SplitPosition.Left) || node1.SplitPosition.Equals(SplitPosition.Right), "Split Horizontally node1");
             Assert.True(node2.SplitPosition.Equals(SplitPosition.Left) || node2.SplitPosition.Equals(SplitPosition.Right), "Split Horizontally node2");
 
         } else if (sizeZ > 2 * minSpaceDim.y)
         {
-            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation);
+            (node1, node2) = BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation, new System.Random(10));
 
             Assert.True(node1.SplitPosition.Equals(SplitPosition.Top) || node1.SplitPosition.Equals(SplitPosition.Bottom), "Split Vertically node1");
             Assert.True(node2.SplitPosition.Equals(SplitPosition.Top) || node2.SplitPosition.Equals(SplitPosition.Bottom), "Split Vertically node2");
@@ -298,7 +298,7 @@ public class BinarySpacePartitionerTest
             
         } else
         {
-            Assert.That(() => BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation),
+            Assert.That(() => BinarySpacePartitioner.SplitSpace(testNode, minSpaceDim, splitCenterDeviation, new System.Random(10)),
                 Throws.TypeOf<Exception>());
         }
 

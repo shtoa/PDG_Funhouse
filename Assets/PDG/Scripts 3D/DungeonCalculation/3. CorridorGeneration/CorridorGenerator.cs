@@ -13,10 +13,17 @@ namespace dungeonGenerator
     {
         public int nTimes = 0;
         public void CreateCorridor(SpaceNode space1, SpaceNode space2, List<Node> corridorList, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight,
-            bool[,,] availableVoxelGrid)
+            bool[,,] availableVoxelGrid, System.Random randomGenerator)
         {
 
-            CorridorNodePath corridor = new CorridorNodePath(space1, space2, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid); // create new corridor between the childeren
+            CorridorNodePath corridor = new CorridorNodePath(space1, 
+                                                             space2, 
+                                                             corridorWidth, 
+                                                             wallThickness, 
+                                                             minRoomDim, 
+                                                             corridorHeight, 
+                                                             availableVoxelGrid, 
+                                                             randomGenerator); // create new corridor between the childeren
 
             corridor.RoomType = RoomType.Corridor;
             corridorList.Add(corridor);
@@ -35,19 +42,19 @@ namespace dungeonGenerator
         /// <returns>corridorList</returns>
 
         public List<Node> CreateCorridors(List<SpaceNode> allNodeSpaces, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight
-              , bool[,,] availableVoxelGrid)
+              , bool[,,] availableVoxelGrid, System.Random randomGenerator)
         {
             List<Node> corridorList = new List<Node>(); // Create list of Corridors to return
             
             // order spaces deepest first
             Queue<SpaceNode> spacesToCheck = new Queue<SpaceNode>(allNodeSpaces.OrderByDescending(node => node.TreeLayerIndex).ToList());
             connectSpaces(spacesToCheck, corridorWidth, wallThickness, minRoomDim, corridorHeight
-              , availableVoxelGrid, corridorList, 1f);
+              , availableVoxelGrid, corridorList, 1f, randomGenerator);
 
             // second pass to add circular connections 
             spacesToCheck = new Queue<SpaceNode>(allNodeSpaces.OrderByDescending(node => node.TreeLayerIndex).ToList());
             connectSpaces(spacesToCheck, corridorWidth, wallThickness, minRoomDim, corridorHeight
-              , availableVoxelGrid, corridorList, 0.5f); // add split chance
+              , availableVoxelGrid, corridorList, 0.5f, randomGenerator); // add split chance
 
 
             return corridorList; // return generated corridors
@@ -56,7 +63,7 @@ namespace dungeonGenerator
 
 
         public void connectSpaces(Queue<SpaceNode> spacesToCheck, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight
-              , bool[,,] availableVoxelGrid, List<Node> corridorList, float connectionChance)
+              , bool[,,] availableVoxelGrid, List<Node> corridorList, float connectionChance, System.Random randomGenerator)
         {
             // join the children of the spaces together based on the bsp graph
             while (spacesToCheck.Count > 0)
@@ -67,10 +74,10 @@ namespace dungeonGenerator
                 {
                     continue;
                 } // Random.value
-                else if (spaceToCheck.ChildrenNodeList.Count > 1 && (new System.Random().NextDouble() < connectionChance)) // check if there are two children to join
+                else if (spaceToCheck.ChildrenNodeList.Count > 1 && (randomGenerator.NextDouble() < connectionChance)) // check if there are two children to join
                 {
                     CreateCorridor((SpaceNode)spaceToCheck.ChildrenNodeList[0], (SpaceNode)spaceToCheck.ChildrenNodeList[1], corridorList, corridorWidth, wallThickness, minRoomDim, corridorHeight,
-                        availableVoxelGrid);
+                        availableVoxelGrid, randomGenerator);
                 }
             }
         }

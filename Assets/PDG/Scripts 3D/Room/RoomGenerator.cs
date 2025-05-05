@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.EditorCoroutines.Editor;
 using Unity.VisualScripting;
 using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
@@ -74,6 +75,8 @@ namespace dungeonGenerator
     //    }
 
     //}
+
+    [ExecuteInEditMode]
     public class RoomGenerator
     {
         private int wallThickness;
@@ -151,6 +154,147 @@ namespace dungeonGenerator
 
         public int currentBatchIndex;
 
+        public void GenerateRoom(Node room)
+        {
+            RoomStyle roomStyle = dungeonDecorator.roomStyles[Random.Range(0, dungeonDecorator.roomStyles.Count)];
+            GameObject roomObj = new GameObject(roomStyle.name + room.SplitPosition);
+
+            roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false); // Find(room.RoomType.ToString())
+
+
+            if (room.RoomType != RoomType.Corridor)
+            {
+
+
+                BoxCollider roomEntryCollider = roomObj.AddComponent<BoxCollider>();
+
+                // for testing check what current room is in
+                roomEntryCollider.size = new Vector3(room.Bounds.size.x, 1f, room.Bounds.size.z);
+                roomEntryCollider.center = room.Bounds.center + new Vector3(1, 0, 1) - (room.Bounds.size.y / 2) * Vector3.up;
+                roomEntryCollider.isTrigger = true;
+
+                RoomVisitChecker rc = roomObj.AddComponent<RoomVisitChecker>();
+                rc.RoomID = room.NodeID;
+            }
+
+            if (!room.CorridorType.Equals(CorridorType.Perpendicular) && !(room.RoomType == RoomType.Corridor))
+            {
+                //DrawCeiling(room, roomStyle, roomObj);
+
+
+
+                DrawFloor(room, roomStyle, roomObj);
+            }
+
+            if (room.RoomType.Equals(RoomType.Corridor))
+            {
+
+
+                foreach (BoundsInt bound in room.CorridorBoundsList)
+                {
+
+                    Debug.Log($"THE NEW CORRIDOR FLOOR SIZE {bound.size}");
+
+                    GameObject floor = MeshHelper.CreatePlane(bound.size, 1, false);
+                    floor.transform.tag = "Floor";
+                    floor.transform.SetParent(roomObj.transform, false);
+
+                    // FIX ME: CHECK THIS TRANSFORMATION
+                    floor.transform.localPosition = (bound.center - new Vector3(0, bound.size.y / 2f, 0)) + new Vector3(1, 0, 1) * wallThickness + Vector3.up * 0.001f; ; // CHECK ME: May be wrong
+                    floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
+
+
+
+
+                }
+
+            }
+
+            if (room.RoomType != RoomType.Corridor)
+            {
+                drawWallsAsync(room, roomStyle, roomObj);
+
+                // draw lights and windows
+                DrawObject(roomObj, room.WindowPlacements, dungeonDecorator.windowMesh, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool._pool);
+                //DrawObject(roomObj, room.LightPlacements, dungeonDecorator.lightMesh);
+
+            }
+            else
+            {
+                if (room.CorridorType == CorridorType.Perpendicular)
+                {
+                    DrawWalls(room, roomStyle, roomObj);
+                }
+                else
+                {
+
+
+                    GameObject wallHolder = new GameObject("wallHolder");
+                    wallHolder.transform.SetParent(roomObj.transform, false);
+
+                    foreach (BoundsInt wallBound in room.CorridorWallBoundsList)
+                    {
+                        GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool._pool.Get().gameObject;
+                        wall.transform.localScale = wallBound.size;
+
+                        wall.name = "Wall";
+                        wall.layer = LayerMask.NameToLayer("Wall");
+                        wall.transform.SetParent(wallHolder.transform, false);
+
+                        if (room.CorridorType.Equals(CorridorType.Perpendicular))
+                        {
+                            wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
+                        }
+
+
+
+                        wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
+                        wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+                    }
+                }
+            }
+
+            if (!room.RoomType.Equals(RoomType.Corridor))
+            {
+
+                GameObject cornerObj = GameObject.Instantiate(dungeonDecorator.cornerObject, roomObj.transform, false);
+                cornerObj.layer = LayerMask.NameToLayer("Wall");
+                //cornerObj.AddComponent<MeshRenderer>();
+                cornerObj.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
+                cornerObj.transform.localScale = new Vector3(
+                            cornerObj.transform.localScale.x,
+                            cornerObj.transform.localScale.y,
+                            cornerObj.transform.localScale.z * room.Bounds.size.y
+
+                    );
+                cornerObj.AddComponent<MeshCollider>();
+
+                // topLeftCorner
+                GameObject topLeftCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                topLeftCorner.transform.localEulerAngles = new Vector3(90, 180, 0);
+                topLeftCorner.transform.localPosition = room.Bounds.size.z * Vector3.forward + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+
+                // topRightCorner
+                GameObject topRightCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                topRightCorner.transform.localEulerAngles = new Vector3(90, -90, 0);
+                topRightCorner.transform.localPosition = room.Bounds.size.z * Vector3.forward + room.Bounds.size.x * Vector3.right + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+
+                // bottomLeftCorner
+                GameObject bottomLeftCornerObj = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                bottomLeftCornerObj.transform.localEulerAngles = new Vector3(90, 90, 0);
+                bottomLeftCornerObj.transform.localPosition = room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+                // bottomRightCorner
+                GameObject bottomRightCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
+                bottomRightCorner.transform.localEulerAngles = new Vector3(90, 0, 0);
+                bottomRightCorner.transform.localPosition = room.Bounds.size.x * Vector3.right + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
+
+                GameObject.DestroyImmediate(cornerObj);
+            }
+        }
+
         public IEnumerator GenerateRoomsBatch(List<Node> roomList, int roomBatchSize, TaskCompletionSource<bool> roomCompleted, float delay) // 
         {
 
@@ -161,156 +305,21 @@ namespace dungeonGenerator
             foreach (var room in roomList)
             {
 
-                RoomStyle roomStyle = dungeonDecorator.roomStyles[Random.Range(0, dungeonDecorator.roomStyles.Count)];
-                GameObject roomObj = new GameObject(roomStyle.name + room.SplitPosition);
+                GenerateRoom(room);
 
-                roomObj.transform.SetParent(dungeonGenerator.transform.Find(room.RoomType.ToString()), false); // Find(room.RoomType.ToString())
-
-
-                if (room.RoomType != RoomType.Corridor)
-                {
-
-
-                    BoxCollider roomEntryCollider = roomObj.AddComponent<BoxCollider>();
-
-                    // for testing check what current room is in
-                    roomEntryCollider.size = new Vector3(room.Bounds.size.x, 1f, room.Bounds.size.z);
-                    roomEntryCollider.center = room.Bounds.center + new Vector3(1, 0, 1) - (room.Bounds.size.y / 2) * Vector3.up;
-                    roomEntryCollider.isTrigger = true;
-
-                    RoomVisitChecker rc = roomObj.AddComponent<RoomVisitChecker>();
-                    rc.RoomID = room.NodeID;
-                }
-
-                if (!room.CorridorType.Equals(CorridorType.Perpendicular) && !(room.RoomType == RoomType.Corridor))
-                {
-                    //DrawCeiling(room, roomStyle, roomObj);
-
-
-
-                    DrawFloor(room, roomStyle, roomObj);
-                }
-
-                if (room.RoomType.Equals(RoomType.Corridor))
-                {
-
-
-                    foreach (BoundsInt bound in room.CorridorBoundsList)
-                    {
-
-                        Debug.Log($"THE NEW CORRIDOR FLOOR SIZE {bound.size}");
-
-                        GameObject floor = MeshHelper.CreatePlane(bound.size, 1, false);
-                        floor.transform.tag = "Floor";
-                        floor.transform.SetParent(roomObj.transform, false);
-
-                        // FIX ME: CHECK THIS TRANSFORMATION
-                        floor.transform.localPosition = (bound.center - new Vector3(0, bound.size.y / 2f, 0)) + new Vector3(1, 0, 1) * wallThickness + Vector3.up * 0.001f; ; // CHECK ME: May be wrong
-                        floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
-
-
-
-
-                    }
-
-                }
-
-                if (room.RoomType != RoomType.Corridor)
-                {
-                    drawWallsAsync(room, roomStyle, roomObj);
-
-                    // draw lights and windows
-                    DrawObject(roomObj, room.WindowPlacements, dungeonDecorator.windowMesh, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool);
-                    //DrawObject(roomObj, room.LightPlacements, dungeonDecorator.lightMesh);
-
-                }
-                else
-                {
-                    if (room.CorridorType == CorridorType.Perpendicular)
-                    {
-                        DrawWalls(room, roomStyle, roomObj);
-                    }
-                    else
-                    {
-
-
-                        GameObject wallHolder = new GameObject("wallHolder");
-                        wallHolder.transform.SetParent(roomObj.transform, false);
-
-                        foreach (BoundsInt wallBound in room.CorridorWallBoundsList)
-                        {
-                            GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool.Get().gameObject;
-                            wall.transform.localScale = wallBound.size;
-
-                            wall.name = "Wall";
-                            wall.layer = LayerMask.NameToLayer("Wall");
-                            wall.transform.SetParent(wallHolder.transform, false);
-
-                            if (room.CorridorType.Equals(CorridorType.Perpendicular))
-                            {
-                                wall.transform.localScale = new Vector3(1, 0.99f, 1); // prevent z-fighting
-                            }
-
-
-
-                            wall.transform.localPosition = wallBound.center + new Vector3(1, 0, 1) * wallThickness; // CHECK ME: May be wrong
-                            wall.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
-                        }
-                    }
-                }
-
-                if (!room.RoomType.Equals(RoomType.Corridor))
-                {
-
-                    GameObject cornerObj = GameObject.Instantiate(dungeonDecorator.cornerObject, roomObj.transform, false);
-                    cornerObj.layer = LayerMask.NameToLayer("Wall");
-                    //cornerObj.AddComponent<MeshRenderer>();
-                    cornerObj.GetComponent<MeshRenderer>().material = roomStyle.roomMaterials.wall;
-                    cornerObj.transform.localScale = new Vector3(
-                                cornerObj.transform.localScale.x,
-                                cornerObj.transform.localScale.y,
-                                cornerObj.transform.localScale.z * room.Bounds.size.y
-
-                        );
-                    cornerObj.AddComponent<MeshCollider>();
-
-                    // topLeftCorner
-                    GameObject topLeftCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
-                    topLeftCorner.transform.localEulerAngles = new Vector3(90, 180, 0);
-                    topLeftCorner.transform.localPosition = room.Bounds.size.z * Vector3.forward + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
-
-
-                    // topRightCorner
-                    GameObject topRightCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
-                    topRightCorner.transform.localEulerAngles = new Vector3(90, -90, 0);
-                    topRightCorner.transform.localPosition = room.Bounds.size.z * Vector3.forward + room.Bounds.size.x * Vector3.right + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
-
-
-                    // bottomLeftCorner
-                    GameObject bottomLeftCornerObj = GameObject.Instantiate(cornerObj, roomObj.transform, false);
-                    bottomLeftCornerObj.transform.localEulerAngles = new Vector3(90, 90, 0);
-                    bottomLeftCornerObj.transform.localPosition = room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
-
-                    // bottomRightCorner
-                    GameObject bottomRightCorner = GameObject.Instantiate(cornerObj, roomObj.transform, false);
-                    bottomRightCorner.transform.localEulerAngles = new Vector3(90, 0, 0);
-                    bottomRightCorner.transform.localPosition = room.Bounds.size.x * Vector3.right + room.Bounds.min + room.Bounds.size.y * Vector3.up + new Vector3(1, 0, 1);
-
-                    GameObject.DestroyImmediate(cornerObj);
-                }
                 batchCounter++;
                 if (batchCounter > roomBatchSize)
                 {
                     batchCounter = 0;
-                    yield return new WaitForSeconds(delay);
+
+                    if (!Application.isPlaying) yield return new EditorWaitForSeconds(delay);
+                    else yield return new WaitForSeconds(delay);
+                    
                 }
 
             }
             roomCompleted.SetResult(true);
             Debug.Log("CompletedDungeon");
-            
-
-
 
         }
 
@@ -429,7 +438,7 @@ namespace dungeonGenerator
                     drawWallsAsync(room, roomStyle, roomObj);
                     
                     // draw lights and windows
-                   DrawObject(roomObj, room.WindowPlacements, dungeonDecorator.windowMesh, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool);
+                   DrawObject(roomObj, room.WindowPlacements, dungeonDecorator.windowMesh, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool._pool);
                    //DrawObject(roomObj, room.LightPlacements, dungeonDecorator.lightMesh);
 
                 } else
@@ -447,7 +456,7 @@ namespace dungeonGenerator
 
                         foreach (BoundsInt wallBound in room.CorridorWallBoundsList)
                         {
-                            GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool.Get().gameObject;                           
+                            GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool._pool.Get().gameObject;                           
                             wall.transform.localScale = wallBound.size;
 
                             wall.name = "Wall";
@@ -794,7 +803,7 @@ namespace dungeonGenerator
                 foreach (var wallBound in wallBounds.getWalls())
                 {
 
-                    GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool.Get().gameObject;
+                    GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool._pool.Get().gameObject;
                     wall.transform.localScale = wallBound.size;
 
                     wall.name = "Wall";
@@ -840,7 +849,7 @@ namespace dungeonGenerator
                 foreach (var wallBound in wallBounds.getWalls())
                 {
 
-                    GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool.Get().gameObject;
+                    GameObject wall = dungeonGenerator.WallSpawner.GetComponent<WallSpawner>()._wallPool._pool.Get().gameObject;
                     wall.transform.localScale = wallBound.size;
 
                     wall.name = "Wall";

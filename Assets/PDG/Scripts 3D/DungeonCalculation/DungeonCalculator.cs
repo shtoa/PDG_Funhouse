@@ -12,6 +12,7 @@ namespace dungeonGenerator
         // Dungeon Properties 
         private int dungeonWidth;
         private int dungeonLength;
+        private System.Random _randomGenerator;
         private int dungeonHeight;
         public List<Node> RoomSpaces { get => roomSpaces; }
 
@@ -30,13 +31,15 @@ namespace dungeonGenerator
                 }
             }
         }
-        public DungeonCalculator(BoundsInt dungeonDimensions)
+        public DungeonCalculator(BoundsInt dungeonDimensions, System.Random randomGenerator)
         {
 
             // TODO: Further Refactor this
             this.dungeonWidth = dungeonDimensions.size.x;
             this.dungeonHeight = dungeonDimensions.size.y;
             this.dungeonLength = dungeonDimensions.size.z;
+
+            this._randomGenerator = randomGenerator;
             
             
             Debug.Log($"Dungeon Height: {dungeonHeight}");
@@ -66,14 +69,12 @@ namespace dungeonGenerator
             // Vector of Minimum Space need to accomodate given Room Size
 
             // TODO: Add check if this value is impossible
-            var minSpaceDim = new Vector3Int(
-                roomWidthMin + roomOffset.x + wallThickness * 2,
-                roomLengthMin + roomOffset.y + wallThickness * 2,
-                roomHeightMin + roomOffset.z
 
-            );
+            // FIXME: Check if this value is correct
+            var totalRoomOffset = roomOffset + new Vector3Int(1, 0, 1) * wallThickness * 2;
+            var minSpaceDim = roomBoundsMin.size + totalRoomOffset;
 
-            var allNodeSpaces = bsp.PartitionSpace(maxIterations, minSpaceDim, splitCenterDeviationPercent);  // include roomOffset and wallThickness to have correct placement
+            var allNodeSpaces = bsp.PartitionSpace(maxIterations, minSpaceDim, splitCenterDeviationPercent, this._randomGenerator);  // include roomOffset and wallThickness to have correct placement
 
 
             // 1.2 Extract the leaves, which represent the possible room positions (BSP Step May lead to bsp overrliance)
@@ -92,12 +93,11 @@ namespace dungeonGenerator
                 roomHeightMin
             );
 
-            // FIXME: Check if this value is correct
-            var totalRoomOffset = roomOffset + new Vector3Int(1, 1, 0) * wallThickness * 2;
+           
 
             // 2.1 Place rooms within the possible room bounds taking into account room offset
             RoomCalculator roomGenerator = new RoomCalculator(minRoomDim, totalRoomOffset, corridorWidth); // FIXME: Make more general remove corriodr width dependency
-            var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
+            var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces, this._randomGenerator);
 
             #endregion
 
@@ -123,7 +123,7 @@ namespace dungeonGenerator
 
 
 
-            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid);
+            var corridorList = corridorGenerator.CreateCorridors(allNodeSpaces, corridorWidth, wallThickness, minRoomDim, corridorHeight, availableVoxelGrid, this._randomGenerator);
 
             //visualizeVoxelGrid(availableVoxelGrid);
 

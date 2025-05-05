@@ -38,7 +38,7 @@ namespace dungeonGenerator
         /// <returns>rooms</returns>
         /// 
 
-        public List<SpaceNode> PlaceRoomsInSpaces(List<Node> roomSpaces)
+        public List<SpaceNode> PlaceRoomsInSpaces(List<Node> roomSpaces, System.Random randomGenerator)
 
         {
             // list of rooms to return
@@ -47,11 +47,11 @@ namespace dungeonGenerator
             // loop over spaces placing rooms in each
             foreach(var roomSpace in roomSpaces)
             {
-
+                Debug.Log($"Original size: {roomSpace.Bounds.size}");
                 // TODO: Add check if totalRoomOffset Greater than room Size
                 BoundsInt bounds = new BoundsInt(
                         roomSpace.Bounds.position,
-                        roomSpace.Bounds.size - new Vector3Int(this.totalRoomOffset.x, this.totalRoomOffset.z, this.totalRoomOffset.y)
+                        roomSpace.Bounds.size - new Vector3Int(this.totalRoomOffset.x, this.totalRoomOffset.y, this.totalRoomOffset.z)
                     );
                 roomSpace.Bounds = bounds;
                 roomSpace.RoomType = RoomType.Room;
@@ -66,9 +66,9 @@ namespace dungeonGenerator
                 //var size = new Vector3Int(Random.Range(minSize.x, maxSize.x), Random.Range(minSize.y, Mathf.Min(32,maxSize.y)), Random.Range(minSize.z, maxSize.z));
 
 
-
+                Debug.Log($"MinSize values: {minSize.x},{minSize.y},{minSize.z}");
                 Debug.Log($"MaxSize values: {maxSize.x},{maxSize.y},{maxSize.z}");
-                var size = new Vector3Int(new System.Random().Next(minSize.x, maxSize.x), new System.Random().Next(minSize.y, (Mathf.Min(32, maxSize.y))), new System.Random().Next(minSize.z, maxSize.z));
+                var size = new Vector3Int(randomGenerator.Next(minSize.x, maxSize.x), randomGenerator.Next(minSize.y, (Mathf.Min(32, maxSize.y))), randomGenerator.Next(minSize.z, maxSize.z));
 
 
                 // randomize Position
@@ -80,7 +80,7 @@ namespace dungeonGenerator
 
 
            
-                var position = roomSpace.Bounds.position + new Vector3Int(new System.Random().Next(0, (roomSpace.Bounds.size.x - size.x)), 0, new System.Random().Next(0, roomSpace.Bounds.size.z - size.z));
+                var position = roomSpace.Bounds.position + new Vector3Int(randomGenerator.Next(0, (roomSpace.Bounds.size.x - size.x)), 0, randomGenerator.Next(0, roomSpace.Bounds.size.z - size.z));
    
 
 

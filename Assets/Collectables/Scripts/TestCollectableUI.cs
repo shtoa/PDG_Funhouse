@@ -47,7 +47,7 @@ public class TestCollectableUI : MonoBehaviour
             if (!areCountersInitialized)
             {
                 CreateCounters();
-                CreateUICollectables();
+                //CreateUICollectables();
                 areCountersInitialized = true;
 
             }

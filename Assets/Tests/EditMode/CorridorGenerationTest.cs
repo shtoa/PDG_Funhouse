@@ -13,13 +13,13 @@ public class CorridorGenerationTest
     // end to end corridor generation test
     [Test]
     [TestCaseSource(nameof(EndToEndCorridorGenerationCases))]
-    public void EndToEndCorridorGenerationTest((List<SpaceNode> spaceNodes, bool[,,] availableVoxelGrid, Vector3Int minRoomDim) testData)
+    public void EndToEndCorridorGenerationTest((List<SpaceNode> spaceNodes, bool[,,] availableVoxelGrid, Vector3Int minRoomDim, int seed) testData)
     {
         CorridorGenerator corridorGenerator = new CorridorGenerator();
-        Assert.Greater(corridorGenerator.CreateCorridors(testData.spaceNodes, 1, 1, testData.minRoomDim, 2, testData.availableVoxelGrid).Count, 0);
+        Assert.Greater(corridorGenerator.CreateCorridors(testData.spaceNodes, 1, 1, testData.minRoomDim, 2, testData.availableVoxelGrid, new System.Random(testData.seed)).Count, 0);
     }
 
-    public static IEnumerable<(List<SpaceNode> spaceNodes, bool[,,] availableVoxelGrid, Vector3Int minRoomDim)> EndToEndCorridorGenerationCases()
+    public static IEnumerable<(List<SpaceNode> spaceNodes, bool[,,] availableVoxelGrid, Vector3Int minRoomDim, int seed)> EndToEndCorridorGenerationCases()
     {
          
         string path = Application.dataPath + "/Tests/EditMode/ProblemConfigs";
@@ -31,7 +31,6 @@ public class CorridorGenerationTest
             foreach (string file in files)
             {
                 dungeonConfigLoad = Load(File.ReadAllText(file));
-                Debug.Log($"corridorWidth: {dungeonConfigLoad.corridorWidth}");
                 yield return GenerateSpaceNodes(dungeonConfigLoad.maxIterations,
                                    dungeonConfigLoad.roomBoundsMin,
                                    dungeonConfigLoad.splitCenterDeviation,
@@ -50,7 +49,7 @@ public class CorridorGenerationTest
 
 
 
-    public static (List<SpaceNode> spaceNodes, bool[,,] availableVoxelGrid, Vector3Int minRoomDim) GenerateSpaceNodes(int maxIterations, BoundsInt roomBoundsMin, Vector3 splitCenterDeviationPercent, Vector3Int roomOffset, Vector3Int dungeonDim, int seed, int corridorWidth = 1, int wallThickness = 1, int corridorHeight = 2)
+    public static (List<SpaceNode> spaceNodes, bool[,,] availableVoxelGrid, Vector3Int minRoomDi, int seed) GenerateSpaceNodes(int maxIterations, BoundsInt roomBoundsMin, Vector3 splitCenterDeviationPercent, Vector3Int roomOffset, Vector3Int dungeonDim, int seed, int corridorWidth = 1, int wallThickness = 1, int corridorHeight = 2)
     {
 
         Random.InitState(seed);
@@ -69,15 +68,10 @@ public class CorridorGenerationTest
 
         // Vector of Minimum Space need to accomodate given Room Size
 
-        // TODO: Add check if this value is impossible
-        var minSpaceDim = new Vector3Int(
-            roomWidthMin + roomOffset.x + wallThickness * 2,
-            roomLengthMin + roomOffset.y + wallThickness * 2,
-            roomHeightMin + roomOffset.z
+        var totalRoomOffset = roomOffset + new Vector3Int(1, 0, 1) * wallThickness * 2;
+        var minSpaceDim = roomBoundsMin.size + totalRoomOffset;
 
-        );
-
-        var allNodeSpaces = bsp.PartitionSpace(maxIterations, minSpaceDim, splitCenterDeviationPercent);  // include roomOffset and wallThickness to have correct placement
+        var allNodeSpaces = bsp.PartitionSpace(maxIterations, minSpaceDim, splitCenterDeviationPercent, new System.Random(seed));  // include roomOffset and wallThickness to have correct placement
         // 1.2 Extract the leaves, which represent the possible room positions (BSP Step May lead to bsp overrliance)
         var roomSpaces = GraphHelper.GetLeaves(bsp.RootNode);
 
@@ -92,12 +86,9 @@ public class CorridorGenerationTest
             roomHeightMin
         );
 
-        // FIXME: Check if this value is correct
-        var totalRoomOffset = roomOffset + new Vector3Int(1, 1, 0) * wallThickness * 2;
-
         // 2.1 Place rooms within the possible room bounds taking into account room offset
         RoomCalculator roomGenerator = new RoomCalculator(minRoomDim, totalRoomOffset, corridorWidth); // FIXME: Make more general remove corriodr width dependency
-        var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces);
+        var rooms = roomGenerator.PlaceRoomsInSpaces(roomSpaces, new System.Random(seed));
 
 
 
@@ -115,7 +106,7 @@ public class CorridorGenerationTest
 
         #endregion
 
-        return (allNodeSpaces,availableVoxelGrid, minRoomDim);
+        return (allNodeSpaces,availableVoxelGrid, minRoomDim, seed);
 
     }
     [System.Serializable]

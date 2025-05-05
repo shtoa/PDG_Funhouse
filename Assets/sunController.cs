@@ -16,6 +16,9 @@ public class sunController : MonoBehaviour
     [SerializeField]
     DungeonGenerator dungeonGenerator;
 
+    [SerializeField]
+    Camera cam;
+
 
     private Vector3 orbitCenter;
 
@@ -25,7 +28,9 @@ public class sunController : MonoBehaviour
         transform.localScale = Vector3.one*20f;
         orbitCenter = dungeonGenerator.transform.position + dungeonGenerator.dungeonBounds.size / 2;
 
-
+        cam.transform.parent = transform;
+        cam.transform.position = transform.position - Vector3.right*10f;
+        cam.transform.localEulerAngles = new Vector3(0, -90f, 0f);
 
 
     }
@@ -35,10 +40,10 @@ public class sunController : MonoBehaviour
     {
         // set Rotation around center
         transform.position = orbitCenter + new Vector3(100*Mathf.Cos(Time.time/10),50,100*Mathf.Sin(Time.time/10));
-        
         // Set Local Rotation
-        
+
         transform.LookAt(playerTransform.position);
+        
         transform.transform.Rotate(0, 90, 0);
 
 

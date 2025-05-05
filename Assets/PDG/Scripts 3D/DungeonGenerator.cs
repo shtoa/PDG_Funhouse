@@ -19,6 +19,8 @@ using static dungeonGenerator.DungeonGenerator;
 using System.Threading.Tasks;
 using UnityEngine.Pool;
 using tutorialGenerator;
+using UnityEditor.Rendering;
+using Unity.EditorCoroutines.Editor;
 
 namespace dungeonGenerator
 
@@ -55,6 +57,10 @@ namespace dungeonGenerator
         private List<BoundsInt> wallBounds = new List<BoundsInt>();
         private List<BoundsInt> doorBounds = new List<BoundsInt>();
 
+        [Header("Editor Generation Settings")]
+        public bool isEditorBatched = true;
+
+
         [Header("Testing")]
         public int testCount = 1;
 
@@ -89,17 +95,21 @@ namespace dungeonGenerator
 
         public void RegenerateDungeon()
         {
-            DeleteDungeon();
-            corridorWidthAndWall = corridorWidth + 2 * wallThickness;
-            GenerateDungeon();
+            //Debug.unityLogger.logEnabled = false;
+            if (dungeonGenerated == null || dungeonGenerated.Task.IsCompleted)
+            {
+                DeleteDungeon();
+                corridorWidthAndWall = corridorWidth + 2 * wallThickness;
+                GenerateDungeon();
+            }
         }
 
         // private List<WindowAsset> allWindows = new List<WindowAsset>();
         public void DeleteDungeon()
         {
             // loop over room objects return all spawned assets
-            WindowSpawner.GetComponent<WindowSpawner>().ResetPrevInstances();
-            WallSpawner.GetComponent<WallSpawner>().ResetPrevInstances();
+            WindowSpawner.GetComponent<WindowSpawner>()._windowPool.ResetPrevInstances();
+            WallSpawner.GetComponent<WallSpawner>()._wallPool.ResetPrevInstances();
             // destroy room objects
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
@@ -112,8 +122,8 @@ namespace dungeonGenerator
         public void DeletePreviousDungeon()
         {
             // loop over room objects return all spawned assets
-            WindowSpawner.GetComponent<WindowSpawner>().ResetPrevInstances();
-            WallSpawner.GetComponent<WallSpawner>().ResetPrevInstances();
+            WindowSpawner.GetComponent<WindowSpawner>()._windowPool.ResetPrevInstances();
+            WallSpawner.GetComponent<WallSpawner>()._wallPool.ResetPrevInstances();
             // destroy room objects
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
@@ -191,7 +201,7 @@ namespace dungeonGenerator
 
                     AllRoomStatsWrapper allRoomStats = new AllRoomStatsWrapper();
 
-                    DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
+                
 
                     if (!seededGenerationEnabled)
                     {
@@ -199,6 +209,8 @@ namespace dungeonGenerator
                     }
 
                     Random.InitState(randomSeed); // set generation seed
+
+                    DungeonCalculator calculator = new DungeonCalculator(dungeonBounds, new System.Random(randomSeed));
 
                     // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
                     roomList = calculator.CalculateDungeon(maxIterations,
@@ -226,54 +238,76 @@ namespace dungeonGenerator
             }
 
         }
+        private IEnumerator GenerateDungeonCoroutine(TaskCompletionSource<bool> dungeonGenerated)
+        {
+            GenerateAsync(dungeonGenerated, 0f, randomSeed, Application.isPlaying || isEditorBatched);//Application.isPlaying);
 
+            yield return new WaitUntil(() => dungeonGenerated.Task.IsCompleted);
+  
+        }
+        private TaskCompletionSource<bool> dungeonGenerated;
         private void GenerateDungeon()
         {
 
-            Stopwatch st = new Stopwatch();
-            st.Start();
-
-            DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
-
-            if (!seededGenerationEnabled)
+            if (dungeonGenerated == null || dungeonGenerated.Task.IsCompleted)
             {
-                randomSeed = Random.Range(int.MinValue, int.MaxValue);
+                if (!seededGenerationEnabled)
+                {
+                    randomSeed = Random.Range(int.MinValue, int.MaxValue);
+                }
+
+
+                Debug.Log("Generating Dungeon");
+                dungeonGenerated = new TaskCompletionSource<bool>();
+
+                if (!Application.isPlaying)
+                    EditorCoroutineUtility.StartCoroutineOwnerless(GenerateDungeonCoroutine(dungeonGenerated));
+                
+                else StartCoroutine(GenerateDungeonCoroutine(dungeonGenerated));
+                
             }
+            //Stopwatch st = new Stopwatch();
+            //st.Start();
 
-            Random.InitState(randomSeed); // set generation seed
-
-            // TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
-            roomList = calculator.CalculateDungeon(maxIterations, 
-                                                   roomBoundsMin, 
-                                                   splitCenterDeviation, 
-                                                   corridorWidthAndWall, 
-                                                   wallThickness, 
-                                                   roomOffsetMin, 
-                                                   corridorHeight);
-         
-            if (roomList.Count == 0)
-            {
-                this.RegenerateDungeon();
-                return;
-            }
+        
 
 
-            InitializeStartAndEnd(calculator.RoomSpaces);
+            //Random.InitState(randomSeed); // set generation seed
 
-            DungeonDecorator decorator = GetComponent<DungeonDecorator>();
-            decorator.roomGenerator = new RoomGenerator(roomList, this.gameObject);
-            decorator.roomGenerator.GenerateRooms(roomList);
+            //DungeonCalculator calculator = new DungeonCalculator(dungeonBounds, new System.Random(randomSeed));
 
-            checkDungeonConnections(roomList);
+            //// TODO: Make objects for Room Properties, Wall Properties, Corridor Properties to pass down
+            //roomList = calculator.CalculateDungeon(maxIterations, 
+            //                                       roomBoundsMin, 
+            //                                       splitCenterDeviation, 
+            //                                       corridorWidthAndWall, 
+            //                                       wallThickness, 
+            //                                       roomOffsetMin, 
+            //                                       corridorHeight);
 
-            st.Stop();
+            //if (roomList.Count == 0)
+            //{
+            //    this.RegenerateDungeon();
+            //    return;
+            //}
 
-            DungeonStatTrack.roomList = roomList;
 
-            setConfigFromTo(this, DungeonStatTrack.dungeonConfig);
+            //InitializeStartAndEnd(calculator.RoomSpaces);
 
-            Debug.Log($"Generation Took {st.ElapsedMilliseconds} Milliseconds");
-            DungeonStatTrack.GenerationTime = st.ElapsedMilliseconds;
+            //DungeonDecorator decorator = GetComponent<DungeonDecorator>();
+            //decorator.roomGenerator = new RoomGenerator(roomList, this.gameObject);
+            //decorator.roomGenerator.GenerateRooms(roomList);
+
+            //checkDungeonConnections(roomList);
+
+            //st.Stop();
+
+            //DungeonStatTrack.roomList = roomList;
+
+            //setConfigFromTo(this, DungeonStatTrack.dungeonConfig);
+
+            //Debug.Log($"Generation Took {st.ElapsedMilliseconds} Milliseconds");
+            //DungeonStatTrack.GenerationTime = st.ElapsedMilliseconds;
         }
 
         private void checkDungeonConnections(List<Node> roomList)
@@ -336,8 +370,6 @@ namespace dungeonGenerator
         public int maxIterationGeneration = 40;
         public int currentGenerationI = 0;
 
-       
-
         void loadDungeonConfig()
         {
             string savePath = Application.dataPath + "/Save/DungeonConfig.txt";
@@ -367,8 +399,7 @@ namespace dungeonGenerator
 
 
             currentGenerationI = 0;
-            maxIterationGeneration = 0;
-            Debug.unityLogger.logEnabled = false;
+            maxIterationGeneration = 40;
             StartCoroutine("GenerateDungeonAuto");
         }
         IEnumerator GenerateDungeonAuto()
@@ -377,36 +408,36 @@ namespace dungeonGenerator
             while (maxIterationGeneration > currentGenerationI)
             {
                 var dungeonGenerated = new TaskCompletionSource<bool>();
-                GenerateAsync(dungeonGenerated);
+                GenerateAsync(dungeonGenerated, 0.1f, new System.Random().Next(), true);
 
                 yield return new WaitUntil(()=>dungeonGenerated.Task.IsCompleted);
 
                 maxIterations = new System.Random().Next(20, 30);
 
 
-                //roomBoundsMin = new BoundsInt(
-                //    roomBoundsMin.position,
-                //    new Vector3Int(new System.Random().Next(10, 20),
-                //                new System.Random().Next(6, 15),
-                //                new System.Random().Next(10, 20)
-                //    )
-                //    );
-                //splitCenterDeviation = new Vector3((float)new System.Random().NextDouble(),
-                //                (float)new System.Random().NextDouble(),
-                //                (float)new System.Random().NextDouble()
-                //    );
+                roomBoundsMin = new BoundsInt(
+                    roomBoundsMin.position,
+                    new Vector3Int(new System.Random().Next(10, 20),
+                                new System.Random().Next(6, 15),
+                                new System.Random().Next(10, 20)
+                    )
+                    );
+                splitCenterDeviation = new Vector3((float)new System.Random().NextDouble(),
+                                (float)new System.Random().NextDouble(),
+                                (float)new System.Random().NextDouble()
+                    );
                 dungeonBounds = new BoundsInt(
                     roomBoundsMin.position,
-                    new Vector3Int(new System.Random().Next(10 * roomBoundsMin.size.x, 10 * roomBoundsMin.size.x),
-                                new System.Random().Next(10 * roomBoundsMin.size.y, 10 * roomBoundsMin.size.y),
-                                new System.Random().Next(10 * roomBoundsMin.size.z, 10 * roomBoundsMin.size.z)
+                    new Vector3Int(new System.Random().Next(5 * roomBoundsMin.size.x, 10 * roomBoundsMin.size.x),
+                                new System.Random().Next(5 * roomBoundsMin.size.y, 10 * roomBoundsMin.size.y),
+                                new System.Random().Next(5 * roomBoundsMin.size.z, 10 * roomBoundsMin.size.z)
                     )
                     );
 
                 currentGenerationI++;
                 Debug.Log($"currentGenerationI {currentGenerationI}");
 
-                //Debug.unityLogger.logEnabled = false;
+                Debug.unityLogger.logEnabled = false;
 
                 yield return new WaitForSeconds(1f);
 
@@ -414,12 +445,13 @@ namespace dungeonGenerator
         }
 
 
-        private async void GenerateAsync(TaskCompletionSource<bool> dungeonGenerated)
+
+        private async void GenerateAsync(TaskCompletionSource<bool> dungeonGenerated, float delay, int seed, bool isBatched)
         {
            
             DungeonDecorator decorator = GetComponent<DungeonDecorator>();
             decorator.roomGenerator = new RoomGenerator(roomList, this.gameObject);
-            DungeonCalculator calculator = new DungeonCalculator(dungeonBounds);
+            DungeonCalculator calculator = new DungeonCalculator(dungeonBounds, new System.Random(seed));
             var result = await Task.Run(() =>
             {
              
@@ -439,7 +471,10 @@ namespace dungeonGenerator
             decorator.roomGenerator.SetupRoomParents();
 
             var roomsComplete = new TaskCompletionSource<bool>();
-            StartCoroutine(decorator.roomGenerator.GenerateRoomsBatch(result, 1, roomsComplete, 0.1f));
+
+            var roomsPerBatch = isBatched ? 1 : result.Count;
+
+            StartCoroutine(decorator.roomGenerator.GenerateRoomsBatch(result, roomsPerBatch, roomsComplete, delay));
 
 
          

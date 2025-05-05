@@ -36,6 +36,7 @@ namespace dungeonGenerator
         // grids to track occupied spaces
         private bool[,,] availableVoxelGrid;
         private bool[,,] corridorGrid;
+        private System.Random _randomGenerator;
 
         // directions surrounding a point
         private List<Vector3Int> possibleDir = new List<Vector3Int> {
@@ -57,7 +58,7 @@ namespace dungeonGenerator
             Vector3Int.back,
         };
 
-        public CorridorNodePath(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight, bool[,,] availableVoxelGrid) : base(null) // null since it doesnt have any parents
+        public CorridorNodePath(Node node1, Node node2, int corridorWidth, int wallThickness, Vector3Int minRoomDim, int corridorHeight, bool[,,] availableVoxelGrid, System.Random randomGenerator) : base(null) // null since it doesnt have any parents
         {
             // nodes to connect
             this.node1 = node1;
@@ -72,6 +73,8 @@ namespace dungeonGenerator
             // grids to track occupied spaces
             this.availableVoxelGrid = availableVoxelGrid;
             this.corridorGrid = getCorridorGrid(availableVoxelGrid);
+
+            this._randomGenerator = randomGenerator;
 
             // generate corridor bounds for nodes
             GenerateCorridor();
@@ -584,7 +587,7 @@ namespace dungeonGenerator
             while (endNodeNeighbors.Count() == 0 && startNodes.Count() > 0)
             {
 
-                startNode = startNodes[new System.Random().Next(0, startNodes.Count())]; //[Random.Range(0, startNodes.Count())];
+                startNode = startNodes[this._randomGenerator.Next(0, startNodes.Count())]; //[Random.Range(0, startNodes.Count())];
                 startNodes.Remove(startNode);
             }
 
@@ -920,7 +923,7 @@ namespace dungeonGenerator
             Node downSpace = null;
             Node upSpace = null;
 
-            upSpace = sortedUpSpace[new System.Random().Next(0, sortedUpSpace.Count())]; // pick a left space from candidates // Random.Range(0, sortedUpSpace.Count())
+            upSpace = sortedUpSpace[this._randomGenerator.Next(0, sortedUpSpace.Count())]; // pick a left space from candidates // Random.Range(0, sortedUpSpace.Count())
             var neighborsInDownSpaceList = ReturnPossibleNeighborsDownSpace(upSpace, sortedDownSpace); // get possible neighbors in rightSpace
 
             if (neighborsInDownSpaceList.Count() > 0)
@@ -943,7 +946,7 @@ namespace dungeonGenerator
                     if (neighborsInDownSpaceList.Count() > 0) // if neighbors are found set leftSpace to newly selected leftSpace and select rightSpace randomly
                     {
                         upSpace = newUpSpace;
-                        downSpace = neighborsInDownSpaceList[new System.Random().Next(0, neighborsInDownSpaceList.Count())]; //Random.Range(0, neighborsInDownSpaceList.Count())];
+                        downSpace = neighborsInDownSpaceList[this._randomGenerator.Next(0, neighborsInDownSpaceList.Count())]; //Random.Range(0, neighborsInDownSpaceList.Count())];
                         break;
                     }
                 }
@@ -1427,7 +1430,7 @@ namespace dungeonGenerator
             var curPos = planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
             preEndPosOffset = preEndPos - startPos - planeOffsets.Aggregate((vec1, vec2) => vec1 + vec2);
 
-            maxIter = i+100; // run for 100 iterations
+            maxIter = i+40; // run for 100 iterations
             int depth = 0;
             failedDirectionsAtDepth[0] = failedDirections;
 
@@ -1450,16 +1453,21 @@ namespace dungeonGenerator
 
                    //))
              
-                   && ((((curPos.y + startPos.y) < (preEndPos.y))
+                   && (((curPos.y + startPos.y) < (preEndPos.y))
 
-                   || Vector3.Distance(curPos + startPos, preEndPos) > 4f)
-
+                   //|| Vector3.Distance(curPos + startPos, preEndPos) > 4f
+                   
                    || !isWithinTopBounds
 
-                   || Vector3.Distance(connectedRoomsOrderedByY[1].Bounds.min + new Vector3(1, 0, 1), curPos + startPos) < 4) // prevents from forming at entrance
+                   || (Vector3.Distance(connectedRoomsOrderedByY[1].Bounds.min + new Vector3(1, 0, 1), curPos + startPos) < 4) // prevents from forming at entrance
 
+                   )
+                   
                 //|| (isOverlapingCorridorGrid(curPos + startPos, preEndPosOffset))
                 //)
+
+                 
+
 
                 )
             {

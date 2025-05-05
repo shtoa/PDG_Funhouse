@@ -4,12 +4,12 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Pool;
 
-public class WindowAsset : MonoBehaviour
+public class WindowAsset : MonoBehaviour, IAssetPoolObject<WindowAsset> 
 {
 
     private ObjectPool<WindowAsset> _windowPool;
 
-    public void setPool(ObjectPool<WindowAsset> windowPool)
+    public void SetPool(ObjectPool<WindowAsset> windowPool)
     {
         _windowPool = windowPool;
     }
