@@ -27,8 +27,13 @@ public class GenericAssetPool<T> : IPoolManager where T : MonoBehaviour, IAssetP
     public void ResetPrevInstances()
     {
         for (int i = _currentInstances.Count - 1; i >= 0; i--){
-
-            _pool.Release(_currentInstances[i]);
+            if (_currentInstances[i] != null)
+            {
+                _pool.Release(_currentInstances[i]);
+            } else
+            {
+                _currentInstances.RemoveAt(i);
+            }
         }
     }
 
