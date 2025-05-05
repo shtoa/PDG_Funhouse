@@ -69,8 +69,10 @@ namespace dungeonGenerator
 
 
         [SerializeField]
+        [Header("Object Pooling")]
         public GameObject WindowSpawner;
         public GameObject WallSpawner;
+        public GameObject LightSpawner;
 
 
         // [Header("Corridor Properties")]
@@ -110,6 +112,8 @@ namespace dungeonGenerator
             // loop over room objects return all spawned assets
             WindowSpawner.GetComponent<WindowSpawner>()._windowPool.ResetPrevInstances();
             WallSpawner.GetComponent<WallSpawner>()._wallPool.ResetPrevInstances();
+            LightSpawner.GetComponent<LightSpawner>()._lightPool.ResetPrevInstances();
+            
             // destroy room objects
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
@@ -124,6 +128,9 @@ namespace dungeonGenerator
             // loop over room objects return all spawned assets
             WindowSpawner.GetComponent<WindowSpawner>()._windowPool.ResetPrevInstances();
             WallSpawner.GetComponent<WallSpawner>()._wallPool.ResetPrevInstances();
+            LightSpawner.GetComponent<LightSpawner>()._lightPool.ResetPrevInstances();
+
+
             // destroy room objects
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
@@ -366,6 +373,7 @@ namespace dungeonGenerator
             
         }
 
+        [Header("DungeonAutoGeneration")]
 
         public int maxIterationGeneration = 40;
         public int currentGenerationI = 0;
@@ -399,7 +407,7 @@ namespace dungeonGenerator
 
 
             currentGenerationI = 0;
-            maxIterationGeneration = 40;
+            maxIterationGeneration = 0;
             StartCoroutine("GenerateDungeonAuto");
         }
         IEnumerator GenerateDungeonAuto()

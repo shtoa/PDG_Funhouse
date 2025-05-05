@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-public class GenericAssetPool<T> where T : MonoBehaviour, IAssetPoolObject<T>
+public class GenericAssetPool<T> : IPoolManager where T : MonoBehaviour, IAssetPoolObject<T>
 {
     [SerializeField]
     public ObjectPool<T> _pool;

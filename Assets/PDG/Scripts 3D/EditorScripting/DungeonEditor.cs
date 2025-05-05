@@ -68,9 +68,9 @@ namespace dungeonGenerator
         private void OnSceneGUI()
         {
 
-            // run only in edit mode
-            if (Application.isPlaying == false)
-            {
+            //// run only in edit mode
+            //if (Application.isPlaying == false)
+            //{
                 var dungeonBounds = dungeonGenerator.dungeonBounds; // get the bounds of the dungeon
                 dungeonBounds.position = Vector3Int.CeilToInt(((DungeonGenerator)target).transform.position); // set the dungeonBounds position to the transform of the gameObject
 
@@ -93,7 +93,7 @@ namespace dungeonGenerator
                 Undo.RecordObject(target, "scaleDungeon"); // add ability to undo dungeon scaling
                 dungeonGenerator.dungeonBounds.size = Vector3Int.FloorToInt(clampedScale); // set the new size to the Dungeon Bounds
                 
-            }
+            //}
 
         }
     }

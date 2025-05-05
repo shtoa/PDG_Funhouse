@@ -215,8 +215,10 @@ namespace dungeonGenerator
                 drawWallsAsync(room, roomStyle, roomObj);
 
                 // draw lights and windows
-                DrawObject(roomObj, room.WindowPlacements, dungeonDecorator.windowMesh, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool._pool);
-                //DrawObject(roomObj, room.LightPlacements, dungeonDecorator.lightMesh);
+                DrawObject(roomObj, room.WindowPlacements, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool._pool);
+                DrawObject(roomObj, room.LightPlacements, dungeonGenerator.LightSpawner.GetComponent<LightSpawner>()._lightPool._pool);
+
+
 
             }
             else
@@ -438,8 +440,8 @@ namespace dungeonGenerator
                     drawWallsAsync(room, roomStyle, roomObj);
                     
                     // draw lights and windows
-                   DrawObject(roomObj, room.WindowPlacements, dungeonDecorator.windowMesh, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool._pool);
-                   //DrawObject(roomObj, room.LightPlacements, dungeonDecorator.lightMesh);
+                   DrawObject(roomObj, room.WindowPlacements, dungeonGenerator.WindowSpawner.GetComponent<WindowSpawner>()._windowPool._pool);
+                   DrawObject(roomObj, room.LightPlacements, dungeonGenerator.LightSpawner.GetComponent<LightSpawner>()._lightPool._pool);
 
                 } else
                 {
@@ -1046,7 +1048,7 @@ namespace dungeonGenerator
         }
 
 
-        public void DrawObject(GameObject roomObj, List<(Vector3, Vector3Int)> objectTransformList, GameObject mesh, ObjectPool<WindowAsset> gameObjPool)
+        public void DrawObject<T>(GameObject roomObj, List<(Vector3, Vector3Int)> objectTransformList, ObjectPool<T> gameObjPool) where T : MonoBehaviour
         {
             foreach (var Placement in objectTransformList)
             {

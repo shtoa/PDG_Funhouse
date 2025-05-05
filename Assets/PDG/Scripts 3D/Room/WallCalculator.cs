@@ -147,13 +147,14 @@ namespace dungeonGenerator
                     var lightRotation = new Vector3Int();
                     if (wallPos == WallPosition.top || wallPos == WallPosition.bottom)
                     {
-                        lightRotation = new Vector3Int(0, 0, 90);
-                        if (wallPos == WallPosition.bottom) lightRotation = new Vector3Int(0, 0, 180);
+                        lightRotation = new Vector3Int(-90, -90, 0);
+                        if (wallPos == WallPosition.bottom) lightRotation = new Vector3Int(-90, 90, 0);
                         lightPosition = new Vector3(x, 2.5f, 0) + wallBounds.position + ((wallPos == WallPosition.top) ? new Vector3(1.5f, 0, 0.9f) : new Vector3(1.5f, 0, 2.1f));
                     }
                     else
                     {
-                        if (wallPos == WallPosition.right) lightRotation = new Vector3Int(0, 0, 180);
+                        if (wallPos == WallPosition.right) lightRotation = new Vector3Int(-90, 0, 0);
+                        else lightRotation = new Vector3Int(-90, 0, 180);
                         lightPosition = new Vector3(0, 2.5f, x) + wallBounds.position + ((wallPos == WallPosition.left) ? new Vector3(2.1f, 0, 1.5f) : new Vector3(0.9f, 0, 1.5f));
 
                     }
