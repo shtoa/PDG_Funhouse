@@ -9,6 +9,7 @@ TagManager:
   - Waypoints
   - Floor
   - minimap
+  - Dungeon
   layers:
   - Default
   - TransparentFX

@@ -153,8 +153,9 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        Movement();
+  
         WallRun();
+        Movement();
 
     }
 
@@ -245,7 +246,7 @@ public class PlayerController : MonoBehaviour
 
     public void SpeedControl()
     {
-        _rigidbody.velocity = Vector3.ClampMagnitude(new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z), 7f)+Vector3.up* Math.Min(_rigidbody.velocity.y,8f);
+        _rigidbody.velocity = Vector3.ClampMagnitude(new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z), 7f)+Vector3.up* Math.Min(_rigidbody.velocity.y,6f);
        
     }
 
@@ -415,6 +416,8 @@ public class PlayerController : MonoBehaviour
             GetComponent<CapsuleCollider>().enabled = false;
             GetComponent<SphereCollider>().enabled = true;
 
+          
+
         }
         else
         {
@@ -424,6 +427,7 @@ public class PlayerController : MonoBehaviour
                 GetComponent<SphereCollider>().enabled = false;
                 _rigidbody.AddForce(Vector3.up * 500f * Time.deltaTime, ForceMode.Impulse);
                 _rigidbody.position = new Vector3(_rigidbody.position.x, _rigidbody.position.y + 0.5f, _rigidbody.position.z);
+                
             }
 
             //}

@@ -22,11 +22,14 @@ public class TestCollectableUI : MonoBehaviour
 
     public GameObject Donor;
     public GameObject Syringe;
+    public ParticleSystem bleedingParticles;
     private void Start()
     {
         UpdateSyringeTracker();
         donorFill = 1f;
         syringeFill = 0f;
+        var bleedingEmission = bleedingParticles.emission;
+        bleedingEmission.enabled = false;
     }
 
     private void Update()
@@ -74,8 +77,26 @@ public class TestCollectableUI : MonoBehaviour
     {
         var curCollectedRatio = (float)GameManager.Instance.numCollected.Values.Sum() / (float)GameManager.Instance.total.Values.Sum();
 
-        donorFill = Mathf.Lerp(donorFill, 1f - curCollectedRatio, 0.05f);
-        syringeFill = Mathf.Lerp(syringeFill, curCollectedRatio, 0.05f);
+        //donorFill = Mathf.Lerp(donorFill, 1f - curCollectedRatio, 0.002f);
+        //syringeFill = Mathf.Lerp(syringeFill, curCollectedRatio, 0.002f);
+
+        if(syringeFill < (curCollectedRatio))
+        {
+            syringeFill += 0.02f*Time.deltaTime;
+            donorFill -= 0.02f * Time.deltaTime;
+
+
+            var bleedingEmission = bleedingParticles.emission;
+            bleedingEmission.enabled = true;
+        }
+        else
+        {
+            
+            var bleedingEmission = bleedingParticles.emission;
+            bleedingEmission.enabled = false;
+            
+             
+        }
 
         Donor.GetComponent<MeshRenderer>().sharedMaterial.SetFloat("_Fill", donorFill);
         Syringe.GetComponent<MeshRenderer>().sharedMaterial.SetFloat("_Fill", syringeFill);

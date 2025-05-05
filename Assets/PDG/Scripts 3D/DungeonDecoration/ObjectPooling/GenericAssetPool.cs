@@ -12,8 +12,8 @@ public class GenericAssetPool<T> : IPoolManager where T : MonoBehaviour, IAssetP
     [SerializeField]
     public List<T> _currentInstances;
 
-    public GameObject _asset;
-    public GameObject _poolParent;
+    private GameObject _asset;
+    private GameObject _poolParent;
 
     // Create Asset Pool in Constructor
     public GenericAssetPool(GameObject asset, GameObject poolParent)
@@ -55,6 +55,10 @@ public class GenericAssetPool<T> : IPoolManager where T : MonoBehaviour, IAssetP
     private void OnReturnAssetToPool(T asset)
     {
         asset.transform.parent = this._poolParent.transform;
+
+        asset.gameObject.transform.localEulerAngles = Vector3.zero;
+        asset.gameObject.transform.localPosition = Vector3.zero;
+
         asset.gameObject.SetActive(false);
         _currentInstances.Remove(asset);
     }

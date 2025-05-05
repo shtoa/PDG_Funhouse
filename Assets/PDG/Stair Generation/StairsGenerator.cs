@@ -67,6 +67,8 @@ namespace dungeonGenerator
 
         public static void GenerateStairs(Transform transform, Vector3 startPos, Material stairsMaterial, Vector3 planeSize, List<Vector3> planeOffsets)
         {
+            var lightSpawner = GameObject.FindWithTag("Dungeon").GetComponent<DungeonGenerator>().LightSpawner.GetComponent<LightSpawner>();
+
             Vector3 curOffset = Vector3.zero;
             Vector3 prevOffset = Vector3.zero;
 
@@ -161,11 +163,17 @@ namespace dungeonGenerator
 
 
                             // add light
-                            //GameObject light = GameObject.Instantiate(GameObject.Find("DungeonGen").GetComponent<DungeonDecorator>().lightMesh);
+                            GameObject light = lightSpawner._lightPool._pool.Get().gameObject;
+                            light.transform.localPosition = Vector3.zero;
+                            light.transform.localEulerAngles = new Vector3(-90, -90, 0);
                             //light.transform.Rotate(0f, 0f, 90f);
-                            //light.transform.localPosition = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.15f;
-                            //light.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
-                            //light.transform.SetParent(transform);
+
+
+                            light.transform.localPosition = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.15f;
+                            light.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
+                            light.transform.SetParent(transform);
+
+
 
                             plane.transform.SetParent(transform);
                         }
