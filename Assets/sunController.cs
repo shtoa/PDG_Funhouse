@@ -1,7 +1,9 @@
 using dungeonGenerator;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 
 public class sunController : MonoBehaviour
@@ -19,7 +21,8 @@ public class sunController : MonoBehaviour
 
     [SerializeField]
     Camera cam;
-
+    private Texture2D dungeonViewImageSave;
+    public RenderTexture dungeonViewTexture;
 
     private Vector3 orbitCenter;
     private Vector3 dungeonLookAt;
@@ -31,13 +34,29 @@ public class sunController : MonoBehaviour
         orbitCenter = dungeonGenerator.transform.position + dungeonGenerator.dungeonBounds.size / 2;
 
         cam.transform.parent = transform;
-        cam.transform.position = transform.position - Vector3.right*30f;
+        cam.transform.position = transform.position;
 
         UpdateDungeonCameraLookAt();
 
         dungeonGenerator.OnDungeonRegenerated += UpdateDungeonCameraLookAt;
 
+        dungeonGenerator.OnDungeonFinished -= SaveDungeonView;
+
     }
+
+    private void SaveDungeonView()
+    {
+        var old_texture = RenderTexture.active;
+        dungeonViewImageSave = new Texture2D(dungeonViewTexture.width, dungeonViewTexture.height, TextureFormat.ARGB32, false);
+        RenderTexture.active = dungeonViewTexture;
+        dungeonViewImageSave.ReadPixels(new Rect(0, 0, dungeonViewTexture.width, dungeonViewTexture.height), 0, 0);
+        dungeonViewImageSave.Apply();
+        RenderTexture.active = old_texture;
+
+        string uniquePath = AssetDatabase.GenerateUniqueAssetPath(Application.dataPath + "/DungeonImages/DungeonImage.png");
+        File.WriteAllBytes(uniquePath,dungeonViewImageSave.EncodeToPNG());
+    }
+        
 
     private void UpdateDungeonCameraLookAt()
     {

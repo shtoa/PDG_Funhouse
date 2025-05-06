@@ -92,6 +92,7 @@ namespace dungeonGenerator
 
         public List<Node> roomList { get; private set; }
         public GameObject startRoom { get; private set; }
+        public Action OnDungeonFinished { get; internal set; }
 
         private static Dictionary<CollectableType, int> total = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
 
@@ -412,6 +413,8 @@ namespace dungeonGenerator
 
             currentGenerationI = 0;
             maxIterationGeneration = 0;
+
+            Debug.unityLogger.logEnabled = false;
             StartCoroutine("GenerateDungeonAuto");
         }
         IEnumerator GenerateDungeonAuto()
@@ -421,7 +424,7 @@ namespace dungeonGenerator
             {
           
                 var dungeonGenerated = new TaskCompletionSource<bool>();
-                GenerateAsync(dungeonGenerated, 1f, new System.Random().Next(), true);
+                GenerateAsync(dungeonGenerated, 0.1f, new System.Random().Next(), true); // 1f
 
                 yield return new WaitUntil(()=>dungeonGenerated.Task.IsCompleted);
 
@@ -452,7 +455,7 @@ namespace dungeonGenerator
 
                 Debug.unityLogger.logEnabled = false;
 
-                yield return new WaitForSeconds(3f);
+                yield return new WaitForSeconds(1f);
 
             }
         }
@@ -495,6 +498,8 @@ namespace dungeonGenerator
          
 
             await roomsComplete.Task;
+
+            OnDungeonFinished?.Invoke();
 
             dungeonGenerated.SetResult(true); 
 
