@@ -58,6 +58,7 @@ public class GenericAssetPool<T> : IPoolManager where T : MonoBehaviour, IAssetP
 
         asset.gameObject.transform.localEulerAngles = Vector3.zero;
         asset.gameObject.transform.localPosition = Vector3.zero;
+        asset.gameObject.transform.position = Vector3.zero;
 
         asset.gameObject.SetActive(false);
         _currentInstances.Remove(asset);

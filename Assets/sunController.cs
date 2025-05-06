@@ -1,6 +1,7 @@
 using dungeonGenerator;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class sunController : MonoBehaviour
@@ -21,6 +22,7 @@ public class sunController : MonoBehaviour
 
 
     private Vector3 orbitCenter;
+    private Vector3 dungeonLookAt;
 
     // Start is called before the first frame update
     void Start()
@@ -29,10 +31,20 @@ public class sunController : MonoBehaviour
         orbitCenter = dungeonGenerator.transform.position + dungeonGenerator.dungeonBounds.size / 2;
 
         cam.transform.parent = transform;
-        cam.transform.position = transform.position - Vector3.right*10f;
-        cam.transform.localEulerAngles = new Vector3(0, -90f, 0f);
+        cam.transform.position = transform.position - Vector3.right*30f;
 
+        UpdateDungeonCameraLookAt();
 
+        dungeonGenerator.OnDungeonRegenerated += UpdateDungeonCameraLookAt;
+
+    }
+
+    private void UpdateDungeonCameraLookAt()
+    {
+        var boundsSize = dungeonGenerator.dungeonBounds.size;
+
+        dungeonLookAt = dungeonGenerator.dungeonBounds.size / 2 + dungeonGenerator.transform.position;
+        cam.orthographicSize = math.max(math.max(boundsSize.x, boundsSize.y), boundsSize.z);
     }
 
     // Update is called once per frame
@@ -45,12 +57,15 @@ public class sunController : MonoBehaviour
         transform.LookAt(playerTransform.position);
         
         transform.transform.Rotate(0, 90, 0);
+        cam.transform.LookAt(dungeonLookAt);
+
+        //cam.transform.localEulerAngles = new Vector3(0, -90f, 0f);
 
 
-        
 
 
-       
+
+
 
     }
 }

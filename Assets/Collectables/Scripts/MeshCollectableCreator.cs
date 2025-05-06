@@ -50,7 +50,7 @@ public class MeshCollectableCreator : MonoBehaviour
     private List<Material> mList = new List<Material>();
 
 
-    public void Awake()
+    public void OnEnable()
     {
         if (instance != null && instance != this)
         {

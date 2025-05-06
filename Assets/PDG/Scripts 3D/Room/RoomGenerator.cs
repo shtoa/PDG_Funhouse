@@ -202,7 +202,7 @@ namespace dungeonGenerator
                     // FIX ME: CHECK THIS TRANSFORMATION
                     floor.transform.localPosition = (bound.center - new Vector3(0, bound.size.y / 2f, 0)) + new Vector3(1, 0, 1) * wallThickness + Vector3.up * 0.001f; ; // CHECK ME: May be wrong
                     floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
-
+                    floor.layer = LayerMask.NameToLayer("Dungeon");
 
 
 
@@ -427,7 +427,7 @@ namespace dungeonGenerator
                         // FIX ME: CHECK THIS TRANSFORMATION
                         floor.transform.localPosition = (bound.center - new Vector3(0, bound.size.y / 2f, 0)) + new Vector3(1, 0, 1) * wallThickness + Vector3.up * 0.001f; ; // CHECK ME: May be wrong
                         floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
-
+                        floor.layer = LayerMask.NameToLayer("Dungeon");
 
 
 
@@ -953,7 +953,7 @@ namespace dungeonGenerator
             // FIX ME: CHECK THIS TRANSFORMATION
             floor.transform.localPosition = (room.Bounds.center - new Vector3(0,room.Bounds.size.y / 2f,0)) + new Vector3(1, 0, 1) * wallThickness + Vector3.up * 0.001f; ; // CHECK ME: May be wrong
             floor.GetComponent<MeshRenderer>().material = room.RoomType.Equals(RoomType.Corridor) ? floorMaterial : roomStyle.roomMaterials.floor;
-
+            floor.layer = LayerMask.NameToLayer("Dungeon");
         
 
             GameObject collectable = null;
@@ -967,6 +967,7 @@ namespace dungeonGenerator
 
                     floor.GetComponent<MeshRenderer>().material = StartRoomMat;
                     floor.AddComponent<FloorTriggers>().roomType = room.RoomType;
+                    floor.layer = LayerMask.NameToLayer("Dungeon");
 
 
                     // remove this
@@ -982,6 +983,7 @@ namespace dungeonGenerator
 
 
                     floor.GetComponent<MeshRenderer>().material = EndRoomMat;
+                    floor.layer = LayerMask.NameToLayer("Dungeon");
                     collectable = MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.cylinder, floor.transform);
                     break;
 
@@ -991,6 +993,7 @@ namespace dungeonGenerator
 
 
                     floor.GetComponent<MeshRenderer>().material = EndRoomMat;
+                    floor.layer = LayerMask.NameToLayer("Dungeon");
                     collectable = MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.sphere, floor.transform);
                     break;
 
@@ -998,6 +1001,7 @@ namespace dungeonGenerator
 
                     // when is just a normal room
                     collectable = MeshCollectableCreator.Instance.GenerateCollectable(CollectableType.cube, floor.transform);
+                    floor.layer = LayerMask.NameToLayer("Dungeon");
                     break;
 
 

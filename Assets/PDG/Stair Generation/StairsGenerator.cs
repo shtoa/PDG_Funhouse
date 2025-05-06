@@ -62,6 +62,7 @@ namespace dungeonGenerator
 
             stairsPlane.transform.localPosition = startPos;
             stairsPlane.transform.SetParent(transform);
+            stairsPlane.layer = LayerMask.NameToLayer("Dungeon");
 
         }
 
@@ -76,6 +77,7 @@ namespace dungeonGenerator
             plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
             plane.transform.localPosition = startPos;
             plane.transform.SetParent(transform);
+            plane.layer = LayerMask.NameToLayer("Dungeon");
 
             foreach (var planeOffset in planeOffsets)
             {
@@ -160,16 +162,16 @@ namespace dungeonGenerator
 
 
                             plane.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
-
+                            plane.layer = LayerMask.NameToLayer("Dungeon");
 
                             // add light
                             GameObject light = lightSpawner._lightPool._pool.Get().gameObject;
-                            light.transform.localPosition = Vector3.zero;
+                            //light.transform.localPosition = Vector3.zero;
                             light.transform.localEulerAngles = new Vector3(-90, -90, 0);
                             //light.transform.Rotate(0f, 0f, 90f);
 
 
-                            light.transform.localPosition = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.15f;
+                            light.transform.position = startPos + curOffset - planeOffset + Vector3.up * 0.5f + Vector3.forward - Vector3.forward * 0.15f;
                             light.transform.RotateAround(startPos + curOffset - planeOffset, Vector3.up, 90 * i);
                             light.transform.SetParent(transform);
 
@@ -186,7 +188,7 @@ namespace dungeonGenerator
                 plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
                 plane.transform.localPosition = startPos + curOffset;
                 plane.transform.SetParent(transform);
-
+                plane.layer = LayerMask.NameToLayer("Dungeon");
 
                 if (planeOffset != planeOffsets.Last())
                 {
@@ -194,6 +196,7 @@ namespace dungeonGenerator
                     plane.GetComponent<MeshRenderer>().sharedMaterial = stairsMaterial;
                     plane.transform.localPosition = startPos + curOffset + Vector3.up * 0.999f;
                     plane.transform.SetParent(transform);
+                    plane.layer = LayerMask.NameToLayer("Dungeon");
                 }
 
 
@@ -263,7 +266,7 @@ namespace dungeonGenerator
 
             stairsPlane.transform.localPosition = startPos + stairsPlane.GetComponent<MeshFilter>().sharedMesh.normals[0]*0.001f;
             stairsPlane.transform.SetParent(transform);
-
+            stairsPlane.layer = LayerMask.NameToLayer("Dungeon");
 
 
             // Right Wall Connection 
@@ -309,6 +312,7 @@ namespace dungeonGenerator
 
             stairsPlane.transform.localPosition = startPos + stairsPlane.GetComponent<MeshFilter>().sharedMesh.normals[0] * 0.001f;
             stairsPlane.transform.SetParent(transform);
+            stairsPlane.layer = LayerMask.NameToLayer("Dungeon");
         }
 
 

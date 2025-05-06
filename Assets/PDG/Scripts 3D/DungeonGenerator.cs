@@ -95,6 +95,9 @@ namespace dungeonGenerator
 
         private static Dictionary<CollectableType, int> total = Enum.GetValues(typeof(CollectableType)).Cast<CollectableType>().ToDictionary(t => t, t => 0);
 
+
+        public event Action OnDungeonRegenerated;
+
         public void RegenerateDungeon()
         {
             //Debug.unityLogger.logEnabled = false;
@@ -103,6 +106,7 @@ namespace dungeonGenerator
                 DeleteDungeon();
                 corridorWidthAndWall = corridorWidth + 2 * wallThickness;
                 GenerateDungeon();
+                OnDungeonRegenerated?.Invoke();
             }
         }
 
@@ -415,12 +419,13 @@ namespace dungeonGenerator
             currentGenerationI = 0;
             while (maxIterationGeneration > currentGenerationI)
             {
+          
                 var dungeonGenerated = new TaskCompletionSource<bool>();
-                GenerateAsync(dungeonGenerated, 0.1f, new System.Random().Next(), true);
+                GenerateAsync(dungeonGenerated, 1f, new System.Random().Next(), true);
 
                 yield return new WaitUntil(()=>dungeonGenerated.Task.IsCompleted);
 
-                maxIterations = new System.Random().Next(20, 30);
+                maxIterations = new System.Random().Next(10, 20);
 
 
                 roomBoundsMin = new BoundsInt(
@@ -447,7 +452,7 @@ namespace dungeonGenerator
 
                 Debug.unityLogger.logEnabled = false;
 
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(3f);
 
             }
         }
@@ -481,6 +486,8 @@ namespace dungeonGenerator
             var roomsComplete = new TaskCompletionSource<bool>();
 
             var roomsPerBatch = isBatched ? 1 : result.Count;
+
+            OnDungeonRegenerated?.Invoke();
 
             StartCoroutine(decorator.roomGenerator.GenerateRoomsBatch(result, roomsPerBatch, roomsComplete, delay));
 
