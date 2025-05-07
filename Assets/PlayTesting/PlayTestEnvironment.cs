@@ -9,6 +9,7 @@ using UnityEditor.Recorder;
 using UnityEditor.Recorder.Input;
 using System.IO;
 
+[ExecuteInEditMode]
 public class PlayTestEnvironment : MonoBehaviour
 {
     public DungeonGenerator dungeonGenerator;
@@ -16,7 +17,7 @@ public class PlayTestEnvironment : MonoBehaviour
     public bool recordPlayTestVideo;
 
     public string playerName = string.Empty;
-
+    [SerializeField] public bool hasTestStarted = false;
 
     [NonSerialized]
     public PlayTestScriptableObject currentPlayTest;
@@ -29,73 +30,78 @@ public class PlayTestEnvironment : MonoBehaviour
 
     private string curDir = string.Empty;
 
-    [ExecuteInEditMode]
-
-
     void Start()
     {
-        if (Application.isPlaying)
+        if (Application.isPlaying && hasTestStarted)
         {
+            GameManager.Instance.isPlayTestingEnabled = true;
             curDir = AssetDatabase.GenerateUniqueAssetPath(Application.dataPath + "/PlayTesting/PlayTests/" + playerName + "/" + PlayTests[currentPlayTestIndex].name + "/" + PlayTests[currentPlayTestIndex].dungeonConfigs[currentConfigIndex].name) + "/";
             if(recordPlayTestVideo) PlayTestRecorder.StartRecording(curDir, "testRecording");
         }
+
+        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
     }
+
+    private void OnPlayModeStateChanged(PlayModeStateChange change)
+    {
+        if (change.Equals(PlayModeStateChange.EnteredEditMode)) hasTestStarted = false;
+    }
+
     public void StartPlaytest()
     {
+        currentPlayTestIndex = 0;
+        currentConfigIndex = 0;
+        hasTestStarted = true;
+        InitializePlaytest();
+    }
 
+    public void InitializePlaytest()
+    {
         InitializePlayerDir();
         InitializeConfig();
         InitializeTestDir();
+    }
 
+    public void EndPlaytest()
+    {
+        hasTestStarted = false; 
     }
 
     public void InitializePlayerDir()
     {
         string dir = Application.dataPath + "/PlayTesting/PlayTests/" + playerName;
-        if (!Directory.Exists(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        
     }
 
 
     public void InitializeTestDir()
     {
         string dir = Application.dataPath + "/PlayTesting/PlayTests/" + playerName + "/" + PlayTests[currentPlayTestIndex].name;
-        if (!Directory.Exists(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        
     }
 
     public void InitializeConfigDir()
     {
         string dir = AssetDatabase.GenerateUniqueAssetPath(Application.dataPath + "/PlayTesting/PlayTests/" + playerName + "/" + PlayTests[currentPlayTestIndex].name + "/" + PlayTests[currentPlayTestIndex].dungeonConfigs[currentConfigIndex].name);
-        if (!Directory.Exists(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
+        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+       
     }
 
     public void InitializeConfig()
     {
-
         // reset player rotation and position
-
-        GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<CharacterController>().enabled = false;
-        GameObject.FindGameObjectsWithTag("Player")[0].transform.position = new Vector3(0, 0.46f, 0);
-        GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<CharacterController>().enabled = true;
+        GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<Rigidbody>().position = new Vector3(0, 0.46f, 0);
 
         dungeonGenerator.dungeonConfig = PlayTests[currentPlayTestIndex].dungeonConfigs[currentConfigIndex];
         dungeonGenerator.LoadDungeon();
         dungeonGenerator.RegenerateDungeon();
-
-
-
     }
 
     public bool Next()
     {
+        Debug.Log("NextCalled");
         DungeonStatTrack.saveDungeonTestData(curDir, PlayTests[currentPlayTestIndex].dungeonConfigs[currentConfigIndex].name);
 
         if (recordPlayTestVideo)  PlayTestRecorder.StopRecording();
@@ -111,7 +117,7 @@ public class PlayTestEnvironment : MonoBehaviour
             currentConfigIndex++;
             //InitializeConfigDir();
 
-            Debug.Log("Testing new Config");
+            Debug.Log($"Testing new Config {currentPlayTestIndex}");
             InitializeConfig();
             curDir = AssetDatabase.GenerateUniqueAssetPath(Application.dataPath + "/PlayTesting/PlayTests/" + playerName + "/" + PlayTests[currentPlayTestIndex].name + "/" + PlayTests[currentPlayTestIndex].dungeonConfigs[currentConfigIndex].name) + "/";
             if (recordPlayTestVideo) PlayTestRecorder.StartRecording(curDir, "testRecording");
@@ -126,7 +132,7 @@ public class PlayTestEnvironment : MonoBehaviour
             InitializeTestDir();
             //InitializeConfigDir();
 
-            Debug.Log("Testing new Config");
+            Debug.Log($"Testing new Config {currentPlayTestIndex}");
 
             InitializeConfig();
             curDir = AssetDatabase.GenerateUniqueAssetPath(Application.dataPath + "/PlayTesting/PlayTests/" + playerName + "/" + PlayTests[currentPlayTestIndex].name + "/" + PlayTests[currentPlayTestIndex].dungeonConfigs[currentConfigIndex].name) + "/";
@@ -136,32 +142,11 @@ public class PlayTestEnvironment : MonoBehaviour
         }
         else
         {
-            Debug.Log("Finished Testing Config");
+            Debug.Log($"Finished Testing Configs");
+            EndPlaytest();
+            hasTestStarted = false;
             return false;
         }
     }
 
-    public void NextTest()
-    {
-
-    }
-
-    public void NextConfig()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
-    //void OnValidate()
-    //{
-    //    if (Directory.Exists())
-    //    {
-
-    //    }
-    //}
 }

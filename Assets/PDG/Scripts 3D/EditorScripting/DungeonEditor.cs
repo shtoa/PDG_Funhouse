@@ -84,8 +84,8 @@ namespace dungeonGenerator
 
                 Vector3 clampedScale = new Vector3(
                     Mathf.Max(scale.x, 2 * dungeonGenerator.wallThickness + dungeonGenerator.roomOffsetMin.x + dungeonGenerator.roomBoundsMin.size.x), 
-                    Mathf.Max(scale.y, 1), 
-                    Mathf.Max(scale.z, 2 * dungeonGenerator.wallThickness + dungeonGenerator.roomOffsetMin.y + +dungeonGenerator.roomBoundsMin.size.z)
+                    Mathf.Max(scale.y, dungeonGenerator.roomOffsetMin.y + dungeonGenerator.roomBoundsMin.size.y), 
+                    Mathf.Max(scale.z, 2 * dungeonGenerator.wallThickness + dungeonGenerator.roomOffsetMin.z + +dungeonGenerator.roomBoundsMin.size.z)
                 ); // clamp the scale to be at least one
 
                

@@ -98,10 +98,10 @@ namespace dungeonGenerator
 
         List<WallBounds> allWallBounds = new List<WallBounds>();
 
-        public RoomGenerator(List<Node> RoomSpaces, GameObject dungeonObject)
+        public RoomGenerator(List<Node> RoomSpaces, DungeonGenerator _dungeonGenerator, DungeonDecorator _dungeonDecorator)
         {
 
-            DungeonDecorator dungeonDecorator = dungeonObject.GetComponent<DungeonDecorator>();
+            DungeonDecorator dungeonDecorator = _dungeonDecorator;
             this.dungeonDecorator = dungeonDecorator;
             this.wallMaterial = dungeonDecorator.wallMaterial;
             this.StartRoomMat = dungeonDecorator.StartRoomMat;
@@ -110,7 +110,7 @@ namespace dungeonGenerator
             this.ceilingMaterial = dungeonDecorator.ceilingMaterial;
             this.DoorMat = dungeonDecorator.DoorMat;
 
-            DungeonGenerator dungeonGenerator = dungeonObject.GetComponent<DungeonGenerator>();
+            DungeonGenerator dungeonGenerator = _dungeonGenerator;
 
             this.dungeonGenerator = dungeonGenerator;
 

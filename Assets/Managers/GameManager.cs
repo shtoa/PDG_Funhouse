@@ -80,6 +80,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(DungeonStatTrack.updateTrackPerformanceStats());
         DungeonStatTrack.DungeonCompletionTime = -1;
         DungeonStatTrack.GameTime = 0;
+        isTestDataCollected = false;
     }
 
     private void Update()
@@ -96,18 +97,20 @@ public class GameManager : MonoBehaviour
                 // !isTestDataCollected && 
                 if (DungeonStatTrack.DungeonCompletionTime != -1 && isPlayTestingEnabled) //  && isPlayTestingEnabled
                 {
+
                     PlayTestEnvironment playTestEnv;
-                    if (GameObject.Find("DungeonGen").TryGetComponent<PlayTestEnvironment>(out playTestEnv)) {
+                    if (GameObject.FindGameObjectWithTag("Dungeon").TryGetComponent<PlayTestEnvironment>(out playTestEnv)) {
 
                         GameManager.instance.gameState = GameManager.GameState.PreStart;
+                        numCollected.Clear();
 
                         if (!playTestEnv.Next())
                         {
                             UnityEditor.EditorApplication.ExitPlaymode();
                         } 
                     }
-                    
-                    isTestDataCollected = true;
+                    DungeonStatTrack.DungeonCompletionTime = -1;
+                    //isTestDataCollected = true;
                 }
             }
 

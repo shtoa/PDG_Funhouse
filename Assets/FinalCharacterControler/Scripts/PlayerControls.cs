@@ -12,7 +12,6 @@ public class PlayerController : MonoBehaviour
 {
     #region Class Variables
     [Header("Componenets")]
-    [SerializeField] private CharacterController _characterController;
     [SerializeField] private Rigidbody _rigidbody;
     [SerializeField] private Camera _playerCamera;
     [SerializeField] private GameObject _cameraFollower;
@@ -91,7 +90,6 @@ public class PlayerController : MonoBehaviour
         _playerState = GetComponent<PlayerState>();
         addColliderSphere();
         _antiBump = sprintSpeed;
-        _stepOffset = _characterController.stepOffset;
         _cameraPositionY = _playerCamera.transform.position.y;
 
     }
@@ -121,7 +119,6 @@ public class PlayerController : MonoBehaviour
 
             _playerState.SetPlayerMovementState(PlayerMovementState.Jump);
             _jumpedLastFrame = false;
-            _characterController.stepOffset = 0;
 
         }
         else if ((!isGrounded || _jumpedLastFrame) && _rigidbody.velocity.y < 0f)
@@ -129,13 +126,9 @@ public class PlayerController : MonoBehaviour
 
             _playerState.SetPlayerMovementState(PlayerMovementState.Fall);
             _jumpedLastFrame = false;
-            _characterController.stepOffset = 0;
 
         }
-        else
-        {
-            _characterController.stepOffset = _stepOffset;
-        }
+
 
 
         if (isClimbing)
@@ -448,12 +441,12 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 normal = CharacterControllerUtils.GetNormalWithSphereCase(GetComponent<CapsuleCollider>(), _groundLayers);
         float angle = Vector3.Angle(normal, Vector3.up);
-        bool validAngle = angle <= _characterController.slopeLimit;
+        //bool validAngle = angle <= _characterController.slopeLimit;
 
-        if (!validAngle && _verticalVelocity < 0f)
-        {
-            velocity = Vector3.ProjectOnPlane(velocity, normal);
-        }
+        //if (!validAngle && _verticalVelocity < 0f)
+        //{
+        //    velocity = Vector3.ProjectOnPlane(velocity, normal);
+        //}
 
         return velocity;
     }
@@ -577,9 +570,9 @@ public class PlayerController : MonoBehaviour
 
         Vector3 normal = CharacterControllerUtils.GetNormalWithSphereCase(GetComponent<CapsuleCollider>(), _groundLayers);
         float angle = Vector3.Angle(normal, Vector3.up);
-        bool validAngle = angle <= _characterController.slopeLimit;
+        //bool validAngle = angle <= _characterController.slopeLimit;
 
-        return _characterController.isGrounded; //&& validAngle;
+        return true; //&& validAngle;
     }
 
     private bool IsGroundedWhileGrounded()
