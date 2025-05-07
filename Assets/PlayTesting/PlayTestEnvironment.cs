@@ -94,6 +94,8 @@ public class PlayTestEnvironment : MonoBehaviour
         // reset player rotation and position
         GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<Rigidbody>().position = new Vector3(0, 0.46f, 0);
 
+   
+
         dungeonGenerator.dungeonConfig = PlayTests[currentPlayTestIndex].dungeonConfigs[currentConfigIndex];
         dungeonGenerator.LoadDungeon();
         dungeonGenerator.RegenerateDungeon();

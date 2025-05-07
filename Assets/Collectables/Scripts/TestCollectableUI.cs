@@ -82,8 +82,8 @@ public class TestCollectableUI : MonoBehaviour
 
         if(syringeFill < (curCollectedRatio))
         {
-            syringeFill += 0.02f*Time.deltaTime;
-            donorFill -= 0.02f * Time.deltaTime;
+            syringeFill += (1f/ (float)GameManager.Instance.total.Values.Sum() )* Time.deltaTime;
+            donorFill -= (1f / (float)GameManager.Instance.total.Values.Sum()) * Time.deltaTime;
 
 
             var bleedingEmission = bleedingParticles.emission;
