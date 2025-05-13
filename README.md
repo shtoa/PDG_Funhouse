@@ -87,9 +87,7 @@ After cloning the repo and loading lfs files, open the folder via Unity Hub:
 1. Navigate to the _Projects_ tab on the left hand menu. 
 2. Select the _Add_ dropdown on the right and _add project from disk_. 
 
-<div align="center">
-![hubNavigation](markdownAssets/hubNavigation.png)
-</div>
+[![hubNavigation]("markdownAssets/hubNavigation.png")]
 
 :warning: make sure to select the correct Unity version ([Unity 2022.3.28f1](https://unity.com/releases/editor/whats-new/2022.3.28#notes)) in the editor version dropdown.
 
@@ -110,9 +108,9 @@ After cloning the repo and loading lfs files, open the folder via Unity Hub:
 
 Opening up the Unity file you will be greeted with an untitled scene:
 
-<div align="center">
-![hierarchyLocation](markdownAssets/dungeonScene.png)
-</div>
+
+![hierarchyLocation](markdownAssets/dungeonScene.png) 
+
 
 To setup the dungeon generator scene, navigate to:
 
@@ -145,23 +143,17 @@ It is possible to manipulate various properties of the dungeon such as the **Dun
 
 1. For the DungeonCalculator:
 
-<div align="center">
 ![hierarchyLocation](markdownAssets/dungeonCalculator.png)
-</div>
 
 :warning: Door Thickness has not yet been implemented
 
 2. For the DungeonDecorator:
 
-<div align="center">
 ![hierarchyLocation](markdownAssets/dungeonDecorator.png)
-</div>
 
 The gizmo on the dungeon generator can be moved and edited within the editor or in play mode:
 
-<div align="center">
 ![hierarchyLocation](markdownAssets/regenerateDungeon.gif)
-</div>
 
 ---
 
@@ -178,9 +170,8 @@ The gizmo on the dungeon generator can be moved and edited within the editor or 
 You can demo the generated dungeon using a simple third person character controller in playmode. To enter play mode in the editor press <code>ctrl-p</code> 
 
 Use the following controlls to navigate around the dungeon:
-<div align="center">
+
 ![hierarchyLocation](markdownAssets/keyboardControls.png)
-</div>
 
 ---
 
